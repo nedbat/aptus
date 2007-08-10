@@ -2,8 +2,8 @@
 # Started from http://www.howforge.com/mandelbrot-set-viewer-using-wxpython
 
 import wx
-import time
 import numpy
+import re, sys, time
 
 if 0: 
     def is_mandelbrot(x, y):
@@ -169,9 +169,49 @@ class wxMandelbrotSetViewer(wx.Frame):
         wx.EndBusyCursor()
         return dc
 
- 
+class XaosState:
+    """ The state of a Xaos rendering.
+    """
+    def __init__(self):
+        self.maxiter = 170
+        self.center = -0.75, 0.0
+        self.diam = 2.55, 2.55
+        
+    def read(self, f):
+        if isinstance(f, str):
+            f = open(f)
+        for l in f:
+            if l.startswith('('):
+                argv = l[1:-2].split()
+                if hasattr(self, 'handle_'+argv[0]):
+                    getattr(self, 'handle_'+argv[0])(*argv)
+                    
+    def handle_maxiter(self, op, maxiter):
+        self.maxiter = int(maxiter)
+        
+    def handle_view(self, op, cx, cy, rx, ry):
+        self.center = self.read_float(cx), self.read_float(cy)
+        self.diam = self.read_float(rx), self.read_float(ry)
+        
+    def read_float(self, fstr):
+        fstr = fstr.lower()
+        if fstr.endswith('e'):
+            fstr += '0'
+        return float(fstr)
+    
 if __name__ == '__main__':
     app = wx.PySimpleApp()
-    f = wxMandelbrotSetViewer(-2.0, 1.5, 1.0, -1.5, 600, 600)
+
+    x0, y0, x1, y1 = -2.0, 1.5, 1.0, -1.5
+    
+    if len(sys.argv) > 1:
+        xaos = XaosState()
+        xaos.read(sys.argv[1])
+        x0 = xaos.center[0] - xaos.diam[0]/2
+        x1 = xaos.center[0] + xaos.diam[0]/2
+        y0 = xaos.center[1] - xaos.diam[1]/2
+        y1 = xaos.center[1] + xaos.diam[1]/2
+        
+    f = wxMandelbrotSetViewer(x0, y0, x1, y1, 600, 600)
     f.Show()
     app.MainLoop()
