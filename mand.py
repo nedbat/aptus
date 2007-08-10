@@ -1,10 +1,35 @@
 #!/usr/bin/env python
-# Copied from http://www.howforge.com/mandelbrot-set-viewer-using-wxpython
+# Started from http://www.howforge.com/mandelbrot-set-viewer-using-wxpython
 
 import wx
 import time
+import numpy
 
-import mandext
+if 0: 
+    def is_mandelbrot(x, y):
+        p = complex(x,y)
+        i = 0
+        z = 0+0j
+        while abs(z) < 2:
+            if i >= MAXITER:
+                return None
+            z = z*z+p
+            i += 1
+        return i
+
+    MAXITER = 999
+
+    def set_maxiter(maxiter):
+        MAXITER = maxiter
+
+elif 0:
+    def is_mandelbrot(x, y):
+        return 4
+else:
+    import mandext
+    is_mandelbrot = mandext.mandelbrot
+    set_maxiter = mandext.set_maxiter
+        
 
 # Colors taken from Xaos, to get the same rendering.
 colors = [
@@ -54,12 +79,11 @@ for i in range(len(the_palette)):
         )
     
 class MandelbrotSet:
-    def __init__(self,x0,y0,x1,y1,w,h,limit=2,maxiter=999):
+    def __init__(self,x0,y0,x1,y1,w,h,maxiter=999):
         self.x0,self.y0 = x0,y0
         self.rx,self.ry = (x1-x0)/w,(y0-y1)/h
         self.w,self.h = w,h
  
-        self.limit = limit
         self.maxiter = maxiter
  
     def from_screen(self,x,y):
@@ -72,35 +96,28 @@ class MandelbrotSet:
     def zoom_out(self,x,y):
         zx,zy = self.w,self.h
         return x-zx*self.rx,y+zy*self.ry,x+zx*self.rx,y-zy*self.ry,self.w,self.h
-
-    if 0: 
-        def is_mandelbrot(self,x,y):
-            p = complex(x,y)
-            i = 0
-            z = 0+0j
-            while abs(z) < self.limit:
-                if i >= self.maxiter:
-                    return None
-                z = z*z+p
-                i += 1
-            return i
-    elif 0:
-        def is_mandelbrot(self, x, y):
-            return 4
-    else:
-        def is_mandelbrot(self, x, y):
-            return mandext.mandelbrot(x, y, self.maxiter)
         
-    def compute(self,callback):
+    def compute(self, palette):
+        print "x, y %r step %r" % ((self.x0, self.y0), (self.rx, self.ry))
+        
+        set_maxiter(self.maxiter)
+        counts = numpy.zeros((self.h, self.w), dtype=numpy.uint16)
         x = self.x0
+        xi = 0
         for xi in range(self.w):
             y = self.y0
+            yi = 0
             for yi in range(self.h):
-                c = self.is_mandelbrot(x,y)
-                callback(xi,yi,c)
+                c = is_mandelbrot(x,y) or 0
+                counts[yi,xi] = c
                 y -= self.ry
+                yi += 1
             x += self.rx
- 
+            xi += 1
+        palarray = numpy.array(palette, dtype=numpy.uint8)
+        pix = palarray[counts % len(palette)]
+        return pix
+    
 class wxMandelbrotSetViewer(wx.Frame):
     def __init__(self,x0,y0,x1,y1,w,h):
         super(wxMandelbrotSetViewer,self).__init__(None,-1,'Mandelbrot Set')
@@ -139,42 +156,19 @@ class wxMandelbrotSetViewer(wx.Frame):
             return (0,0,0)
         return the_palette[c % len(the_palette)]
  
-    def old_draw(self):
-        wx.BeginBusyCursor()
-        start = time.clock()
-        dc = wx.MemoryDC()
-        dc.SelectObject(self.bitmap)
-        self.cur_c = -1
-        def callback(x,y,c):
-            if c != self.cur_c:
-                rgb = self.palette(c)
-                self.cur_c = c
-                dc.SetPen(wx.Pen(wx.Colour(*rgb),1))
-            dc.DrawPoint(x,y)
-        self.m.compute(callback)
-        print "Computation: %.2f sec" % (time.clock() - start)
-        wx.EndBusyCursor()
-        return dc
- 
     def draw(self):
         wx.BeginBusyCursor()
         start = time.clock()
         img = wx.EmptyImage(self.w, self.h)
-        self.cur_c = -1
-        self.cur_rgb = None
-        def callback(x,y,c):
-            if c != self.cur_c:
-                self.cur_rgb = self.palette(c)
-                self.cur_c = c
-            img.SetRGB(x,y,self.cur_rgb[0],self.cur_rgb[1],self.cur_rgb[2])
-        self.m.compute(callback)
-
+        pix = self.m.compute(the_palette)
+        img.SetData(pix.tostring())
         dc = wx.MemoryDC()
         dc.SelectObject(self.bitmap)
         dc.DrawBitmap(img.ConvertToBitmap(), 0, 0, False)
         print "Computation: %.2f sec" % (time.clock() - start)
         wx.EndBusyCursor()
         return dc
+
  
 if __name__ == '__main__':
     app = wx.PySimpleApp()
