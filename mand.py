@@ -79,23 +79,23 @@ for i in range(len(the_palette)):
         )
     
 class MandelbrotSet:
-    def __init__(self,x0,y0,x1,y1,w,h,maxiter=999):
-        self.x0,self.y0 = x0,y0
-        self.rx,self.ry = (x1-x0)/w,(y0-y1)/h
-        self.w,self.h = w,h
+    def __init__(self, x0, y0, x1, y1, w, h, maxiter=999):
+        self.x0, self.y0 = x0, y0
+        self.rx, self.ry = (x1-x0)/w, (y0-y1)/h
+        self.w, self.h = w, h
  
         self.maxiter = maxiter
  
-    def from_screen(self,x,y):
-        return self.x0+self.rx*x,self.y0-self.ry*y
+    def from_screen(self, x, y):
+        return self.x0+self.rx*x, self.y0-self.ry*y
  
-    def zoom_in(self,x,y):
-        zx,zy = self.w/4,self.h/4
-        return x-zx*self.rx,y+zy*self.ry,x+zx*self.rx,y-zy*self.ry,self.w,self.h
+    def zoom_in(self, x, y):
+        zx, zy = self.w/4, self.h/4
+        return x-zx*self.rx, y+zy*self.ry, x+zx*self.rx, y-zy*self.ry, self.w, self.h
  
-    def zoom_out(self,x,y):
-        zx,zy = self.w,self.h
-        return x-zx*self.rx,y+zy*self.ry,x+zx*self.rx,y-zy*self.ry,self.w,self.h
+    def zoom_out(self, x, y):
+        zx, zy = self.w, self.h
+        return x-zx*self.rx, y+zy*self.ry, x+zx*self.rx, y-zy*self.ry, self.w, self.h
         
     def compute(self, palette):
         print "x, y %r step %r" % ((self.x0, self.y0), (self.rx, self.ry))
@@ -119,39 +119,39 @@ class MandelbrotSet:
         return pix
     
 class wxMandelbrotSetViewer(wx.Frame):
-    def __init__(self,x0,y0,x1,y1,w,h):
-        super(wxMandelbrotSetViewer,self).__init__(None,-1,'Mandelbrot Set')
+    def __init__(self, x0, y0, x1, y1, w, h):
+        super(wxMandelbrotSetViewer, self).__init__(None, -1, 'Mandelbrot Set')
         self.dc = None
  
-        self.SetSize((w,h))
-        self.bitmap = wx.EmptyBitmap(w,h)
+        self.SetSize((w, h))
+        self.bitmap = wx.EmptyBitmap(w, h)
         self.panel = wx.Panel(self)
-        self.panel.Bind(wx.EVT_PAINT,self.on_paint)
-        self.panel.Bind(wx.EVT_LEFT_UP,self.on_zoom_in)
-        self.panel.Bind(wx.EVT_RIGHT_UP,self.on_zoom_out)
+        self.panel.Bind(wx.EVT_PAINT, self.on_paint)
+        self.panel.Bind(wx.EVT_LEFT_UP, self.on_zoom_in)
+        self.panel.Bind(wx.EVT_RIGHT_UP, self.on_zoom_out)
  
-        self.w,self.h = w,h
-        self.m = MandelbrotSet(x0,y0,x1,y1,w,h)
+        self.w, self.h = w, h
+        self.m = MandelbrotSet(x0, y0, x1, y1, w, h)
  
-    def on_zoom_in(self,event):
-        x,y = self.m.from_screen(event.GetX(),event.GetY())
-        self.m = MandelbrotSet(*self.m.zoom_in(x,y))
+    def on_zoom_in(self, event):
+        x,y = self.m.from_screen(event.GetX(), event.GetY())
+        self.m = MandelbrotSet(*self.m.zoom_in(x, y))
         self.dc = None
         self.Refresh()
  
-    def on_zoom_out(self,event):
-        x,y = self.m.from_screen(event.GetX(),event.GetY())
-        self.m = MandelbrotSet(*self.m.zoom_out(x,y))
+    def on_zoom_out(self, event):
+        x,y = self.m.from_screen(event.GetX(), event.GetY())
+        self.m = MandelbrotSet(*self.m.zoom_out(x, y))
         self.dc = None
         self.Refresh()
  
-    def on_paint(self,event):
+    def on_paint(self, event):
         if not self.dc:
             self.dc = self.draw()
         dc = wx.PaintDC(self.panel)
-        dc.Blit(0,0,self.w,self.h,self.dc,0,0)
+        dc.Blit(0, 0, self.w, self.h, self.dc, 0, 0)
  
-    def palette(self,c):
+    def palette(self, c):
         if c is None:
             return (0,0,0)
         return the_palette[c % len(the_palette)]
@@ -172,6 +172,6 @@ class wxMandelbrotSetViewer(wx.Frame):
  
 if __name__ == '__main__':
     app = wx.PySimpleApp()
-    f = wxMandelbrotSetViewer(-2.0,1.5,1.0,-1.5,600,600)
+    f = wxMandelbrotSetViewer(-2.0, 1.5, 1.0, -1.5, 600, 600)
     f.Show()
     app.MainLoop()
