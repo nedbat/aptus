@@ -91,11 +91,11 @@ class MandelbrotSet:
  
     def zoom_in(self, x, y):
         zx, zy = self.w/4, self.h/4
-        return x-zx*self.rx, y+zy*self.ry, x+zx*self.rx, y-zy*self.ry, self.w, self.h
+        return x-zx*self.rx, y+zy*self.ry, x+zx*self.rx, y-zy*self.ry, self.w, self.h, self.maxiter
  
     def zoom_out(self, x, y):
         zx, zy = self.w, self.h
-        return x-zx*self.rx, y+zy*self.ry, x+zx*self.rx, y-zy*self.ry, self.w, self.h
+        return x-zx*self.rx, y+zy*self.ry, x+zx*self.rx, y-zy*self.ry, self.w, self.h, self.maxiter
         
     def compute(self, palette):
         print "x, y %r step %r" % ((self.x0, self.y0), (self.rx, self.ry))
@@ -119,7 +119,7 @@ class MandelbrotSet:
         return pix
     
 class wxMandelbrotSetViewer(wx.Frame):
-    def __init__(self, x0, y0, x1, y1, w, h):
+    def __init__(self, x0, y0, x1, y1, w, h, maxiter):
         super(wxMandelbrotSetViewer, self).__init__(None, -1, 'Mandelbrot Set')
         self.dc = None
  
@@ -131,7 +131,7 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.panel.Bind(wx.EVT_RIGHT_UP, self.on_zoom_out)
  
         self.w, self.h = w, h
-        self.m = MandelbrotSet(x0, y0, x1, y1, w, h)
+        self.m = MandelbrotSet(x0, y0, x1, y1, w, h, maxiter)
  
     def on_zoom_in(self, event):
         x,y = self.m.from_screen(event.GetX(), event.GetY())
@@ -203,6 +203,8 @@ if __name__ == '__main__':
     app = wx.PySimpleApp()
 
     x0, y0, x1, y1 = -2.0, 1.5, 1.0, -1.5
+    w, h = 600, 600
+    maxiter = 999
     
     if len(sys.argv) > 1:
         xaos = XaosState()
@@ -211,7 +213,8 @@ if __name__ == '__main__':
         x1 = xaos.center[0] + xaos.diam[0]/2
         y0 = xaos.center[1] - xaos.diam[1]/2
         y1 = xaos.center[1] + xaos.diam[1]/2
+        maxiter = xaos.maxiter
         
-    f = wxMandelbrotSetViewer(x0, y0, x1, y1, 600, 600)
+    f = wxMandelbrotSetViewer(x0, y0, x1, y1, w, h, maxiter)
     f.Show()
     app.MainLoop()
