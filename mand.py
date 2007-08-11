@@ -6,8 +6,8 @@ import numpy
 import re, sys, time
 
 if 0: 
-    def is_mandelbrot(x, y):
-        p = complex(x,y)
+    def is_mandelbrot(xi, yi):
+        p = complex(XO+xi*XD, Y0+yi*YD)
         i = 0
         z = 0+0j
         while abs(z) < 2:
@@ -18,8 +18,12 @@ if 0:
         return i
 
     MAXITER = 999
-
-    def set_maxiter(maxiter):
+    X0, Y0 = 0, 0
+    XD, YD = 0, 0
+    
+    def set_params(x0, y0, xd, yd, maxiter):
+        X0, Y0 = x0, y0
+        XD, YD = xd, yd
         MAXITER = maxiter
 
 elif 0:
@@ -28,7 +32,7 @@ elif 0:
 else:
     import mandext
     is_mandelbrot = mandext.mandelbrot
-    set_maxiter = mandext.set_maxiter
+    set_params = mandext.set_params
         
 
 # Colors taken from Xaos, to get the same rendering.
@@ -100,13 +104,11 @@ class MandelbrotSet:
     def compute(self, palette):
         print "x, y %r step %r" % ((self.x0, self.y0), (self.rx, self.ry))
         
-        set_maxiter(self.maxiter)
+        set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
         counts = numpy.zeros((self.h, self.w), dtype=numpy.uint16)
         for xi in range(self.w):
-            x = self.x0 + xi*self.rx
             for yi in range(self.h):
-                y = self.y0 - yi*self.ry
-                c = is_mandelbrot(x,y) or 0
+                c = is_mandelbrot(xi, -yi)
                 counts[yi,xi] = c
         palarray = numpy.array(palette, dtype=numpy.uint8)
         pix = palarray[counts % len(palette)]
