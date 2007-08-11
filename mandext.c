@@ -1,20 +1,27 @@
 #include "Python.h"
 
+typedef long double float_t;
+
 static int max_iter;
 
 static PyObject *
 mandelbrot(PyObject *self, PyObject *args)
 {
-    double cr, ci;
+    float_t cr, ci;
     int count = 0;
     
-    if (!PyArg_ParseTuple(args, "dd", &cr, &ci))
+    double crd, cid;
+    
+    if (!PyArg_ParseTuple(args, "dd", &crd, &cid))
         return NULL;
 
-    double az = 0.0;
-    double bz = 0.0;
-    double anew, bnew;
-    double a2, b2;
+    cr = crd;
+    ci = cid;
+    
+    float_t az = 0.0;
+    float_t bz = 0.0;
+    float_t anew, bnew;
+    float_t a2, b2;
     
     while (count <= max_iter) {
         a2 = az * az;

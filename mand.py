@@ -102,18 +102,12 @@ class MandelbrotSet:
         
         set_maxiter(self.maxiter)
         counts = numpy.zeros((self.h, self.w), dtype=numpy.uint16)
-        x = self.x0
-        xi = 0
         for xi in range(self.w):
-            y = self.y0
-            yi = 0
+            x = self.x0 + xi*self.rx
             for yi in range(self.h):
+                y = self.y0 - yi*self.ry
                 c = is_mandelbrot(x,y) or 0
                 counts[yi,xi] = c
-                y -= self.ry
-                yi += 1
-            x += self.rx
-            xi += 1
         palarray = numpy.array(palette, dtype=numpy.uint8)
         pix = palarray[counts % len(palette)]
         return pix
