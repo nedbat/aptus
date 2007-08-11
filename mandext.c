@@ -4,19 +4,24 @@ typedef long double float_t;
 
 static int max_iter;
 
+static float_t x0;
+static float_t yy0;
+static float_t xd;
+static float_t yd;
+
 static PyObject *
 mandelbrot(PyObject *self, PyObject *args)
 {
-    float_t cr, ci;
     int count = 0;
     
-    double crd, cid;
+    int xi, yi;
     
-    if (!PyArg_ParseTuple(args, "dd", &crd, &cid))
+    if (!PyArg_ParseTuple(args, "ii", &xi, &yi)) {
         return NULL;
-
-    cr = crd;
-    ci = cid;
+    }
+    
+    float_t cr = x0 + xi*xd;
+    float_t ci = yy0 + yi*yd;
     
     float_t az = 0.0;
     float_t bz = 0.0;
@@ -37,27 +42,33 @@ mandelbrot(PyObject *self, PyObject *args)
     }
 
     if (count > max_iter) {
-        Py_INCREF(Py_None);
-        return Py_None;
+        count = 0;
     }
-    else {
-        return Py_BuildValue("i", count);
-    }
+
+    return Py_BuildValue("i", count);
 }	
 
 static PyObject *
-set_maxiter(PyObject *self, PyObject *args)
+set_params(PyObject *self, PyObject *args)
 {
-    if (!PyArg_ParseTuple(args, "i", &max_iter))
+    double lx0, ly0, lxd, lyd;
+    
+    if (!PyArg_ParseTuple(args, "ddddi", &lx0, &ly0, &lxd, &lyd, &max_iter)) {
         return NULL;
-
+    }
+    
+    x0 = lx0;
+    yy0 = ly0;
+    xd = lxd;
+    yd = lyd;
+    
     Py_INCREF(Py_None);
     return Py_None;
 }
 
 static PyMethodDef mandext_methods[] = {
     {"mandelbrot", mandelbrot, METH_VARARGS, "Compute a mandelbrot count for a point"},
-    {"set_maxiter", set_maxiter, METH_VARARGS, "Set the maximum iteration count"},
+    {"set_params", set_params, METH_VARARGS, "Set parameters"},
     {NULL, NULL}
 };
 
