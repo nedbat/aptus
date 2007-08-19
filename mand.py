@@ -6,29 +6,27 @@ import numpy
 import re, sys, time
 
 if 0: 
-    def is_mandelbrot(xi, yi):
-        p = complex(XO+xi*XD, Y0+yi*YD)
-        i = 0
-        z = 0+0j
-        while abs(z) < 2:
-            if i >= MAXITER:
-                return None
-            z = z*z+p
-            i += 1
-        return i
-
     MAXITER = 999
     X0, Y0 = 0, 0
     XD, YD = 0, 0
     
+    def is_mandelbrot(xi, yi):
+        p = complex(X0+xi*XD, Y0+yi*YD)
+        i = 0
+        z = 0+0j
+        while abs(z) < 2:
+            if i >= MAXITER:
+                return 0
+            z = z*z+p
+            i += 1
+        return i
+
     def set_params(x0, y0, xd, yd, maxiter):
+        global X0, Y0, XD, YD, MAXITER
         X0, Y0 = x0, y0
         XD, YD = xd, yd
         MAXITER = maxiter
 
-elif 0:
-    def is_mandelbrot(x, y):
-        return 4
 else:
     import mandext
     is_mandelbrot = mandext.mandelbrot
@@ -117,45 +115,57 @@ class MandelbrotSet:
 class wxMandelbrotSetViewer(wx.Frame):
     def __init__(self, x0, y0, x1, y1, w, h, maxiter):
         super(wxMandelbrotSetViewer, self).__init__(None, -1, 'Mandelbrot Set')
-        self.dc = None
  
         self.SetSize((w, h))
-        self.bitmap = wx.EmptyBitmap(w, h)
         self.panel = wx.Panel(self)
         self.panel.Bind(wx.EVT_PAINT, self.on_paint)
         self.panel.Bind(wx.EVT_LEFT_UP, self.on_zoom_in)
         self.panel.Bind(wx.EVT_RIGHT_UP, self.on_zoom_out)
- 
-        self.w, self.h = w, h
-        self.m = MandelbrotSet(x0, y0, x1, y1, w, h, maxiter)
- 
+        self.panel.Bind(wx.EVT_SIZE, self.on_size)
+        self.panel.Bind(wx.EVT_IDLE, self.on_idle)
+        
+        self.x0, self.y0, self.x1, self.y1 = x0, y0, x1, y1
+        self.maxiter = maxiter
+        self.set_size()
+
+    def set_size(self):
+        self.cw, self.ch = self.GetClientSize()
+        self.bitmap = wx.EmptyBitmap(self.cw, self.ch)
+        self.dc = None
+        self.m = MandelbrotSet(self.x0, self.y0, self.x1, self.y1, self.cw, self.ch, self.maxiter)
+        self.check_size = False
+        self.Refresh()
+        
     def on_zoom_in(self, event):
-        x,y = self.m.from_screen(event.GetX(), event.GetY())
+        x, y = self.m.from_screen(event.GetX(), event.GetY())
         self.m = MandelbrotSet(*self.m.zoom_in(x, y))
         self.dc = None
         self.Refresh()
  
     def on_zoom_out(self, event):
-        x,y = self.m.from_screen(event.GetX(), event.GetY())
+        x, y = self.m.from_screen(event.GetX(), event.GetY())
         self.m = MandelbrotSet(*self.m.zoom_out(x, y))
         self.dc = None
         self.Refresh()
  
+    def on_size(self, event):
+        self.check_size = True
+        
+    def on_idle(self, event):
+        if self.check_size and self.GetClientSize() != (self.cw, self.ch):
+            print "New size is %r" % self.GetClientSize()
+            self.set_size()
+
     def on_paint(self, event):
         if not self.dc:
             self.dc = self.draw()
         dc = wx.PaintDC(self.panel)
-        dc.Blit(0, 0, self.w, self.h, self.dc, 0, 0)
- 
-    def palette(self, c):
-        if c is None:
-            return (0,0,0)
-        return the_palette[c % len(the_palette)]
+        dc.Blit(0, 0, self.cw, self.ch, self.dc, 0, 0)
  
     def draw(self):
         wx.BeginBusyCursor()
         start = time.clock()
-        img = wx.EmptyImage(self.w, self.h)
+        img = wx.EmptyImage(self.cw, self.ch)
         pix = self.m.compute(the_palette)
         img.SetData(pix.tostring())
         dc = wx.MemoryDC()
