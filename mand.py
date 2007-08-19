@@ -104,8 +104,8 @@ class MandelbrotSet:
         
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
         counts = numpy.zeros((self.h, self.w), dtype=numpy.uint16)
-        for xi in range(self.w):
-            for yi in range(self.h):
+        for xi in xrange(self.w):
+            for yi in xrange(self.h):
                 c = is_mandelbrot(xi, -yi)
                 counts[yi,xi] = c
         palarray = numpy.array(palette, dtype=numpy.uint8)
