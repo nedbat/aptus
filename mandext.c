@@ -10,7 +10,7 @@ static float_t xd;
 static float_t yd;
 
 static PyObject *
-mandelbrot(PyObject *self, PyObject *args)
+mandelbrot_count(PyObject *self, PyObject *args)
 {
     int count = 0;
     
@@ -67,7 +67,7 @@ set_params(PyObject *self, PyObject *args)
 }
 
 static PyMethodDef mandext_methods[] = {
-    {"mandelbrot", mandelbrot, METH_VARARGS, "Compute a mandelbrot count for a point"},
+    {"mandelbrot_count", mandelbrot_count, METH_VARARGS, "Compute a mandelbrot count for a point"},
     {"set_params", set_params, METH_VARARGS, "Set parameters"},
     {NULL, NULL}
 };
