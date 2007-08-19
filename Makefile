@@ -1,6 +1,10 @@
 # Makefile for utility work on coverage.py
 
-build:
+EXTENSION = mandext.pyd
+
+build: $(EXTENSION)
+
+$(EXTENSION): mandext.c
 	python setup.py build -cmingw32
 	cp build/lib.win32-2.4/mandext.pyd .
 
