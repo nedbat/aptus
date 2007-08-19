@@ -88,17 +88,9 @@ class MandelbrotSet:
  
         self.maxiter = maxiter
  
-    def from_screen(self, x, y):
+    def from_pixel(self, x, y):
         return self.x0+self.rx*x, self.y0-self.ry*y
  
-    def zoom_in(self, x, y):
-        zx, zy = self.w/4, self.h/4
-        return x-zx*self.rx, y+zy*self.ry, x+zx*self.rx, y-zy*self.ry, self.w, self.h, self.maxiter
- 
-    def zoom_out(self, x, y):
-        zx, zy = self.w, self.h
-        return x-zx*self.rx, y+zy*self.ry, x+zx*self.rx, y-zy*self.ry, self.w, self.h, self.maxiter
-        
     def compute(self, palette):
         print "x, y %r step %r" % ((self.x0, self.y0), (self.rx, self.ry))
         
@@ -113,7 +105,7 @@ class MandelbrotSet:
         return pix
     
 class wxMandelbrotSetViewer(wx.Frame):
-    def __init__(self, x0, y0, x1, y1, w, h, maxiter):
+    def __init__(self, xcenter, ycenter, xdiam, ydiam, w, h, maxiter):
         super(wxMandelbrotSetViewer, self).__init__(None, -1, 'Mandelbrot Set')
  
         self.SetSize((w, h))
@@ -124,37 +116,44 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.panel.Bind(wx.EVT_SIZE, self.on_size)
         self.panel.Bind(wx.EVT_IDLE, self.on_idle)
         
-        self.x0, self.y0, self.x1, self.y1 = x0, y0, x1, y1
+        self.xcenter, self.ycenter = xcenter, ycenter
+        self.xdiam, self.ydiam = xdiam, ydiam
         self.maxiter = maxiter
-        self.set_size()
+        self.set_view()
 
-    def set_size(self):
+    def set_view(self):
         self.cw, self.ch = self.GetClientSize()
         self.bitmap = wx.EmptyBitmap(self.cw, self.ch)
         self.dc = None
-        self.m = MandelbrotSet(self.x0, self.y0, self.x1, self.y1, self.cw, self.ch, self.maxiter)
+
+        scale = max(self.xdiam / self.cw, self.ydiam / self.ch)
+        xradius, yradius = scale * self.cw / 2, scale * self.ch / 2
+        
+        x0, y0 = self.xcenter - xradius, self.ycenter - yradius
+        x1, y1 = self.xcenter + xradius, self.ycenter + yradius
+        
+        self.m = MandelbrotSet(x0, y0, x1, y1, self.cw, self.ch, self.maxiter)
         self.check_size = False
         self.Refresh()
         
     def on_zoom_in(self, event):
-        x, y = self.m.from_screen(event.GetX(), event.GetY())
-        self.m = MandelbrotSet(*self.m.zoom_in(x, y))
-        self.dc = None
-        self.Refresh()
+        self.xcenter, self.ycenter = self.m.from_pixel(event.GetX(), event.GetY())
+        self.xdiam /= 2.0
+        self.ydiam /= 2.0
+        self.set_view()
  
     def on_zoom_out(self, event):
-        x, y = self.m.from_screen(event.GetX(), event.GetY())
-        self.m = MandelbrotSet(*self.m.zoom_out(x, y))
-        self.dc = None
-        self.Refresh()
+        self.xcenter, self.ycenter = self.m.from_pixel(event.GetX(), event.GetY())
+        self.xdiam *= 2.0
+        self.ydiam *= 2.0
+        self.set_view()
  
     def on_size(self, event):
         self.check_size = True
         
     def on_idle(self, event):
         if self.check_size and self.GetClientSize() != (self.cw, self.ch):
-            print "New size is %r" % self.GetClientSize()
-            self.set_size()
+            self.set_view()
 
     def on_paint(self, event):
         if not self.dc:
@@ -208,19 +207,18 @@ class XaosState:
 if __name__ == '__main__':
     app = wx.PySimpleApp()
 
-    x0, y0, x1, y1 = -2.0, 1.5, 1.0, -1.5
+    xcenter, ycenter = -0.5, 0.0
+    xdiam, ydiam = 3.0, 3.0
     w, h = 600, 600
     maxiter = 999
     
     if len(sys.argv) > 1:
         xaos = XaosState()
         xaos.read(sys.argv[1])
-        x0 = xaos.center[0] - xaos.diam[0]/2
-        x1 = xaos.center[0] + xaos.diam[0]/2
-        y0 = xaos.center[1] - xaos.diam[1]/2
-        y1 = xaos.center[1] + xaos.diam[1]/2
+        xcenter, ycenter = xaos.center
+        xdiam, ydiam = xaos.diam
         maxiter = xaos.maxiter
         
-    f = wxMandelbrotSetViewer(x0, y0, x1, y1, w, h, maxiter)
+    f = wxMandelbrotSetViewer(xcenter, ycenter, xdiam, ydiam, w, h, maxiter)
     f.Show()
     app.MainLoop()
