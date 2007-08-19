@@ -10,7 +10,7 @@ if 0:
     X0, Y0 = 0, 0
     XD, YD = 0, 0
     
-    def is_mandelbrot(xi, yi):
+    def mandelbrot_count(xi, yi):
         p = complex(X0+xi*XD, Y0+yi*YD)
         i = 0
         z = 0+0j
@@ -29,7 +29,7 @@ if 0:
 
 else:
     import mandext
-    is_mandelbrot = mandext.mandelbrot
+    mandelbrot_count = mandext.mandelbrot_count
     set_params = mandext.set_params
         
 
@@ -106,7 +106,7 @@ class MandelbrotSet:
         counts = numpy.zeros((self.h, self.w), dtype=numpy.uint16)
         for xi in xrange(self.w):
             for yi in xrange(self.h):
-                c = is_mandelbrot(xi, -yi)
+                c = mandelbrot_count(xi, -yi)
                 counts[yi,xi] = c
         palarray = numpy.array(palette, dtype=numpy.uint8)
         pix = palarray[counts % len(palette)]
