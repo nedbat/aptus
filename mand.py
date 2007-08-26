@@ -91,7 +91,7 @@ class MandelbrotSet:
     def from_pixel(self, x, y):
         return self.x0+self.rx*x, self.y0-self.ry*y
  
-    def compute(self, palette):
+    def compute_simple(self, palette):
         print "x, y %r step %r" % ((self.x0, self.y0), (self.rx, self.ry))
         
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
@@ -104,80 +104,13 @@ class MandelbrotSet:
         pix = palarray[counts % len(palette)]
         return pix
     
-    def compute_trace(self, palette):
-        DOWN, LEFT, UP, RIGHT = range(4)
-        turn_right = [LEFT, UP, RIGHT, DOWN]
-        turn_left = [RIGHT, DOWN, LEFT, UP]
+    def compute(self, palette):
+        from boundary import trace_boundary
+        
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
-        counts = numpy.zeros((self.h, self.w), dtype=numpy.uint16)
-        status = numpy.zeros((self.h, self.w), dtype=numpy.uint8)
+
+        counts = trace_boundary(mandelbrot_count, self.w, self.h)
         
-        def pix_count(x, y):
-            if status[y,x] == 0:
-                c = mandelbrot_count(x, -y)
-                counts[y,x] = c
-                status[y,x] = 1
-            else:
-                c = counts[y,x]
-            return c
-        
-        for xi in xrange(self.w):
-            for yi in xrange(self.h):
-                c = pix_count(xi, yi)
-                    
-                if status[yi,xi] == 1:
-                    # Start a boundary trace.
-                    status[yi,xi] == 2
-                    curdir = DOWN
-                    curx, cury = xi, yi
-                    origx, origy = xi, yi
-                    lastx, lasty = xi, yi
-                    num_fill = 1
-                    
-                    while True:
-                        print "Tracing: %r, %r, %s" % (curx, cury, "DLUR"[curdir])
-                        # Move to the next position. If we're off the field, turn left.
-                        if curdir == DOWN:
-                            if cury >= self.h-1:
-                                curdir = RIGHT
-                                continue
-                            cury += 1
-                        elif curdir == LEFT:
-                            if curx <= 0:
-                                curdir = DOWN
-                                continue
-                            curx -= 1
-                        elif curdir == UP:
-                            if cury <= 0:
-                                curdir = LEFT
-                                continue
-                            cury -= 1
-                        elif curdir == RIGHT:
-                            if curx >= self.w-1:
-                                curdir = UP
-                                continue
-                            curx += 1
-                        
-                        # Eventually, we reach our starting point. Stop.
-                        if (curx,cury) == (origx,origy) and curdir == DOWN:
-                            print "DONE!"
-                            break
-                        
-                        # Get the count of the next position
-                        c2 = pix_count(curx, cury)
-                            
-                        # If the same color, turn right, else turn left.
-                        if c == c2:
-                            status[cury,curx] = 2
-                            num_fill += 1
-                            lastx, lasty = curx, cury
-                            curdir = turn_right[curdir]
-                        else:
-                            curx, cury = lastx, lasty
-                            curdir = turn_left[curdir]
-                        
-                    print num_fill
-                    
         palarray = numpy.array(palette, dtype=numpy.uint8)
         pix = palarray[counts % len(palette)]
         return pix
@@ -287,7 +220,7 @@ if __name__ == '__main__':
 
     xcenter, ycenter = -0.5, 0.0
     xdiam, ydiam = 3.0, 3.0
-    w, h = 600, 600
+    w, h = 60, 60
     maxiter = 999
     
     if len(sys.argv) > 1:
