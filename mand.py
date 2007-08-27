@@ -3,7 +3,8 @@
 
 import wx
 import numpy
-import re, sys, time, traceback
+import Image
+import os, re, sys, time, traceback
 
 if 0: 
     MAXITER = 999
@@ -126,6 +127,7 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.panel.Bind(wx.EVT_RIGHT_UP, self.on_zoom_out)
         self.panel.Bind(wx.EVT_SIZE, self.on_size)
         self.panel.Bind(wx.EVT_IDLE, self.on_idle)
+        self.panel.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         
         self.xcenter, self.ycenter = xcenter, ycenter
         self.xdiam, self.ydiam = xdiam, ydiam
@@ -166,6 +168,10 @@ class wxMandelbrotSetViewer(wx.Frame):
         if self.check_size and self.GetClientSize() != (self.cw, self.ch):
             self.set_view()
 
+    def on_key_down(self, event):
+        if event.KeyCode == ord('S'):
+            self.cmd_save()
+        
     def on_paint(self, event):
         if not self.dc:
             self.dc = self.draw()
@@ -176,13 +182,14 @@ class wxMandelbrotSetViewer(wx.Frame):
         wx.BeginBusyCursor()
         img = wx.EmptyImage(self.cw, self.ch)
         start = time.clock()
-        pixo = self.m.compute(the_palette)
+        pix = self.m.compute(the_palette)
         print "Computation: %.2f sec" % (time.clock() - start)
-        start = time.clock()
-        pix = self.m.compute_trace(the_palette)
-        print "Computation: %.2f sec" % (time.clock() - start)
-        wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pixo, pix)))
-        print wrong_count
+        if 0:
+            start = time.clock()
+            pix = self.m.compute_trace(the_palette)
+            print "Computation: %.2f sec" % (time.clock() - start)
+            wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pixo, pix)))
+            print wrong_count
         img.SetData(pix.tostring())
         dc = wx.MemoryDC()
         dc.SelectObject(self.bitmap)
@@ -190,6 +197,20 @@ class wxMandelbrotSetViewer(wx.Frame):
         wx.EndBusyCursor()
         return dc
 
+    def cmd_save(self):
+        dlg = wx.FileDialog(
+            self, message="Save image as ...", defaultDir=os.getcwd(), 
+            defaultFile="", style=wx.SAVE # wildcard=wildcard, 
+            )
+
+        if dlg.ShowModal() == wx.ID_OK:
+            image = wx.ImageFromBitmap(self.bitmap)
+            im = Image.new('RGB', (image.GetWidth(), image.GetHeight()))
+            im.fromstring(image.GetData())
+            fout = open(dlg.GetPath(), 'wb')
+            im.save(fout, 'PNG')
+            fout.close()
+            
 class XaosState:
     """ The state of a Xaos rendering.
     """
@@ -226,7 +247,7 @@ if __name__ == '__main__':
     xcenter, ycenter = -0.5, 0.0
     xdiam, ydiam = 3.0, 3.0
     w, h = 600, 600
-    maxiter = 99999
+    maxiter = 999
     
     if len(sys.argv) > 1:
         xaos = XaosState()
