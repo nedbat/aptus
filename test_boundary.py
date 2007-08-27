@@ -17,7 +17,11 @@ class BoundaryTest(unittest.TestCase):
         self.fn_calls = 0
         def fn(x,y):
             self.fn_calls += 1
-            return ord(lines[y][x])
+            pic = lines[-y][x]
+            if pic == '.':
+                return 0
+            else:
+                return ord(pic)
         return fn
     
     def assert_correct(self, counts, lines, xo, yo):
@@ -26,11 +30,16 @@ class BoundaryTest(unittest.TestCase):
         for yi in range(y):
             l = ''
             for xi in range(x):
-                l += chr(counts[yi,xi] or 32)
+                l += chr(counts[yi,xi] or ord('.'))
             out.append(l)
         
         self.assertEqual(xo, x)
         self.assertEqual(yo, y)
+        if out != lines:
+            print "Out:"
+            print "\n".join(out)
+            print "Lines:"
+            print "\n".join(lines)
         self.assertEqual(out, lines)
     
     def try_it(self, picture, num_calls=0):
@@ -57,7 +66,7 @@ class BoundaryTest(unittest.TestCase):
             XXXXXX
             XXXXXX
             XXXXXX
-            """, num_calls=24)
+            """, num_calls=16)
         
     def test2(self):
         self.try_it("""
@@ -100,7 +109,7 @@ class BoundaryTest(unittest.TestCase):
             ~~~~~~~~~~}}}}}}}}}}}}}}}}}}}}|||||||||{{{zyxwoaqwxz{{{|||||}}}}}}~~~~~~~~~
             ~~~~~~~~~~~~~}}}}}}}}}}}}}}}}}}}}||||||||{{{zyvrwuW{|||||}}}}}}~~~~~~~~~~~~
             ~~~~~~~~~~~~~~~~~}}}}}}}}}}}}}}}}}}}}}|||||{zmt{{{||||}}}}}~~~~~~~~~~~~~~~~
-            """, num_calls=22*75)
+            """, num_calls=1154)
 
 if __name__ == '__main__':
     unittest.main()

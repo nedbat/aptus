@@ -91,7 +91,7 @@ class MandelbrotSet:
     def from_pixel(self, x, y):
         return self.x0+self.rx*x, self.y0-self.ry*y
  
-    def compute_simple(self, palette):
+    def compute(self, palette):
         print "x, y %r step %r" % ((self.x0, self.y0), (self.rx, self.ry))
         
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
@@ -104,7 +104,7 @@ class MandelbrotSet:
         pix = palarray[counts % len(palette)]
         return pix
     
-    def compute(self, palette):
+    def compute_trace(self, palette):
         from boundary import trace_boundary
         
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
@@ -174,14 +174,19 @@ class wxMandelbrotSetViewer(wx.Frame):
  
     def draw(self):
         wx.BeginBusyCursor()
-        start = time.clock()
         img = wx.EmptyImage(self.cw, self.ch)
-        pix = self.m.compute(the_palette)
+        start = time.clock()
+        pixo = self.m.compute(the_palette)
+        print "Computation: %.2f sec" % (time.clock() - start)
+        start = time.clock()
+        pix = self.m.compute_trace(the_palette)
+        print "Computation: %.2f sec" % (time.clock() - start)
+        wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pixo, pix)))
+        print wrong_count
         img.SetData(pix.tostring())
         dc = wx.MemoryDC()
         dc.SelectObject(self.bitmap)
         dc.DrawBitmap(img.ConvertToBitmap(), 0, 0, False)
-        print "Computation: %.2f sec" % (time.clock() - start)
         wx.EndBusyCursor()
         return dc
 
@@ -220,8 +225,8 @@ if __name__ == '__main__':
 
     xcenter, ycenter = -0.5, 0.0
     xdiam, ydiam = 3.0, 3.0
-    w, h = 60, 60
-    maxiter = 999
+    w, h = 600, 600
+    maxiter = 99999
     
     if len(sys.argv) > 1:
         xaos = XaosState()
