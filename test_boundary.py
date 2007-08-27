@@ -12,10 +12,11 @@ class BoundaryTest(unittest.TestCase):
         assert [len(l) for l in lines] == [len(lines[0])]*len(lines)
         return lines, len(lines[0]), len(lines)
     
-    
     def count_fn(self, picture):
         lines, _, _ = self.prepare_picture(picture)
+        self.fn_calls = 0
         def fn(x,y):
+            self.fn_calls += 1
             return ord(lines[y][x])
         return fn
     
@@ -32,11 +33,13 @@ class BoundaryTest(unittest.TestCase):
         self.assertEqual(yo, y)
         self.assertEqual(out, lines)
     
-    def try_it(self, picture):
+    def try_it(self, picture, num_calls=0):
         lines, x, y = self.prepare_picture(picture)
         cfn = self.count_fn(picture)
         counts = trace_boundary(cfn, x, y)
         self.assert_correct(counts, lines, x, y)
+        if num_calls:
+            self.assertEqual(self.fn_calls, num_calls)
         
     def testTestCode(self):
         cfn = self.count_fn("""
@@ -46,22 +49,32 @@ class BoundaryTest(unittest.TestCase):
         self.assertEqual(cfn(0,0), 97)
         self.assertEqual(cfn(1,0), 98)
         self.assertEqual(cfn(0,1), 120)
-
+        self.assertEqual(self.fn_calls, 3)
+        
     def test1(self):
         self.try_it("""
             XXXXXX
             XXXXXX
             XXXXXX
-            """)
+            XXXXXX
+            """, num_calls=24)
         
     def test2(self):
+        self.try_it("""
+            XXXXXX
+            XXXXXX
+            XXYYXX
+            XXYYXX
+            """, num_calls=24)
+        
+    def test3(self):
         self.try_it("""
             XXXXXA
             XXXXXB
             XXYZXC
             XXYZXD
             JKLMNE
-            """)
+            """, num_calls=30)
     
     def testMandelbrot(self):
         self.try_it("""
@@ -87,7 +100,7 @@ class BoundaryTest(unittest.TestCase):
             ~~~~~~~~~~}}}}}}}}}}}}}}}}}}}}|||||||||{{{zyxwoaqwxz{{{|||||}}}}}}~~~~~~~~~
             ~~~~~~~~~~~~~}}}}}}}}}}}}}}}}}}}}||||||||{{{zyvrwuW{|||||}}}}}}~~~~~~~~~~~~
             ~~~~~~~~~~~~~~~~~}}}}}}}}}}}}}}}}}}}}}|||||{zmt{{{||||}}}}}~~~~~~~~~~~~~~~~
-            """)
+            """, num_calls=22*75)
 
 if __name__ == '__main__':
     unittest.main()
