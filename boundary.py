@@ -39,11 +39,11 @@ def trace_boundary(count_fn, w, h):
                 start = True
                 
                 while True:
-                    print "Tracing: %r, %r, %s" % (curx, cury, "DLUR"[curdir])
+                    #print "Tracing: %r, %r, %s" % (curx, cury, "DLUR"[curdir])
 
                     # Eventually, we reach our starting point. Stop.
                     if not start and (curx,cury) == (origx,origy) and curdir == DOWN:
-                        print "DONE!"
+                        #print "DONE!"
                         break
                     
                     # Move to the next position. If we're off the field, turn left.
@@ -83,6 +83,6 @@ def trace_boundary(count_fn, w, h):
                     
                     start = False
                     
-                print num_fill
+                #print num_fill
     
     return counts
