@@ -4,7 +4,7 @@
 import wx
 import numpy
 import Image
-import os, re, sys, time, traceback
+import os, re, sys, time, traceback, zlib
 
 if 0: 
     MAXITER = 999
@@ -92,29 +92,21 @@ class MandelbrotSet:
     def from_pixel(self, x, y):
         return self.x0+self.rx*x, self.y0-self.ry*y
  
-    def compute(self, palette):
+    def compute(self):
         print "x, y %r step %r" % ((self.x0, self.y0), (self.rx, self.ry))
         
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
-        counts = numpy.zeros((self.h, self.w), dtype=numpy.uint16)
+        counts = numpy.zeros((self.h, self.w), dtype=numpy.uint32)
         for xi in xrange(self.w):
             for yi in xrange(self.h):
                 c = mandelbrot_count(xi, -yi)
                 counts[yi,xi] = c
-        palarray = numpy.array(palette, dtype=numpy.uint8)
-        pix = palarray[counts % len(palette)]
-        return pix
+        return counts
     
-    def compute_trace(self, palette):
+    def compute_trace(self):
         from boundary import trace_boundary
-        
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
-
-        counts = trace_boundary(mandelbrot_count, self.w, self.h)
-        
-        palarray = numpy.array(palette, dtype=numpy.uint8)
-        pix = palarray[counts % len(palette)]
-        return pix
+        return trace_boundary(mandelbrot_count, self.w, self.h)
     
 class wxMandelbrotSetViewer(wx.Frame):
     def __init__(self, xcenter, ycenter, xdiam, ydiam, w, h, maxiter):
@@ -148,6 +140,11 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.m = MandelbrotSet(x0, y0, x1, y1, self.cw, self.ch, self.maxiter)
         self.check_size = False
         self.Refresh()
+    
+    def message(self, msg):
+        dlg = wx.MessageDialog(self, msg, 'Mand', wx.OK | wx.ICON_WARNING)
+        dlg.ShowModal()
+        dlg.Destroy()
         
     def on_zoom_in(self, event):
         self.xcenter, self.ycenter = self.m.from_pixel(event.GetX(), event.GetY())
@@ -178,19 +175,27 @@ class wxMandelbrotSetViewer(wx.Frame):
         dc = wx.PaintDC(self.panel)
         dc.Blit(0, 0, self.cw, self.ch, self.dc, 0, 0)
  
+    def compute_pixels(self, compute_fn, palette, keep=False):
+        start = time.clock()
+        counts = compute_fn()
+        if keep:
+            self.counts = counts
+        print "Computation: %.2f sec" % (time.clock() - start)
+        palarray = numpy.array(palette, dtype=numpy.uint8)
+        pix = palarray[counts % len(palette)]
+        return pix
+        
     def draw(self):
         wx.BeginBusyCursor()
         img = wx.EmptyImage(self.cw, self.ch)
-        start = time.clock()
-        pix = self.m.compute(the_palette)
-        print "Computation: %.2f sec" % (time.clock() - start)
-        if 0:
-            start = time.clock()
-            pix = self.m.compute_trace(the_palette)
-            print "Computation: %.2f sec" % (time.clock() - start)
-            wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pixo, pix)))
+        pix = self.compute_pixels(self.m.compute, the_palette, keep=True)
+        Image.fromarray(pix).save('one.png')
+        if 1:
+            pixt = self.compute_pixels(self.m.compute_trace, the_palette)
+            Image.fromarray(pixt).save('two.png')
+            wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pixt, pix)))
             print wrong_count
-        img.SetData(pix.tostring())
+        img.SetData(pixt.tostring())
         dc = wx.MemoryDC()
         dc.SelectObject(self.bitmap)
         dc.DrawBitmap(img.ConvertToBitmap(), 0, 0, False)
@@ -198,19 +203,58 @@ class wxMandelbrotSetViewer(wx.Frame):
         return dc
 
     def cmd_save(self):
+        wildcard = (
+            "PNG image (*.png)|*.png|"     
+            "Mand state (*.mand)|*.mand|"
+            "All files (*.*)|*.*"
+            )
+
         dlg = wx.FileDialog(
             self, message="Save image as ...", defaultDir=os.getcwd(), 
-            defaultFile="", style=wx.SAVE # wildcard=wildcard, 
+            defaultFile="", style=wx.SAVE, wildcard=wildcard, 
             )
 
         if dlg.ShowModal() == wx.ID_OK:
-            image = wx.ImageFromBitmap(self.bitmap)
-            im = Image.new('RGB', (image.GetWidth(), image.GetHeight()))
-            im.fromstring(image.GetData())
-            fout = open(dlg.GetPath(), 'wb')
-            im.save(fout, 'PNG')
-            fout.close()
-            
+            ext = dlg.GetFilename().split('.')[-1].lower()
+            if ext == 'png':
+                image = wx.ImageFromBitmap(self.bitmap)
+                im = Image.new('RGB', (image.GetWidth(), image.GetHeight()))
+                im.fromstring(image.GetData())
+                fout = open(dlg.GetPath(), 'wb')
+                im.save(fout, 'PNG')
+                fout.close()
+            elif ext == 'mand':
+                ms = MandState()
+                ms.w = self.cw
+                ms.h = self.ch
+                ms.counts = self.counts.tostring()
+                ms.write(dlg.GetPath())
+            else:
+                self.message("Don't understand how to write file '%s'" % dlg.GetFilename())
+                
+class MandState:
+    def write(self, f):
+        if isinstance(f, basestring):
+            f = open(f, 'wb')
+        print >>f, '{'
+        self._write_item(f, 'what_is_this', 'A Mand state file, version 1')
+        self._write_item(f, 'w', self.w)
+        self._write_item(f, 'h', self.h)
+        self._write_item(f, 'counts', zlib.compress(self.counts).encode('base64').strip())
+        print >>f, '}'
+    
+    def read(self, f):
+        if isinstance(f, basestring):
+            f = open(f, 'rb')
+        # This is dangerous!
+        d = eval(f.read())
+        self.w = d['w']
+        self.h = d['h']
+        self.counts = zlib.decompress(d['counts'].decode('base64'))
+        
+    def _write_item(self, f, k, v):
+        print >> f, ' "%s": %r,' % (k, v)
+        
 class XaosState:
     """ The state of a Xaos rendering.
     """
@@ -246,7 +290,7 @@ if __name__ == '__main__':
 
     xcenter, ycenter = -0.5, 0.0
     xdiam, ydiam = 3.0, 3.0
-    w, h = 600, 600
+    w, h = 60, 60
     maxiter = 999
     
     if len(sys.argv) > 1:
