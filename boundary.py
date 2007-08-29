@@ -3,10 +3,12 @@
 
 import numpy
 
-def trace_boundary(count_fn, w, h):
+def trace_boundary(count_fn, w, h, threshold=250):
     """ Compute counts for pixels, using a boundary trace technique.
         count_fn(x,y) returns the iteration count for a pixel.
         Returns a numpy array w by h with iteration counts for each pixel.
+        Threshold is the minimum count that triggers a boundary trace.  Below
+        this, the expense of the trace outweighs simply computing each pixel.
     """
     
     DOWN, LEFT, UP, RIGHT = range(4)
@@ -14,7 +16,8 @@ def trace_boundary(count_fn, w, h):
     turn_left = [RIGHT, DOWN, LEFT, UP]
     counts = numpy.zeros((h, w), dtype=numpy.uint32)
     status = numpy.zeros((h, w), dtype=numpy.uint8)
-        
+    num_trace = 0
+    
     def pix_count(x, y):
         if status[y,x] == 0:
             c = count_fn(x, -y)
@@ -26,10 +29,17 @@ def trace_boundary(count_fn, w, h):
     
     for xi in xrange(w):
         for yi in xrange(h):
-            c = pix_count(xi, yi)
+            s = status[yi,xi]
+            if s == 0:
+                c = count_fn(xi, -yi)
+                counts[yi,xi] = c
+                status[yi,xi] = s = 1
+            else:
+                c = counts[yi,xi]
                 
-            if status[yi,xi] == 1:
+            if s == 1 and c >= threshold:
                 # Start a boundary trace.
+                num_trace += 1
                 status[yi,xi] == 2
                 curdir = DOWN
                 curx, cury = xi, yi
@@ -103,5 +113,6 @@ def trace_boundary(count_fn, w, h):
                             break
                         counts[pty,curx] = c
                         status[pty,curx] = 2
-                    
+    
+    print "Traced %s boundaries" % num_trace
     return counts
