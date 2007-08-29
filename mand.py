@@ -189,13 +189,13 @@ class wxMandelbrotSetViewer(wx.Frame):
         wx.BeginBusyCursor()
         img = wx.EmptyImage(self.cw, self.ch)
         pix = self.compute_pixels(self.m.compute, the_palette, keep=True)
-        Image.fromarray(pix).save('one.png')
-        if 1:
+        #Image.fromarray(pix).save('one.png')
+        if 0:
             pixt = self.compute_pixels(self.m.compute_trace, the_palette)
-            Image.fromarray(pixt).save('two.png')
+            #Image.fromarray(pixt).save('two.png')
             wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pixt, pix)))
             print wrong_count
-        img.SetData(pixt.tostring())
+        img.SetData(pix.tostring())
         dc = wx.MemoryDC()
         dc.SelectObject(self.bitmap)
         dc.DrawBitmap(img.ConvertToBitmap(), 0, 0, False)
@@ -284,13 +284,13 @@ class XaosState:
         if fstr.endswith('e'):
             fstr += '0'
         return float(fstr)
-    
+
 if __name__ == '__main__':
     app = wx.PySimpleApp()
 
     xcenter, ycenter = -0.5, 0.0
     xdiam, ydiam = 3.0, 3.0
-    w, h = 60, 60
+    w, h = 600, 600
     maxiter = 999
     
     if len(sys.argv) > 1:
