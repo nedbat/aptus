@@ -3,6 +3,7 @@
 
 from boundary import trace_boundary
 import unittest
+import numpy
 
 class BoundaryTest(unittest.TestCase):
 
@@ -12,7 +13,7 @@ class BoundaryTest(unittest.TestCase):
         assert [len(l) for l in lines] == [len(lines[0])]*len(lines)
         return lines, len(lines[0]), len(lines)
     
-    def count_fn(self, picture):
+    def count_fn_from_picture(self, picture):
         lines, _, _ = self.prepare_picture(picture)
         self.fn_calls = 0
         def fn(x,y):
@@ -42,16 +43,31 @@ class BoundaryTest(unittest.TestCase):
             print "\n".join(lines)
         self.assertEqual(out, lines)
     
-    def try_it(self, picture, num_calls=0):
+    def try_picture(self, picture, num_calls=0):
         lines, x, y = self.prepare_picture(picture)
-        cfn = self.count_fn(picture)
+        cfn = self.count_fn_from_picture(picture)
         counts = trace_boundary(cfn, x, y)
         self.assert_correct(counts, lines, x, y)
         if num_calls:
             self.assertEqual(self.fn_calls, num_calls)
         
+    def try_mand_file(self, fname):
+        from mand import MandState
+        ms = MandState()
+        ms.read(fname)
+        counts = numpy.fromstring(ms.counts, dtype=numpy.uint32)
+        counts = counts.reshape((ms.w,ms.h))
+
+        def fn(x,y):
+            return counts[-y,x]
+        
+        counts2 = trace_boundary(fn, counts.shape[1], counts.shape[0])
+        wrong_count = numpy.sum(numpy.logical_not(numpy.equal(counts, counts2)))
+        print wrong_count
+        
+            
     def testTestCode(self):
-        cfn = self.count_fn("""
+        cfn = self.count_fn_from_picture("""
                        abcdefghi
                        xyz012345
                        """)
@@ -61,7 +77,7 @@ class BoundaryTest(unittest.TestCase):
         self.assertEqual(self.fn_calls, 3)
         
     def test1(self):
-        self.try_it("""
+        self.try_picture("""
             XXXXXX
             XXXXXX
             XXXXXX
@@ -69,7 +85,7 @@ class BoundaryTest(unittest.TestCase):
             """, num_calls=16)
         
     def test2(self):
-        self.try_it("""
+        self.try_picture("""
             XXXXXX
             XXXXXX
             XXYYXX
@@ -77,7 +93,7 @@ class BoundaryTest(unittest.TestCase):
             """, num_calls=24)
         
     def test3(self):
-        self.try_it("""
+        self.try_picture("""
             XXXXXA
             XXXXXB
             XXYZXC
@@ -86,7 +102,7 @@ class BoundaryTest(unittest.TestCase):
             """, num_calls=30)
     
     def testMandelbrot(self):
-        self.try_it("""
+        self.try_picture("""
             ~~~~~~~~~~~~~}}}}}}}}}}}}}}}}}}}}||||||||{{{zyvrwuW{|||||}}}}}}~~~~~~~~~~~~
             ~~~~~~~~~~}}}}}}}}}}}}}}}}}}}}|||||||||{{{zyxwoaqwxz{{{|||||}}}}}}~~~~~~~~~
             ~~~~~~~~}}}}}}}}}}}}}}}}}}}|||||||||{{zzzyxvn....Knwyz{{{{||||}}}}}}~~~~~~~
@@ -109,7 +125,10 @@ class BoundaryTest(unittest.TestCase):
             ~~~~~~~~~~}}}}}}}}}}}}}}}}}}}}|||||||||{{{zyxwoaqwxz{{{|||||}}}}}}~~~~~~~~~
             ~~~~~~~~~~~~~}}}}}}}}}}}}}}}}}}}}||||||||{{{zyvrwuW{|||||}}}}}}~~~~~~~~~~~~
             ~~~~~~~~~~~~~~~~~}}}}}}}}}}}}}}}}}}}}}|||||{zmt{{{||||}}}}}~~~~~~~~~~~~~~~~
-            """, num_calls=1154)
+            """)
 
+    def testBigForReal(self):
+        self.try_mand_file('test_data\\twelve_wrong.mand')
+        
 if __name__ == '__main__':
     unittest.main()
