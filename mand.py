@@ -251,9 +251,12 @@ class wxMandelbrotSetViewer(wx.Frame):
         if dlg.ShowModal() == wx.ID_OK:
             ext = dlg.GetFilename().split('.')[-1].lower()
             if ext == 'png':
-                m = self.choose_mandel(1680, 1050)
+                w, h = 1680, 1050
+                m = self.choose_mandel(w*2, h*2)
                 pix = m.compute_pixels(m.compute, the_palette)
-                Image.fromarray(pix).save(dlg.GetPath())
+                im = Image.fromarray(pix)
+                im = im.resize((w,h), Image.ANTIALIAS)
+                im.save(dlg.GetPath())
 
 class MandState:
     def write(self, f):
