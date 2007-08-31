@@ -108,6 +108,14 @@ class MandelbrotSet:
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
         return trace_boundary(mandelbrot_count, self.w, self.h)
     
+    def compute_pixels(self, compute_fn, palette, keep=False):
+        start = time.clock()
+        self.counts = compute_fn()
+        print "Computation: %.2f sec" % (time.clock() - start)
+        palarray = numpy.array(palette, dtype=numpy.uint8)
+        pix = palarray[self.counts % len(palette)]
+        return pix
+        
 class wxMandelbrotSetViewer(wx.Frame):
     def __init__(self, xcenter, ycenter, xdiam, ydiam, w, h, maxiter):
         super(wxMandelbrotSetViewer, self).__init__(None, -1, 'Mandelbrot Set')
@@ -131,16 +139,19 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.bitmap = wx.EmptyBitmap(self.cw, self.ch)
         self.dc = None
 
-        scale = max(self.xdiam / self.cw, self.ydiam / self.ch)
-        xradius, yradius = scale * self.cw / 2, scale * self.ch / 2
+        self.m = self.choose_mandel(self.cw, self.ch)
+        self.check_size = False
+        self.Refresh()
+
+    def choose_mandel(self, w, h):
+        scale = max(self.xdiam / w, self.ydiam / h)
+        xradius, yradius = scale * w / 2, scale * h / 2
         
         x0, y0 = self.xcenter - xradius, self.ycenter - yradius
         x1, y1 = self.xcenter + xradius, self.ycenter + yradius
         
-        self.m = MandelbrotSet(x0, y0, x1, y1, self.cw, self.ch, self.maxiter)
-        self.check_size = False
-        self.Refresh()
-    
+        return MandelbrotSet(x0, y0, x1, y1, w, h, self.maxiter)
+        
     def message(self, msg):
         dlg = wx.MessageDialog(self, msg, 'Mand', wx.OK | wx.ICON_WARNING)
         dlg.ShowModal()
@@ -166,8 +177,12 @@ class wxMandelbrotSetViewer(wx.Frame):
             self.set_view()
 
     def on_key_down(self, event):
+        shift = event.ShiftDown()
         if event.KeyCode == ord('S'):
-            self.cmd_save()
+            if shift:
+                self.cmd_save_big()
+            else:
+                self.cmd_save()
         
     def on_paint(self, event):
         if not self.dc:
@@ -175,26 +190,16 @@ class wxMandelbrotSetViewer(wx.Frame):
         dc = wx.PaintDC(self.panel)
         dc.Blit(0, 0, self.cw, self.ch, self.dc, 0, 0)
  
-    def compute_pixels(self, compute_fn, palette, keep=False):
-        start = time.clock()
-        counts = compute_fn()
-        if keep:
-            self.counts = counts
-        print "Computation: %.2f sec" % (time.clock() - start)
-        palarray = numpy.array(palette, dtype=numpy.uint8)
-        pix = palarray[counts % len(palette)]
-        return pix
-        
     def draw(self):
         wx.BeginBusyCursor()
-        img = wx.EmptyImage(self.cw, self.ch)
-        pix = self.compute_pixels(self.m.compute, the_palette, keep=True)
+        pix = self.m.compute_pixels(self.m.compute, the_palette, keep=True)
         #Image.fromarray(pix).save('one.png')
         if 0:
-            pixt = self.compute_pixels(self.m.compute_trace, the_palette)
+            pixt = self.m.compute_pixels(self.m.compute_trace, the_palette)
             #Image.fromarray(pixt).save('two.png')
             wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pixt, pix)))
             print wrong_count
+        img = wx.EmptyImage(self.cw, self.ch)
         img.SetData(pix.tostring())
         dc = wx.MemoryDC()
         dc.SelectObject(self.bitmap)
@@ -210,7 +215,7 @@ class wxMandelbrotSetViewer(wx.Frame):
             )
 
         dlg = wx.FileDialog(
-            self, message="Save image as ...", defaultDir=os.getcwd(), 
+            self, message="Save", defaultDir=os.getcwd(), 
             defaultFile="", style=wx.SAVE, wildcard=wildcard, 
             )
 
@@ -232,6 +237,24 @@ class wxMandelbrotSetViewer(wx.Frame):
             else:
                 self.message("Don't understand how to write file '%s'" % dlg.GetFilename())
                 
+    def cmd_save_big(self):
+        wildcard = (
+            "PNG image (*.png)|*.png|"     
+            "All files (*.*)|*.*"
+            )
+
+        dlg = wx.FileDialog(
+            self, message="Save big image", defaultDir=os.getcwd(), 
+            defaultFile="", style=wx.SAVE, wildcard=wildcard, 
+            )
+
+        if dlg.ShowModal() == wx.ID_OK:
+            ext = dlg.GetFilename().split('.')[-1].lower()
+            if ext == 'png':
+                m = self.choose_mandel(1680, 1050)
+                pix = m.compute_pixels(m.compute, the_palette)
+                Image.fromarray(pix).save(dlg.GetPath())
+
 class MandState:
     def write(self, f):
         if isinstance(f, basestring):
