@@ -66,9 +66,16 @@ set_params(PyObject *self, PyObject *args)
     return Py_None;
 }
 
+static PyObject *
+float_sizes(PyObject *self, PyObject *args)
+{
+    return Py_BuildValue("ii", sizeof(double), sizeof(float_t));
+}
+
 static PyMethodDef mandext_methods[] = {
     {"mandelbrot_count", mandelbrot_count, METH_VARARGS, "Compute a mandelbrot count for a point"},
     {"set_params", set_params, METH_VARARGS, "Set parameters"},
+    {"float_sizes", float_sizes, METH_VARARGS, "Get sizes of float types"},
     {NULL, NULL}
 };
 
