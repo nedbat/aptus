@@ -61,9 +61,8 @@ set_params(PyObject *self, PyObject *args)
     yy0 = ly0;
     xd = lxd;
     yd = lyd;
-    
-    Py_INCREF(Py_None);
-    return Py_None;
+
+    return Py_BuildValue("");    
 }
 
 static PyObject *
