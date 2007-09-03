@@ -1,6 +1,6 @@
 #include "Python.h"
 
-typedef long double float_t;
+typedef double float_t;
 
 static int max_iter;
 
