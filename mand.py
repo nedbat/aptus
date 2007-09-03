@@ -290,7 +290,7 @@ class XaosState:
         self.diam = 2.55, 2.55
         
     def read(self, f):
-        if isinstance(f, str):
+        if isinstance(f, basestring):
             f = open(f)
         for l in f:
             if l.startswith('('):
