@@ -2,24 +2,23 @@
 
 typedef double float_t;
 
+typedef struct {
+    float_t i, r;
+} complex_t;
+
 static int max_iter;
 
-static float_t x0;
-static float_t yy0;
-static float_t xd;
-static float_t yd;
+static complex_t xy0;
+static complex_t xyd;
 
-#define CYCLES 1
+//#define CYCLES 1
 
 #ifdef CYCLES
 #define MAX_CYCLE 500
 
 typedef union {
-    struct {
-        float_t a;
-        float_t b;
-    };
-    char bytes[sizeof(float_t)*2];
+    complex_t c;
+    char bytes[sizeof(complex_t)];
 } float_cmp;
 
 static float_cmp cycle_buf[MAX_CYCLE];
@@ -35,14 +34,14 @@ mandelbrot_count(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "ii", &xi, &yi)) {
         return NULL;
     }
+
+    complex_t c;
+    c.r = xy0.r + xi*xyd.r;
+    c.i = xy0.i + yi*xyd.i;
     
-    float_t cr = x0 + xi*xd;
-    float_t ci = yy0 + yi*yd;
-    
-    float_t az = 0.0;
-    float_t bz = 0.0;
-    float_t anew, bnew;
-    float_t a2, b2;
+    complex_t z = {0,0};
+    complex_t znew;
+    complex_t z2;
     
 #ifdef CYCLES
     float_cmp * pCycle = cycle_buf;
@@ -54,28 +53,25 @@ mandelbrot_count(PyObject *self, PyObject *args)
 #ifdef CYCLES
         /* Store the current values for orbit checking. */
         if ((pCycle - cycle_buf) < MAX_CYCLE) {
-            pCycle->a = az;
-            pCycle->b = bz;
+            pCycle->c = z;
             pCycle++;
         }
 #endif
 
-        a2 = az * az;
-        b2 = bz * bz;
-        if (a2 + b2 > 4) {
+        z2.r = z.r * z.r;
+        z2.i = z.i * z.i;
+        if (z2.r + z2.i > 4.0) {
             break;
         }
-        anew = a2 - b2 + cr;
-        bnew = 2 * az * bz + ci;
-        az = anew;
-        bz = bnew;
+        znew.r = z2.r - z2.i + c.r;
+        znew.i = 2 * z.i * z.r + c.i;
+        z = znew;
         count++;
 
 #ifdef CYCLES
         /* Check the orbits. */
         float_cmp cmp;
-        cmp.a = az;
-        cmp.b = bz;
+        cmp.c = z;
         
         for (pCheck = cycle_buf; pCheck < pCycle; pCheck++) {
             if (memcmp(cmp.bytes, pCheck->bytes, sizeof(cmp.bytes)) == 0) {
@@ -110,10 +106,10 @@ set_params(PyObject *self, PyObject *args)
         return NULL;
     }
     
-    x0 = lx0;
-    yy0 = ly0;
-    xd = lxd;
-    yd = lyd;
+    xy0.r = lx0;
+    xy0.i = ly0;
+    xyd.r = lxd;
+    xyd.i = lyd;
 
     return Py_BuildValue("");    
 }
