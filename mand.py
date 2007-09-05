@@ -139,6 +139,9 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.bitmap = wx.EmptyBitmap(self.cw, self.ch)
         self.dc = None
 
+        #self.rubberBand = rubberband.RubberBand(drawingSurface=self.panel)
+        #self.rubberBand.reset(aspectRatio=1.0*self.cw/self.ch)
+
         self.m = self.choose_mandel(self.cw, self.ch)
         self.check_size = False
         self.Refresh()
@@ -183,7 +186,9 @@ class wxMandelbrotSetViewer(wx.Frame):
                 self.cmd_save_big()
             else:
                 self.cmd_save()
-        
+        elif event.KeyCode == ord('I'):
+            self.cmd_set_maxiter()
+            
     def on_paint(self, event):
         if not self.dc:
             self.dc = self.draw()
@@ -257,6 +262,20 @@ class wxMandelbrotSetViewer(wx.Frame):
                 im = Image.fromarray(pix)
                 im = im.resize((w,h), Image.ANTIALIAS)
                 im.save(dlg.GetPath())
+
+    def cmd_set_maxiter(self):
+        dlg = wx.TextEntryDialog(
+                self, 'Maximum iteration count:',
+                'Maxiter', str(self.maxiter)
+                )
+
+        if dlg.ShowModal() == wx.ID_OK:
+            try:
+                self.maxiter = int(dlg.GetValue())
+            except Exception, e:
+                self.message("Couldn't set maxiter: %s" % e)
+
+        dlg.Destroy()
 
 class MandState:
     def write(self, f):
