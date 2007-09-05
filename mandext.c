@@ -9,6 +9,22 @@ static float_t yy0;
 static float_t xd;
 static float_t yd;
 
+#define CYCLES 1
+
+#ifdef CYCLES
+#define MAX_CYCLE 500
+
+typedef union {
+    struct {
+        float_t a;
+        float_t b;
+    };
+    char bytes[sizeof(float_t)*2];
+} float_cmp;
+
+static float_cmp cycle_buf[MAX_CYCLE];
+#endif
+
 static PyObject *
 mandelbrot_count(PyObject *self, PyObject *args)
 {
@@ -28,7 +44,22 @@ mandelbrot_count(PyObject *self, PyObject *args)
     float_t anew, bnew;
     float_t a2, b2;
     
+#ifdef CYCLES
+    float_cmp * pCycle = cycle_buf;
+    float_cmp * pCheck;
+    int cycle = 0;
+#endif
+
     while (count <= max_iter) {
+#ifdef CYCLES
+        /* Store the current values for orbit checking. */
+        if ((pCycle - cycle_buf) < MAX_CYCLE) {
+            pCycle->a = az;
+            pCycle->b = bz;
+            pCycle++;
+        }
+#endif
+
         a2 = az * az;
         b2 = bz * bz;
         if (a2 + b2 > 4) {
@@ -39,12 +70,34 @@ mandelbrot_count(PyObject *self, PyObject *args)
         az = anew;
         bz = bnew;
         count++;
+
+#ifdef CYCLES
+        /* Check the orbits. */
+        float_cmp cmp;
+        cmp.a = az;
+        cmp.b = bz;
+        
+        for (pCheck = cycle_buf; pCheck < pCycle; pCheck++) {
+            if (memcmp(cmp.bytes, pCheck->bytes, sizeof(cmp.bytes)) == 0) {
+                cycle = (pCycle - pCheck)/2;
+                break;
+            }
+        }
+        
+        if (cycle) {
+            break;
+        }
+#endif
     }
 
     if (count > max_iter) {
         count = 0;
     }
 
+#ifdef CYCLES
+    count = cycle;
+#endif
+    
     return Py_BuildValue("i", count);
 }	
 
