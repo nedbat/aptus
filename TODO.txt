@@ -1,0 +1,10 @@
+- Cycle detection
+- HSV palette
+- Generalized palette specification
+- Reading GIMP gradients as palettes
+- Command line invocation (refactor a bunch of stuff)
+- Multi-precision floats
+- Optimize boundary.py so we can use it for high iterations
+- Boundary checking in C
+- Some kind of progress indicator.
+- Stats: what's the census of iteration counts in the image?

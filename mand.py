@@ -257,7 +257,7 @@ class wxMandelbrotSetViewer(wx.Frame):
             ext = dlg.GetFilename().split('.')[-1].lower()
             if ext == 'png':
                 w, h = 1680, 1050
-                m = self.choose_mandel(w*2, h*2)
+                m = self.choose_mandel(w*3, h*3)
                 pix = m.compute_pixels(m.compute, the_palette)
                 im = Image.fromarray(pix)
                 im = im.resize((w,h), Image.ANTIALIAS)
@@ -325,10 +325,14 @@ class XaosState:
         self.diam = self.read_float(rx), self.read_float(ry)
         
     def read_float(self, fstr):
-        fstr = fstr.lower()
-        if fstr.endswith('e'):
-            fstr += '0'
-        return float(fstr)
+        # Xaos writes out floats with extra characters tacked on the end sometimes.
+        # Very ad-hoc: try converting to float, and if it fails, lop of trailing
+        # chars until it works.
+        while True:
+            try:
+                return float(fstr)
+            except:
+                fstr = fstr[:-1]
 
 if __name__ == '__main__':
     app = wx.PySimpleApp()
