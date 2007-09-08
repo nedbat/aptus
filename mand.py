@@ -6,7 +6,10 @@ import numpy
 import Image
 import os, re, sys, time, traceback, zlib
 
-if 0: 
+try:
+    from mandext import *
+except:
+    # Pure python (slow!) implementation of mandext interface.
     MAXITER = 999
     X0, Y0 = 0, 0
     XD, YD = 0, 0
@@ -28,11 +31,11 @@ if 0:
         XD, YD = xd, yd
         MAXITER = maxiter
 
-else:
-    import mandext
-    mandelbrot_count = mandext.mandelbrot_count
-    set_params = mandext.set_params
-        
+    def clear_stats():
+        pass
+
+    def get_stats():
+        return {}
 
 # Colors taken from Xaos, to get the same rendering.
 colors = [
@@ -111,13 +114,15 @@ class MandelbrotSet:
     def compute_trace(self):
         from boundary import trace_boundary
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
-        return trace_boundary(mandelbrot_count, self.w, self.h)
+        return trace_boundary(mandelbrot_count, self.w, self.h, progress_fn=self.progress)
     
     def compute_pixels(self, compute_fn, palette, keep=False):
+        clear_stats()
         start = time.time()
         self.counts = compute_fn()
         total = time.time() - start
         print "Computation: %s (%.2fs)" % (duration(total), total)
+        print get_stats()
         palarray = numpy.array(palette, dtype=numpy.uint8)
         pix = palarray[self.counts % len(palette)]
         return pix
@@ -390,6 +395,7 @@ if __name__ == '__main__':
     xcenter, ycenter = -0.5, 0.0
     xdiam, ydiam = 3.0, 3.0
     w, h = 420, 262     # 1680x1050 / 4.
+    w, h = 105, 65      # 1680x1050 / 16.
     maxiter = 999
     
     if len(sys.argv) > 1:

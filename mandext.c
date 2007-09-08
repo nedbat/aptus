@@ -1,3 +1,5 @@
+// The Mandext C extension for computing Mandelbrot fractals (hopefully quickly).
+
 #include "Python.h"
 
 typedef double float_t;
@@ -6,10 +8,18 @@ typedef struct {
     float_t i, r;
 } complex_t;
 
+// Global Parameters to the module.
 static int max_iter;
 
 static complex_t xy0;
 static complex_t xyd;
+
+// Statistics.
+
+struct {
+    int     maxiter;    // Max iteration that isn't in the set.
+    int     totaliter;  // Total number of iterations.
+} stats;
 
 //#define CYCLES 1
 
@@ -61,6 +71,9 @@ mandelbrot_count(PyObject *self, PyObject *args)
         z2.r = z.r * z.r;
         z2.i = z.i * z.i;
         if (z2.r + z2.i > 4.0) {
+            if (count > stats.maxiter) {
+                stats.maxiter = count;
+            }
             break;
         }
         znew.r = z2.r - z2.i + c.r;
@@ -68,6 +81,8 @@ mandelbrot_count(PyObject *self, PyObject *args)
         z = znew;
         count++;
 
+        stats.totaliter++;
+        
 #ifdef CYCLES
         /* Check the orbits. */
         float_cmp cmp;
@@ -120,10 +135,29 @@ float_sizes(PyObject *self, PyObject *args)
     return Py_BuildValue("ii", sizeof(double), sizeof(float_t));
 }
 
+static PyObject *
+clear_stats(PyObject *self, PyObject *args)
+{
+    stats.maxiter = 0;
+    stats.totaliter = 0;
+    return Py_BuildValue("");
+}
+
+static PyObject *
+get_stats(PyObject *self, PyObject *args)
+{
+    return Py_BuildValue("{sisi}",
+        "maxiter", stats.maxiter,
+        "totaliter", stats.totaliter
+        );        
+}
+
 static PyMethodDef mandext_methods[] = {
     {"mandelbrot_count", mandelbrot_count, METH_VARARGS, "Compute a mandelbrot count for a point"},
     {"set_params", set_params, METH_VARARGS, "Set parameters"},
     {"float_sizes", float_sizes, METH_VARARGS, "Get sizes of float types"},
+    {"clear_stats", clear_stats, METH_VARARGS, "Clear the statistic counters"},
+    {"get_stats", get_stats, METH_VARARGS, "Get the statistics as a dictionary"},
     {NULL, NULL}
 };
 
