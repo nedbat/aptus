@@ -1,3 +1,6 @@
+- Status bar for progress and stats presentation.
++ Some kind of progress indicator.
+- Some kind of GUI progress indicator.
 - Cycle detection
 - HSV palette
 - Generalized palette specification
@@ -6,5 +9,4 @@
 - Multi-precision floats
 - Optimize boundary.py so we can use it for high iterations
 - Boundary checking in C
-- Some kind of progress indicator.
 - Stats: what's the census of iteration counts in the image?

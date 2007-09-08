@@ -88,7 +88,11 @@ class MandelbrotSet:
         self.w, self.h = w, h
  
         self.maxiter = maxiter
- 
+        self.progress = self.progress_noop
+        
+    def progress_noop(self, frac_done):
+        pass
+    
     def from_pixel(self, x, y):
         return self.x0+self.rx*x, self.y0-self.ry*y
  
@@ -97,10 +101,11 @@ class MandelbrotSet:
         
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
         counts = numpy.zeros((self.h, self.w), dtype=numpy.uint32)
-        for xi in xrange(self.w):
-            for yi in xrange(self.h):
+        for yi in xrange(self.h):
+            for xi in xrange(self.w):
                 c = mandelbrot_count(xi, -yi)
                 counts[yi,xi] = c
+            self.progress(float(yi)/self.h)
         return counts
     
     def compute_trace(self):
@@ -109,9 +114,10 @@ class MandelbrotSet:
         return trace_boundary(mandelbrot_count, self.w, self.h)
     
     def compute_pixels(self, compute_fn, palette, keep=False):
-        start = time.clock()
+        start = time.time()
         self.counts = compute_fn()
-        print "Computation: %.2f sec" % (time.clock() - start)
+        total = time.time() - start
+        print "Computation: %s (%.2fs)" % (duration(total), total)
         palarray = numpy.array(palette, dtype=numpy.uint8)
         pix = palarray[self.counts % len(palette)]
         return pix
@@ -120,7 +126,8 @@ class wxMandelbrotSetViewer(wx.Frame):
     def __init__(self, xcenter, ycenter, xdiam, ydiam, w, h, maxiter):
         super(wxMandelbrotSetViewer, self).__init__(None, -1, 'Mandelbrot Set')
  
-        self.SetSize((w, h))
+        chromew, chromeh = 8, 28
+        self.SetSize((w+chromew, h+chromeh))
         self.panel = wx.Panel(self)
         self.panel.Bind(wx.EVT_PAINT, self.on_paint)
         self.panel.Bind(wx.EVT_LEFT_UP, self.on_zoom_in)
@@ -197,6 +204,7 @@ class wxMandelbrotSetViewer(wx.Frame):
  
     def draw(self):
         wx.BeginBusyCursor()
+        self.m.progress = ConsoleProgressReporter().report
         pix = self.m.compute_pixels(self.m.compute, the_palette, keep=True)
         #Image.fromarray(pix).save('one.png')
         if 0:
@@ -258,6 +266,7 @@ class wxMandelbrotSetViewer(wx.Frame):
             if ext == 'png':
                 w, h = 1680, 1050
                 m = self.choose_mandel(w*3, h*3)
+                m.progress = ConsoleProgressReporter().report
                 pix = m.compute_pixels(m.compute, the_palette)
                 im = Image.fromarray(pix)
                 im = im.resize((w,h), Image.ANTIALIAS)
@@ -276,6 +285,47 @@ class wxMandelbrotSetViewer(wx.Frame):
                 self.message("Couldn't set maxiter: %s" % e)
 
         dlg.Destroy()
+
+class ConsoleProgressReporter:
+    def __init__(self):
+        self.start = time.time()
+        self.latest = self.start
+
+    def report(self, frac_done):
+        now = time.time()
+        if now - self.latest > 10:
+            so_far = int(now - self.start)
+            to_go = int(so_far / frac_done * (1-frac_done))
+            print "%.2f%% done, %s so far, %s to go" % (frac_done*100, duration(so_far), duration(to_go))
+            self.latest = now
+            
+def duration(s):
+    """ Make a nice string representation of a number of seconds.
+    """
+    w = d = h = m = 0
+    if s >= 60:
+        m, s = divmod(s, 60)
+    if m >= 60:
+        h, m = divmod(m, 60)
+    if h >= 24:
+        d, h = divmod(h, 24)
+    if d >= 7:
+        w, d = divmod(d, 7)
+    dur = []
+    if w:
+        dur.append("%dw" % w)
+    if d:
+        dur.append("%dd" % d)
+    if h:
+        dur.append("%dh" % h)
+    if m:
+        dur.append("%dm" % m)
+    if s:
+        if int(s) == s:
+            dur.append("%ds" % s)
+        else:
+            dur.append("%.2fs" % s)
+    return " ".join(dur)
 
 class MandState:
     def write(self, f):
@@ -339,7 +389,7 @@ if __name__ == '__main__':
 
     xcenter, ycenter = -0.5, 0.0
     xdiam, ydiam = 3.0, 3.0
-    w, h = 600, 600
+    w, h = 420, 262     # 1680x1050 / 4.
     maxiter = 999
     
     if len(sys.argv) > 1:
