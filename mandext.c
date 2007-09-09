@@ -16,22 +16,24 @@ static complex_t xyd;
 
 // Statistics.
 
-struct {
+static struct {
     int     maxiter;        // Max iteration that isn't in the set.
     int     totaliter;      // Total number of iterations.
     int     totalcycles;    // Number of cycles detected.
     int     maxitercycle;   // Max iteration that was finally a cycle.
 } stats;
 
+static int check_for_cycles = 1;
+
 #define INITIAL_CYCLE_PERIOD 7
 #define CYCLE_TRIES 10
 
-#define EPSILON xyd.r
+static float_t epsilon;
 
 inline int
 fequal(float_t a, float_t b)
 {
-    return fabs(a - b) < EPSILON;
+    return fabs(a - b) < epsilon;
 }
 
 static PyObject *
@@ -73,26 +75,28 @@ mandelbrot_count(PyObject *self, PyObject *args)
         count++;
 
         stats.totaliter++;
-        
-        // Check for cycles
-        if (fequal(z.r, cycle_check.r) && fequal(z.i, cycle_check.i)) {
-            // We're in a cycle!
-            stats.totalcycles++;
-            if (count > stats.maxitercycle) {
-                stats.maxitercycle = count;
+
+        if (check_for_cycles) {
+            // Check for cycles
+            if (fequal(z.r, cycle_check.r) && fequal(z.i, cycle_check.i)) {
+                // We're in a cycle!
+                stats.totalcycles++;
+                if (count > stats.maxitercycle) {
+                    stats.maxitercycle = count;
+                }
+                count = 0;
+                //count = cycle_period;
+                break;
             }
-            count = 0;
-            //count = cycle_period;
-            break;
-        }
-        
-        if (--cycle_countdown == 0) {
-            // Take a new cycle_check point.
-            cycle_check = z;
-            cycle_countdown = cycle_period;
-            if (--cycle_tries == 0) {
-                cycle_period = 2*cycle_period-1;
-                cycle_tries = CYCLE_TRIES;
+            
+            if (--cycle_countdown == 0) {
+                // Take a new cycle_check point.
+                cycle_check = z;
+                cycle_countdown = cycle_period;
+                if (--cycle_tries == 0) {
+                    cycle_period = 2*cycle_period-1;
+                    cycle_tries = CYCLE_TRIES;
+                }
             }
         }
     }
@@ -118,6 +122,18 @@ set_params(PyObject *self, PyObject *args)
     xyd.r = lxd;
     xyd.i = lyd;
 
+    epsilon = xyd.r/2;
+
+    return Py_BuildValue("");    
+}
+
+static PyObject *
+set_check_cycles(PyObject *self, PyObject *args)
+{
+    if (!PyArg_ParseTuple(args, "i", &check_for_cycles)) {
+        return NULL;
+    }
+
     return Py_BuildValue("");    
 }
 
@@ -134,6 +150,7 @@ clear_stats(PyObject *self, PyObject *args)
     stats.totaliter = 0;
     stats.totalcycles = 0;
     stats.maxitercycle = 0;
+    
     return Py_BuildValue("");
 }
 
@@ -148,9 +165,11 @@ get_stats(PyObject *self, PyObject *args)
         );        
 }
 
-static PyMethodDef mandext_methods[] = {
+static PyMethodDef
+mandext_methods[] = {
     {"mandelbrot_count", mandelbrot_count, METH_VARARGS, "Compute a mandelbrot count for a point"},
     {"set_params", set_params, METH_VARARGS, "Set parameters"},
+    {"set_check_cycles", set_check_cycles, METH_VARARGS, "Set more parameters"},
     {"float_sizes", float_sizes, METH_VARARGS, "Get sizes of float types"},
     {"clear_stats", clear_stats, METH_VARARGS, "Clear the statistic counters"},
     {"get_stats", get_stats, METH_VARARGS, "Get the statistics as a dictionary"},

@@ -1,7 +1,7 @@
 - Status bar for progress and stats presentation.
 + Some kind of progress indicator.
-- Some kind of GUI progress indicator.
-- Cycle detection
+- GUI progress indicator.
++ Cycle detection
 - HSV palette
 - Generalized palette specification
 - Reading GIMP gradients as palettes
@@ -10,3 +10,10 @@
 - Optimize boundary.py so we can use it for high iterations
 - Boundary checking in C
 - Stats: what's the census of iteration counts in the image?
+- Editable parameters for things like cycle checking epsilon.
+- Switchable coloring: standard, cycle count, etc.
+- Interruptable rendering: write partial counts to a file and restart.
+- Paint partial progress in the window.
+- Refactor mandext.c so that it defines a class, rather than having all those globals.
+- Make a window icon.
+- Faster epsilon comparison for cycle checking (use tricky int operations...)
