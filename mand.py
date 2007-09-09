@@ -214,7 +214,7 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.m.progress = ConsoleProgressReporter().report
         pix = self.m.compute_pixels(self.m.compute, the_palette, keep=True)
         #Image.fromarray(pix).save('one.png')
-        if 1:
+        if 0:
             pixt = self.m.compute_pixels(self.m.compute_trace, the_palette)
             #Image.fromarray(pixt).save('two.png')
             wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pixt, pix)))
