@@ -108,13 +108,13 @@ class MandelbrotSet:
             for xi in xrange(self.w):
                 c = mandelbrot_count(xi, -yi)
                 counts[yi,xi] = c
-            self.progress(float(yi)/self.h)
+            self.progress(float(yi+1)/self.h)
         return counts
     
     def compute_trace(self):
         from boundary import trace_boundary
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
-        return trace_boundary(mandelbrot_count, self.w, self.h, progress_fn=self.progress)
+        return trace_boundary(mandelbrot_count, self.w, self.h, self.maxiter, progress_fn=self.progress)
     
     def compute_pixels(self, compute_fn, palette, keep=False):
         clear_stats()
@@ -200,6 +200,8 @@ class wxMandelbrotSetViewer(wx.Frame):
                 self.cmd_save()
         elif event.KeyCode == ord('I'):
             self.cmd_set_maxiter()
+        elif event.KeyCode == ord('R'):
+            self.cmd_redraw()
             
     def on_paint(self, event):
         if not self.dc:
@@ -212,7 +214,7 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.m.progress = ConsoleProgressReporter().report
         pix = self.m.compute_pixels(self.m.compute, the_palette, keep=True)
         #Image.fromarray(pix).save('one.png')
-        if 0:
+        if 1:
             pixt = self.m.compute_pixels(self.m.compute_trace, the_palette)
             #Image.fromarray(pixt).save('two.png')
             wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pixt, pix)))
@@ -291,6 +293,9 @@ class wxMandelbrotSetViewer(wx.Frame):
 
         dlg.Destroy()
 
+    def cmd_redraw(self):
+        self.set_view()
+        
 class ConsoleProgressReporter:
     def __init__(self):
         self.start = time.time()
@@ -396,6 +401,7 @@ if __name__ == '__main__':
     xdiam, ydiam = 3.0, 3.0
     w, h = 420, 262     # 1680x1050 / 4.
     w, h = 105, 65      # 1680x1050 / 16.
+    w, h = 600, 600
     maxiter = 999
     
     if len(sys.argv) > 1:
