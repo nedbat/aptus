@@ -213,11 +213,17 @@ class wxMandelbrotSetViewer(wx.Frame):
         wx.BeginBusyCursor()
         self.m.progress = ConsoleProgressReporter().report
         pix = self.m.compute_pixels(self.m.compute, the_palette, keep=True)
-        #Image.fromarray(pix).save('one.png')
+        Image.fromarray(pix).save('one.png')
+        pix2 = None
         if 0:
-            pixt = self.m.compute_pixels(self.m.compute_trace, the_palette)
-            #Image.fromarray(pixt).save('two.png')
-            wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pixt, pix)))
+            pix2 = self.m.compute_pixels(self.m.compute_trace, the_palette)
+        if 1:
+            set_check_cycles(0)
+            pix2 = self.m.compute_pixels(self.m.compute, the_palette)
+            set_check_cycles(1)
+        if pix2 is not None:
+            Image.fromarray(pix2).save('two.png')
+            wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pix, pix2)))
             print wrong_count
         img = wx.EmptyImage(self.cw, self.ch)
         img.SetData(pix.tostring())

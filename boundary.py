@@ -3,7 +3,7 @@
 
 import numpy
 
-def trace_boundary(count_fn, w, h, maxiter, threshold=15000, progress_fn=None):
+def trace_boundary(count_fn, w, h, maxiter, threshold=10000, progress_fn=None):
     """ Compute counts for pixels, using a boundary trace technique.
         count_fn(x,y) returns the iteration count for a pixel.
         Returns a numpy array w by h with iteration counts for each pixel.
