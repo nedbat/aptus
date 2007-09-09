@@ -17,34 +17,33 @@ static complex_t xyd;
 // Statistics.
 
 struct {
-    int     maxiter;    // Max iteration that isn't in the set.
-    int     totaliter;  // Total number of iterations.
+    int     maxiter;        // Max iteration that isn't in the set.
+    int     totaliter;      // Total number of iterations.
+    int     totalcycles;    // Number of cycles detected.
+    int     maxitercycle;   // Max iteration that was finally a cycle.
 } stats;
 
-//#define CYCLES 1
+#define INITIAL_CYCLE_PERIOD 7
+#define CYCLE_TRIES 10
 
-#ifdef CYCLES
-#define MAX_CYCLE 500
+#define EPSILON xyd.r
 
-typedef union {
-    complex_t c;
-    char bytes[sizeof(complex_t)];
-} float_cmp;
-
-static float_cmp cycle_buf[MAX_CYCLE];
-#endif
+inline int
+fequal(float_t a, float_t b)
+{
+    return fabs(a - b) < EPSILON;
+}
 
 static PyObject *
 mandelbrot_count(PyObject *self, PyObject *args)
 {
-    int count = 0;
-    
     int xi, yi;
     
     if (!PyArg_ParseTuple(args, "ii", &xi, &yi)) {
         return NULL;
     }
 
+    int count = 0;
     complex_t c;
     c.r = xy0.r + xi*xyd.r;
     c.i = xy0.i + yi*xyd.i;
@@ -53,20 +52,12 @@ mandelbrot_count(PyObject *self, PyObject *args)
     complex_t znew;
     complex_t z2;
     
-#ifdef CYCLES
-    float_cmp * pCycle = cycle_buf;
-    float_cmp * pCheck;
-    int cycle = 0;
-#endif
-
+    complex_t cycle_check = z;
+    int cycle_period = INITIAL_CYCLE_PERIOD;
+    int cycle_tries = CYCLE_TRIES;
+    int cycle_countdown = cycle_period;
+    
     while (count <= max_iter) {
-#ifdef CYCLES
-        /* Store the current values for orbit checking. */
-        if ((pCycle - cycle_buf) < MAX_CYCLE) {
-            pCycle->c = z;
-            pCycle++;
-        }
-#endif
 
         z2.r = z.r * z.r;
         z2.i = z.i * z.i;
@@ -83,32 +74,33 @@ mandelbrot_count(PyObject *self, PyObject *args)
 
         stats.totaliter++;
         
-#ifdef CYCLES
-        /* Check the orbits. */
-        float_cmp cmp;
-        cmp.c = z;
-        
-        for (pCheck = cycle_buf; pCheck < pCycle; pCheck++) {
-            if (memcmp(cmp.bytes, pCheck->bytes, sizeof(cmp.bytes)) == 0) {
-                cycle = (pCycle - pCheck)/2;
-                break;
+        // Check for cycles
+        if (fequal(z.r, cycle_check.r) && fequal(z.i, cycle_check.i)) {
+            // We're in a cycle!
+            stats.totalcycles++;
+            if (count > stats.maxitercycle) {
+                stats.maxitercycle = count;
             }
-        }
-        
-        if (cycle) {
+            count = 0;
+            //count = cycle_period;
             break;
         }
-#endif
+        
+        if (--cycle_countdown == 0) {
+            // Take a new cycle_check point.
+            cycle_check = z;
+            cycle_countdown = cycle_period;
+            if (--cycle_tries == 0) {
+                cycle_period = 2*cycle_period-1;
+                cycle_tries = CYCLE_TRIES;
+            }
+        }
     }
 
     if (count > max_iter) {
         count = 0;
     }
 
-#ifdef CYCLES
-    count = cycle;
-#endif
-    
     return Py_BuildValue("i", count);
 }	
 
@@ -140,15 +132,19 @@ clear_stats(PyObject *self, PyObject *args)
 {
     stats.maxiter = 0;
     stats.totaliter = 0;
+    stats.totalcycles = 0;
+    stats.maxitercycle = 0;
     return Py_BuildValue("");
 }
 
 static PyObject *
 get_stats(PyObject *self, PyObject *args)
 {
-    return Py_BuildValue("{sisi}",
+    return Py_BuildValue("{sisisisi}",
         "maxiter", stats.maxiter,
-        "totaliter", stats.totaliter
+        "totaliter", stats.totaliter,
+        "totalcycles", stats.totalcycles,
+        "maxitercycle", stats.maxitercycle
         );        
 }
 
