@@ -100,9 +100,6 @@ class MandelbrotSet:
         return self.x0+self.rx*x, self.y0-self.ry*y
  
     def compute(self):
-        print "x, y %r step %r" % ((self.x0, self.y0), (self.rx, self.ry))
-        
-        set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
         counts = numpy.zeros((self.h, self.w), dtype=numpy.uint32)
         for yi in xrange(self.h):
             for xi in xrange(self.w):
@@ -113,13 +110,17 @@ class MandelbrotSet:
     
     def compute_trace(self):
         from boundary import trace_boundary
-        set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
         return trace_boundary(mandelbrot_count, self.w, self.h, self.maxiter, progress_fn=self.progress)
     
-    def compute_pixels(self, compute_fn, palette, keep=False):
+    def compute_pixels(self, palette, trace=False, keep=False):
+        print "x, y %r step %r, maxiter %r, trace %r" % ((self.x0, self.y0), (self.rx, self.ry), self.maxiter, trace)
         clear_stats()
         start = time.time()
-        self.counts = compute_fn()
+        set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
+        if trace:
+            self.counts = self.compute_trace()
+        else:
+            self.counts = self.compute()
         total = time.time() - start
         print "Computation: %s (%.2fs)" % (duration(total), total)
         print get_stats()
@@ -212,16 +213,16 @@ class wxMandelbrotSetViewer(wx.Frame):
     def draw(self):
         wx.BeginBusyCursor()
         self.m.progress = ConsoleProgressReporter().report
-        pix = self.m.compute_pixels(self.m.compute, the_palette, keep=True)
-        Image.fromarray(pix).save('one.png')
+        pix = self.m.compute_pixels(the_palette, trace=self.trace, keep=True)
         pix2 = None
         if 0:
-            pix2 = self.m.compute_pixels(self.m.compute_trace, the_palette)
-        if 1:
+            pix2 = self.m.compute_pixels(the_palette, trace=not self.trace)
+        if 0:
             set_check_cycles(0)
-            pix2 = self.m.compute_pixels(self.m.compute, the_palette)
+            pix2 = self.m.compute_pixels(the_palette, trace=self.trace)
             set_check_cycles(1)
         if pix2 is not None:
+            Image.fromarray(pix).save('one.png')
             Image.fromarray(pix2).save('two.png')
             wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pix, pix2)))
             print wrong_count
@@ -280,7 +281,7 @@ class wxMandelbrotSetViewer(wx.Frame):
                 w, h = 1680, 1050
                 m = self.choose_mandel(w*3, h*3)
                 m.progress = ConsoleProgressReporter().report
-                pix = m.compute_pixels(m.compute, the_palette)
+                pix = m.compute_pixels(the_palette, trace=self.trace)
                 im = Image.fromarray(pix)
                 im = im.resize((w,h), Image.ANTIALIAS)
                 im.save(dlg.GetPath())
@@ -409,6 +410,7 @@ if __name__ == '__main__':
     w, h = 105, 65      # 1680x1050 / 16.
     w, h = 600, 600
     maxiter = 999
+    trace = False
     
     if len(sys.argv) > 1:
         xaos = XaosState()
@@ -418,5 +420,6 @@ if __name__ == '__main__':
         maxiter = xaos.maxiter
         
     f = wxMandelbrotSetViewer(xcenter, ycenter, xdiam, ydiam, w, h, maxiter)
+    f.trace = trace
     f.Show()
     app.MainLoop()
