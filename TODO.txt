@@ -1,19 +1,47 @@
+- Stats: what's the census of iteration counts in the image?
+- Switchable coloring: standard, cycle count, etc.
+- Interruptable rendering: write partial counts to a file and restart.
+- Stats: some counters (totaliter) need to be more than 32-bit ints.
+- Better progress reporting for trace_boundary: has to count pixels rather than scanlines.
+
+* Bugs
+
+- If client size is queried while minimized, it comes back as zero, and a divide by zero error happens.
+
+* Speed
+
+- Multi-threaded to use more than one core.
+- Faster epsilon comparison for cycle checking (use tricky int operations...)
+    - http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
+- Take some more optimizations from Xaos: http://www.delorie.com/gnu/docs/xaos/xaos_29.html
+    - Do iterations in batches of 8 to avoid the bailout comparison.
+- Optimize boundary.py so we can use it for high iterations
+- Boundary checking in C
+- Fracint computes the miniter by running the edges (where the min must be), then
+    uses it to skip the bailout check until reaching the miniter.
+
+* UI
+
+- Make a window icon.
 - Status bar for progress and stats presentation.
-+ Some kind of progress indicator.
 - GUI progress indicator.
-+ Cycle detection
+- Paint partial progress in the window.
+
+* Beauty
+
 - HSV palette
 - Generalized palette specification
 - Reading GIMP gradients as palettes
+- Rotation (simply store the pixel offsets as dx and dy computed from angle).
+
+* Power
+
+- Editable parameters for things like cycle checking epsilon.
+- Refactor mandext.c so that it defines a class, rather than having all those globals.
 - Command line invocation (refactor a bunch of stuff)
 - Multi-precision floats
-- Optimize boundary.py so we can use it for high iterations
-- Boundary checking in C
-- Stats: what's the census of iteration counts in the image?
-- Editable parameters for things like cycle checking epsilon.
-- Switchable coloring: standard, cycle count, etc.
-- Interruptable rendering: write partial counts to a file and restart.
-- Paint partial progress in the window.
-- Refactor mandext.c so that it defines a class, rather than having all those globals.
-- Make a window icon.
-- Faster epsilon comparison for cycle checking (use tricky int operations...)
+
+* Done
+
++ Some kind of progress indicator.
++ Cycle detection
