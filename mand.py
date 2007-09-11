@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # Started from http://www.howforge.com/mandelbrot-set-viewer-using-wxpython
 
+from timeutil import duration, future
+
 import wx
 import numpy
 import Image
@@ -84,6 +86,16 @@ for i in range(len(the_palette)):
         int(b0 + (b1 - b0) * step),
         )
     
+class NullProgressReporter:
+    def begin(self):
+        pass
+    
+    def progress(self, frac_done):
+        pass
+    
+    def end(self):
+        pass
+    
 class MandelbrotSet:
     def __init__(self, x0, y0, x1, y1, w, h, maxiter=999):
         self.x0, self.y0 = x0, y0
@@ -91,11 +103,8 @@ class MandelbrotSet:
         self.w, self.h = w, h
  
         self.maxiter = maxiter
-        self.progress = self.progress_noop
+        self.progress = NullProgressReporter()
         
-    def progress_noop(self, frac_done):
-        pass
-    
     def from_pixel(self, x, y):
         return self.x0+self.rx*x, self.y0-self.ry*y
  
@@ -105,24 +114,23 @@ class MandelbrotSet:
             for xi in xrange(self.w):
                 c = mandelbrot_count(xi, -yi)
                 counts[yi,xi] = c
-            self.progress(float(yi+1)/self.h)
+            self.progress.progress(float(yi+1)/self.h)
         return counts
     
     def compute_trace(self):
         from boundary import trace_boundary
-        return trace_boundary(mandelbrot_count, self.w, self.h, self.maxiter, progress_fn=self.progress)
+        return trace_boundary(mandelbrot_count, self.w, self.h, self.maxiter, progress_fn=self.progress.progress)
     
     def compute_pixels(self, palette, trace=False, keep=False):
         print "x, y %r step %r, maxiter %r, trace %r" % ((self.x0, self.y0), (self.rx, self.ry), self.maxiter, trace)
         clear_stats()
-        start = time.time()
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
+        self.progress.begin()
         if trace:
             self.counts = self.compute_trace()
         else:
             self.counts = self.compute()
-        total = time.time() - start
-        print "Computation: %s (%.2fs)" % (duration(total), total)
+        self.progress.end()
         print get_stats()
         palarray = numpy.array(palette, dtype=numpy.uint8)
         pix = palarray[self.counts % len(palette)]
@@ -212,7 +220,7 @@ class wxMandelbrotSetViewer(wx.Frame):
  
     def draw(self):
         wx.BeginBusyCursor()
-        self.m.progress = ConsoleProgressReporter().report
+        self.m.progress = ConsoleProgressReporter()
         pix = self.m.compute_pixels(the_palette, trace=self.trace, keep=True)
         pix2 = None
         if 0:
@@ -280,7 +288,7 @@ class wxMandelbrotSetViewer(wx.Frame):
             if ext == 'png':
                 w, h = 1680, 1050
                 m = self.choose_mandel(w*3, h*3)
-                m.progress = ConsoleProgressReporter().report
+                m.progress = ConsoleProgressReporter()
                 pix = m.compute_pixels(the_palette, trace=self.trace)
                 im = Image.fromarray(pix)
                 im = im.resize((w,h), Image.ANTIALIAS)
@@ -304,46 +312,22 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.set_view()
         
 class ConsoleProgressReporter:
-    def __init__(self):
+    def begin(self):
         self.start = time.time()
         self.latest = self.start
 
-    def report(self, frac_done):
+    def progress(self, frac_done):
         now = time.time()
         if now - self.latest > 10:
             so_far = int(now - self.start)
             to_go = int(so_far / frac_done * (1-frac_done))
-            print "%.2f%% done, %s so far, %s to go" % (frac_done*100, duration(so_far), duration(to_go))
+            print "%.2f%%: %10s done, %10s to go, eta %10s" % (frac_done*100, duration(so_far), duration(to_go), future(to_go))
             self.latest = now
-            
-def duration(s):
-    """ Make a nice string representation of a number of seconds.
-    """
-    w = d = h = m = 0
-    if s >= 60:
-        m, s = divmod(s, 60)
-    if m >= 60:
-        h, m = divmod(m, 60)
-    if h >= 24:
-        d, h = divmod(h, 24)
-    if d >= 7:
-        w, d = divmod(d, 7)
-    dur = []
-    if w:
-        dur.append("%dw" % w)
-    if d:
-        dur.append("%dd" % d)
-    if h:
-        dur.append("%dh" % h)
-    if m:
-        dur.append("%dm" % m)
-    if s:
-        if int(s) == s:
-            dur.append("%ds" % s)
-        else:
-            dur.append("%.2fs" % s)
-    return " ".join(dur)
-
+    
+    def end(self):
+        total = time.time() - self.start
+        print "Total: %s (%.2fs)" % (duration(total), total)
+        
 class MandState:
     def write(self, f):
         if isinstance(f, basestring):
@@ -408,9 +392,9 @@ if __name__ == '__main__':
     xdiam, ydiam = 3.0, 3.0
     w, h = 420, 262     # 1680x1050 / 4.
     w, h = 105, 65      # 1680x1050 / 16.
-    w, h = 600, 600
+    #w, h = 600, 600
     maxiter = 999
-    trace = False
+    trace = True
     
     if len(sys.argv) > 1:
         xaos = XaosState()
