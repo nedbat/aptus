@@ -17,15 +17,8 @@ def trace_boundary(count_fn, w, h, maxiter, threshold=10000, progress_fn=None):
     counts = numpy.zeros((h, w), dtype=numpy.uint32)
     status = numpy.zeros((h, w), dtype=numpy.uint8)
     num_trace = 0
-    
-    def pix_count(x, y):
-        if status[y,x] == 0:
-            c = count_fn(x, -y)
-            counts[y,x] = c
-            status[y,x] = 1
-        else:
-            c = counts[y,x]
-        return c
+    num_pixels = 0
+    total_pixels = h * w
     
     for yi in xrange(h):
         for xi in xrange(w):
@@ -33,6 +26,7 @@ def trace_boundary(count_fn, w, h, maxiter, threshold=10000, progress_fn=None):
             if s == 0:
                 c = count_fn(xi, -yi)
                 counts[yi,xi] = c
+                num_pixels += 1
                 status[yi,xi] = s = 1
             else:
                 c = counts[yi,xi]
@@ -40,7 +34,6 @@ def trace_boundary(count_fn, w, h, maxiter, threshold=10000, progress_fn=None):
             comp_c = c or maxiter
             if s == 1 and comp_c >= threshold:
                 # Start a boundary trace.
-                num_trace += 1
                 status[yi,xi] == 2
                 curdir = DOWN
                 curx, cury = xi, yi
@@ -79,8 +72,14 @@ def trace_boundary(count_fn, w, h, maxiter, threshold=10000, progress_fn=None):
                         curx += 1
                     
                     # Get the count of the next position
-                    c2 = pix_count(curx, cury)
-                        
+                    if status[cury,curx] == 0:
+                        c2 = count_fn(curx, -cury)
+                        counts[cury,curx] = c2
+                        num_pixels += 1
+                        status[cury,curx] = 1
+                    else:
+                        c2 = counts[cury,curx]
+    
                     # If the same color, turn right, else turn left.
                     if c2 == c:
                         status[cury,curx] = 2
@@ -92,30 +91,37 @@ def trace_boundary(count_fn, w, h, maxiter, threshold=10000, progress_fn=None):
                         curdir = turn_left[curdir]
                     
                     start = False
-                    
-                # Now flood fill the region.  The points list has all the boundary
-                # points, so we only need to fill left and right from each of those.
-                for ptx, pty in points:
-                    curx = ptx
-                    while True:
-                        curx -= 1
-                        if curx < 0:
-                            break
-                        if status[pty,curx] != 0:
-                            break
-                        counts[pty,curx] = c
-                        status[pty,curx] = 2
-                    curx = ptx
-                    while True:
-                        curx += 1
-                        if curx > w-1:
-                            break
-                        if status[pty,curx] != 0:
-                            break
-                        counts[pty,curx] = c
-                        status[pty,curx] = 2
+
+                if points:
+                    num_trace += 1
     
-        progress_fn(float(yi+1)/h)
+                    # Now flood fill the region.  The points list has all the boundary
+                    # points, so we only need to fill left and right from each of those.
+                    for ptx, pty in points:
+                        curx = ptx
+                        while True:
+                            curx -= 1
+                            if curx < 0:
+                                break
+                            if status[pty,curx] != 0:
+                                break
+                            counts[pty,curx] = c
+                            num_pixels += 1
+                            status[pty,curx] = 2
+                        curx = ptx
+                        while True:
+                            curx += 1
+                            if curx > w-1:
+                                break
+                            if status[pty,curx] != 0:
+                                break
+                            counts[pty,curx] = c
+                            num_pixels += 1
+                            status[pty,curx] = 2
+                    
+                    progress_fn(float(num_pixels)/total_pixels)
+    
+        progress_fn(float(num_pixels)/total_pixels)
     
     print "Traced %s boundaries" % num_trace
     return counts
