@@ -2,6 +2,7 @@
 # Started from http://www.howforge.com/mandelbrot-set-viewer-using-wxpython
 
 from timeutil import duration, future
+from options import MandOptions
 
 import wx
 import numpy
@@ -351,59 +352,17 @@ class MandState:
     def _write_item(self, f, k, v):
         print >> f, ' "%s": %r,' % (k, v)
         
-class XaosState:
-    """ The state of a Xaos rendering.
-    """
-    def __init__(self):
-        self.maxiter = 170
-        self.center = -0.75, 0.0
-        self.diam = 2.55, 2.55
-        
-    def read(self, f):
-        if isinstance(f, basestring):
-            f = open(f)
-        for l in f:
-            if l.startswith('('):
-                argv = l[1:-2].split()
-                if hasattr(self, 'handle_'+argv[0]):
-                    getattr(self, 'handle_'+argv[0])(*argv)
-                    
-    def handle_maxiter(self, op, maxiter):
-        self.maxiter = int(maxiter)
-        
-    def handle_view(self, op, cx, cy, rx, ry):
-        self.center = self.read_float(cx), self.read_float(cy)
-        self.diam = self.read_float(rx), self.read_float(ry)
-        
-    def read_float(self, fstr):
-        # Xaos writes out floats with extra characters tacked on the end sometimes.
-        # Very ad-hoc: try converting to float, and if it fails, lop of trailing
-        # chars until it works.
-        while True:
-            try:
-                return float(fstr)
-            except:
-                fstr = fstr[:-1]
-
 if __name__ == '__main__':
-    app = wx.PySimpleApp()
-
-    xcenter, ycenter = -0.5, 0.0
-    xdiam, ydiam = 3.0, 3.0
-    w, h = 420, 262     # 1680x1050 / 4.
-    w, h = 105, 65      # 1680x1050 / 16.
-    #w, h = 600, 600
-    maxiter = 999
-    trace = True
+    opts = MandOptions()
+    opts.read_args(sys.argv[1:])
     
-    if len(sys.argv) > 1:
-        xaos = XaosState()
-        xaos.read(sys.argv[1])
-        xcenter, ycenter = xaos.center
-        xdiam, ydiam = xaos.diam
-        maxiter = xaos.maxiter
-        
-    f = wxMandelbrotSetViewer(xcenter, ycenter, xdiam, ydiam, w, h, maxiter)
-    f.trace = trace
+    app = wx.PySimpleApp()
+    f = wxMandelbrotSetViewer(
+        opts.center[0], opts.center[1],
+        opts.diam[0], opts.diam[1],
+        opts.size[0], opts.size[1],
+        opts.maxiter
+        )
+    f.trace = opts.trace
     f.Show()
     app.MainLoop()
