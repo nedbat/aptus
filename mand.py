@@ -11,8 +11,7 @@ import os, re, sys, time, traceback, zlib
 # We use PIL, and need 1.1.6.
 import Image
 
-im = Image.new('RGB', (10,10))
-if not hasattr(im, 'fromarray'):
+if not hasattr(Image, 'fromarray'):
     raise Exception("Need PIL 1.1.6 or greater.")
 
 try:
