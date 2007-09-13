@@ -1,6 +1,7 @@
 * Bugs
 
 - If client size is queried while minimized, it comes back as zero, and a divide by zero error happens.
+- Proper prompting about overwriting existing files.
 
 * Speed
 
@@ -26,6 +27,9 @@
 - HSV palette
 - Generalized palette specification
 - Reading GIMP gradients as palettes
+- Xaos palette options:
+    - Palette shifting
+    - Algorithmic palette
 - Rotation (simply store the pixel offsets as dx and dy computed from angle).
 
 * Power
