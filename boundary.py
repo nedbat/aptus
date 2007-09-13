@@ -119,9 +119,9 @@ def trace_boundary(count_fn, w, h, maxiter, threshold=10000, progress_fn=None):
                             num_pixels += 1
                             status[pty,curx] = 2
                     
-                    progress_fn(float(num_pixels)/total_pixels)
+                    progress_fn(float(num_pixels)/total_pixels, info='trace %d' % c)
     
-        progress_fn(float(num_pixels)/total_pixels)
+        progress_fn(float(num_pixels)/total_pixels, info='scan %d' % (yi+1))
     
     print "Traced %s boundaries" % num_trace
     return counts

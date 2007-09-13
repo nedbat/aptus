@@ -56,6 +56,13 @@ def future(s):
     return text[1:]                     # Trim the initial space.
 
 if __name__ == '__main__':
-    for p in range(8,26):
-        s = 2**p
-        print "%10d sec from now is %s" % (s, future(s))
+    import sys
+    
+    if len(sys.argv) > 1:
+        s = eval(sys.argv[1])
+        print "%d sec from now is %s" % (s, future(s))
+    else:
+        for p in range(3,8):
+            for m in [1,2,5]:
+                s = m*10**p
+                print "%10d sec from now is %s" % (s, future(s))
