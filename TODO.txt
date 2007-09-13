@@ -1,9 +1,3 @@
-- Stats: what's the census of iteration counts in the image?
-- Switchable coloring: standard, cycle count, etc.
-- Interruptable rendering: write partial counts to a file and restart.
-- Stats: some counters (totaliter) need to be more than 32-bit ints.
-- Better progress reporting for trace_boundary: has to count pixels rather than scanlines.
-
 * Bugs
 
 - If client size is queried while minimized, it comes back as zero, and a divide by zero error happens.
@@ -40,6 +34,15 @@
 - Refactor mandext.c so that it defines a class, rather than having all those globals.
 - Command line invocation (refactor a bunch of stuff)
 - Multi-precision floats
+- Interruptable rendering: write partial counts (and all other state) to a file and restart.
+
+* Knowledge
+
+- Stats: what's the census of iteration counts in the image?
+- Stats: some counters (totaliter) need to be more than 32-bit ints.
++ Better progress reporting for trace_boundary: has to count pixels rather than scanlines.
+- Switchable coloring: standard, cycle count, etc.
+- Some way of embedding the mandelbrot parameters into the final .PNG, so it can be recreated.
 
 * Done
 

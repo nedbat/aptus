@@ -6,8 +6,14 @@ from options import MandOptions
 
 import wx
 import numpy
-import Image
 import os, re, sys, time, traceback, zlib
+
+# We use PIL, and need 1.1.6.
+import Image
+
+im = Image.new('RGB', (10,10))
+if not hasattr(im, 'fromarray'):
+    raise Exception("Need PIL 1.1.6 or greater.")
 
 try:
     from mandext import *
@@ -317,12 +323,16 @@ class ConsoleProgressReporter:
         self.start = time.time()
         self.latest = self.start
 
-    def progress(self, frac_done):
+    def progress(self, frac_done, info=''):
         now = time.time()
         if now - self.latest > 10:
             so_far = int(now - self.start)
             to_go = int(so_far / frac_done * (1-frac_done))
-            print "%.2f%%: %10s done, %10s to go, eta %10s" % (frac_done*100, duration(so_far), duration(to_go), future(to_go))
+            if info:
+                info = '  ' + info
+            print "%.2f%%: %10s done, %10s to go, eta %10s%s" % (
+                frac_done*100, duration(so_far), duration(to_go), future(to_go), info
+                )
             self.latest = now
     
     def end(self):
