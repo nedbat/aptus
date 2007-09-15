@@ -3,6 +3,7 @@
 
 from timeutil import duration, future
 from options import MandOptions
+from palettes import the_palette
 
 import wx
 import numpy
@@ -45,53 +46,6 @@ except:
     def get_stats():
         return {}
 
-# Colors taken from Xaos, to get the same rendering.
-colors = [
-    (0, 0, 0),
-    (120, 119, 238),
-    (24, 7, 25),
-    (197, 66, 28),
-    (29, 18, 11),
-    (135, 46, 71),
-    (24, 27, 13),
-    (241, 230, 128),
-    (17, 31, 24),
-    (240, 162, 139),
-    (11, 4, 30),
-    (106, 87, 189),
-    (29, 21, 14),
-    (12, 140, 118),
-    (10, 6, 29),
-    (50, 144, 77),
-    (22, 0, 24),
-    (148, 188, 243),
-    (4, 32, 7),
-    (231, 146, 14),
-    (10, 13, 20),
-    (184, 147, 68),
-    (13, 28, 3),
-    (169, 248, 152),
-    (4, 0, 34),
-    (62, 83, 48),
-    (7, 21, 22),
-    (152, 97, 184),
-    (8, 3, 12),
-    (247, 92, 235),
-    (31, 32, 16)
-]
-
-the_palette = [None]*(len(colors)*8)
-for i in range(len(the_palette)):
-    color_index = i//8
-    r0, g0, b0 = colors[color_index]
-    r1, g1, b1 = colors[(color_index + 1) % len(colors)]
-    step = float(i % 8)/8
-    the_palette[i] = (
-        int(r0 + (r1 - r0) * step),
-        int(g0 + (g1 - g0) * step),
-        int(b0 + (b1 - b0) * step),
-        )
-    
 class NullProgressReporter:
     def begin(self):
         pass
@@ -127,7 +81,7 @@ class MandelbrotSet:
         from boundary import trace_boundary
         return trace_boundary(mandelbrot_count, self.w, self.h, self.maxiter, progress_fn=self.progress.progress)
     
-    def compute_pixels(self, palette, trace=False, keep=False):
+    def compute_pixels(self, trace=False):
         print "x, y %r step %r, maxiter %r, trace %r" % ((self.x0, self.y0), (self.rx, self.ry), self.maxiter, trace)
         clear_stats()
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
@@ -138,8 +92,11 @@ class MandelbrotSet:
             self.counts = self.compute()
         self.progress.end()
         print get_stats()
+        
+    def color_pixels(self, palette):
         palarray = numpy.array(palette, dtype=numpy.uint8)
         pix = palarray[self.counts % len(palette)]
+        pix[self.counts == 0] = (0,0,0)
         return pix
         
 class wxMandelbrotSetViewer(wx.Frame):
@@ -227,13 +184,16 @@ class wxMandelbrotSetViewer(wx.Frame):
     def draw(self):
         wx.BeginBusyCursor()
         self.m.progress = ConsoleProgressReporter()
-        pix = self.m.compute_pixels(the_palette, trace=self.trace, keep=True)
+        self.m.compute_pixels(trace=self.trace)
+        pix = self.m.color_pixels(the_palette)
         pix2 = None
         if 0:
-            pix2 = self.m.compute_pixels(the_palette, trace=not self.trace)
+            self.m.compute_pixels(trace=not self.trace)
+            pix2 = self.m.color_pixels(the_palette)
         if 0:
             set_check_cycles(0)
-            pix2 = self.m.compute_pixels(the_palette, trace=self.trace)
+            self.m.compute_pixels(trace=self.trace)
+            pix2 = self.m.color_pixels(the_palette)
             set_check_cycles(1)
         if pix2 is not None:
             Image.fromarray(pix).save('one.png')
@@ -295,7 +255,8 @@ class wxMandelbrotSetViewer(wx.Frame):
                 w, h = 1680, 1050
                 m = self.choose_mandel(w*3, h*3)
                 m.progress = ConsoleProgressReporter()
-                pix = m.compute_pixels(the_palette, trace=self.trace)
+                m.compute_pixels(trace=self.trace)
+                pix = m.color_pixels(the_palette)
                 im = Image.fromarray(pix)
                 im = im.resize((w,h), Image.ANTIALIAS)
                 im.save(dlg.GetPath())
