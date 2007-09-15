@@ -4,11 +4,14 @@
 import colorsys, math
 
 class GimpGradient:
-    
-    class segment:
+    """ Read and interpret a Gimp .ggr gradient file.
+    """
+    class _segment:
         pass
     
     def read(self, f):
+        """ Read a .ggr file from f (either an open file or a file path).
+        """
         if isinstance(f, basestring):
             f = file(f)
         if f.readline().strip() != "GIMP Gradient":
@@ -21,7 +24,7 @@ class GimpGradient:
         self.segs = []
         for i in range(nsegs):
             line = f.readline().strip()
-            seg = self.segment()
+            seg = self._segment()
             (seg.l, seg.m, seg.r,
                 seg.rl, seg.gl, seg.bl, _,
                 seg.rr, seg.gr, seg.br, _,
@@ -30,6 +33,8 @@ class GimpGradient:
             
     def color(self, x):
         """ Get the color for the point x in the range [0..1).
+            The color is returned as an rgb triple, with all values in the range
+            [0..1).
         """
         # Find the segment.
         for seg in self.segs:
