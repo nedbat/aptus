@@ -1,7 +1,7 @@
 """ Read Gimp .ggr gradient files.
 """
 
-import colorsys
+import colorsys, math
 
 class GimpGradient:
     
@@ -39,74 +39,58 @@ class GimpGradient:
             # No segment applies! Return black I guess.
             return (0,0,0)
 
-        # Normalize the geometry of the segment.
-        #mid = (seg.m - seg.l)/(seg.r - seg.l)
-        #pos = (x - seg.l)/(seg.r - seg.l)
+        # Normalize the segment geometry.
+        mid = (seg.m - seg.l)/(seg.r - seg.l)
+        pos = (x - seg.l)/(seg.r - seg.l)
         
-        # Assume linear for now.
-        if x <= seg.m:
-            f = (x - seg.l)/(seg.m - seg.l)
-            upper = False
+        # Assume linear (most common, and needed by most others).
+        if pos <= mid:
+            f = pos/mid/2
         else:
-            f = (x - seg.m)/(seg.r - seg.m)
-            upper = True
+            f = (pos - mid)/(1 - mid)/2 + 0.5
 
-        cl = (seg.rl, seg.gl, seg.bl)
-        cr = (seg.rr, seg.gr, seg.br)
-        
+        # Find the correct interpolation factor.
+        if seg.fn == 1:   # Curved
+            f = math.pow(pos, math.log(0.5) / math.log(mid));
+        elif seg.fn == 2:   # Sinusoidal
+            f = (math.sin((-math.pi/2) + math.pi*f) + 1)/2
+        elif seg.fn == 3:   # Spherical increasing
+            f -= 1
+            f = math.sqrt(1 - f*f)
+        elif seg.fn == 4:   # Spherical decreasing
+            f = 1 - math.sqrt(1 - f*f);
+
         # Interpolate the colors
         if seg.space == 0:
-            cm = ((seg.rl+seg.rr)/2, (seg.gl+seg.gr)/2, (seg.bl+seg.br)/2)
-            if upper:
-                cl = cm
-            else:
-                cr = cm
             c = (
-                cl[0] + (cr[0]-cl[0]) * f,
-                cl[1] + (cr[1]-cl[1]) * f,
-                cl[2] + (cr[2]-cl[2]) * f
+                seg.rl + (seg.rr-seg.rl) * f,
+                seg.gl + (seg.gr-seg.gl) * f,
+                seg.bl + (seg.br-seg.bl) * f
                 )
         elif seg.space in (1,2):
-            hl = colorsys.rgb_to_hsv(*cl)
-            hr = colorsys.rgb_to_hsv(*cr)
+            hl, sl, vl = colorsys.rgb_to_hsv(seg.rl, seg.gl, seg.bl)
+            hr, sr, vr = colorsys.rgb_to_hsv(seg.rr, seg.gr, seg.br)
 
-            huel, huer = hl[0], hr[0]
-            if seg.space == 1 and huer < huel:
-                huer += 1
-            elif seg.space == 2 and huer > huel:
-                huer -= 1
+            if seg.space == 1 and hr < hl:
+                hr += 1
+            elif seg.space == 2 and hr > hl:
+                hr -= 1
 
-            huem = (huel+huer)/2
-            hm = (huem, (hl[1]+hr[1])/2, (hl[2]+hr[2])/2)
-            if upper:
-                hl = hm
-            else:
-                hr = hm
-
-            huel, huer = hl[0], hr[0]
-            if seg.space == 1 and huer < huel:
-                huer += 1
-            elif seg.space == 2 and huer > huel:
-                huer -= 1
-
-            hf = (
-                (huel + (huer-huel) * f) % 1.0,
-                hl[1] + (hr[1]-hl[1]) * f,
-                hl[2] + (hr[2]-hl[2]) * f
+            c = colorsys.hsv_to_rgb(
+                (hl + (hr-hl) * f) % 1.0,
+                sl + (sr-sl) * f,
+                vl + (vr-vl) * f
                 )
-            c = colorsys.hsv_to_rgb(*hf)
         return c
     
 if __name__ == '__main__':
     import sys, wx
-    ggr = GimpGradient()
-    ggr.read(sys.argv[1])
 
     class GgrView(wx.Frame):
         def __init__(self, ggr):
             super(GgrView, self).__init__(None, -1, 'Ggr: %s' % ggr.name)
             self.ggr = ggr
-            self.SetSize((300, 50))
+            self.SetSize((600, 100))
             self.panel = wx.Panel(self)
             self.panel.Bind(wx.EVT_PAINT, self.on_paint)
             self.panel.Bind(wx.EVT_SIZE, self.on_size)
@@ -122,7 +106,10 @@ if __name__ == '__main__':
         def on_size(self, event):
             self.Refresh()
             
+
     app = wx.PySimpleApp()
+    ggr = GimpGradient()
+    ggr.read(sys.argv[1])
     f = GgrView(ggr)
     f.Show()
     app.MainLoop()
