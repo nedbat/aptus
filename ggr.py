@@ -87,9 +87,10 @@ if __name__ == '__main__':
     import sys, wx
 
     class GgrView(wx.Frame):
-        def __init__(self, ggr):
+        def __init__(self, ggr, chunks):
             super(GgrView, self).__init__(None, -1, 'Ggr: %s' % ggr.name)
             self.ggr = ggr
+            self.chunks = chunks
             self.SetSize((600, 100))
             self.panel = wx.Panel(self)
             self.panel.Bind(wx.EVT_PAINT, self.on_paint)
@@ -98,18 +99,27 @@ if __name__ == '__main__':
         def on_paint(self, event):
             dc = wx.PaintDC(self.panel)
             cw, ch = self.GetClientSize()
-            for x in range(0, cw):
+            self.paint_some(dc, 0, 0, ch/2)
+            self.paint_some(dc, self.chunks, ch/2, ch)
+            
+        def paint_some(self, dc, chunks, y0, y1):
+            cw, ch = self.GetClientSize()
+            chunkw = (cw // (chunks or 99999)) or 1
+            for x in range(0, cw, chunkw):
                 c = map(lambda x:int(255*x), ggr.color(float(x)/cw))
                 dc.SetPen(wx.Pen(wx.Colour(*c),1))
-                dc.DrawLine(x, 0, x, ch)
+                dc.SetBrush(wx.Brush(wx.Colour(*c),wx.SOLID))
+                dc.DrawRectangle(x, y0, chunkw, y1-y0)
         
         def on_size(self, event):
             self.Refresh()
-            
 
     app = wx.PySimpleApp()
     ggr = GimpGradient()
     ggr.read(sys.argv[1])
-    f = GgrView(ggr)
+    chunks = 2000
+    if len(sys.argv) > 2:
+        chunks = int(sys.argv[2])
+    f = GgrView(ggr, chunks)
     f.Show()
     app.MainLoop()
