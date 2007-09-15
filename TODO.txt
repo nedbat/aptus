@@ -24,7 +24,7 @@
 
 * Beauty
 
-- HSV palette
++ HSV palette
 - Generalized palette specification
 - Reading GIMP gradients as palettes
 - Xaos palette options:
