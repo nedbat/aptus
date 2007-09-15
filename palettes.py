@@ -8,7 +8,10 @@ class Palette:
         self.incolor = (0,0,0)
         self.colors = [(0,0,0),(255,255,255)]
         self.phase = 0
-        
+    
+    def _255(self, *vals):
+        return map(lambda x:int(x*255), vals)
+    
     def set_colors(self, colors):
         self.colors = colors[:]
         return self
@@ -16,14 +19,14 @@ class Palette:
     def set_rainbow(self, ncolors, s, v):
         colors = []
         for h in xrange(ncolors):
-            colors.append(map(lambda x:int(x*256),colorsys.hsv_to_rgb(h*1.0/ncolors,s,v)))
+            colors.append(self._255(*colorsys.hsv_to_rgb(h*1.0/ncolors,s,v)))
         self.colors = colors
         return self
     
     def set_rainbow_hls(self, ncolors, l, s):
         colors = []
         for h in xrange(ncolors):
-            colors.append(map(lambda x:int(x*256),colorsys.hls_to_rgb(h*1.0/ncolors,l,s)))
+            colors.append(self._255(*colorsys.hls_to_rgb(h*1.0/ncolors,l,s)))
         self.colors = colors
         return self
     
@@ -44,6 +47,13 @@ class Palette:
     
     def set_incolor(self, color):
         self.incolor = color
+        return self
+
+    def from_ggr(self, ggr_file, ncolors):
+        from ggr import GimpGradient
+        ggr = GimpGradient()
+        ggr.read(ggr_file)
+        self.colors = [ self._255(*ggr.color(float(c)/ncolors)) for c in range(ncolors) ]
         return self
     
 # Colors taken from Xaos, to get the same rendering.
@@ -89,4 +99,7 @@ all_palettes = [
     Palette().set_rainbow_hls(15, .2, .7),
     Palette().set_colors([(255,192,192), (255,255,255)]).set_incolor((192,192,255)),
     Palette().set_colors([(255,255,255), (0,0,0), (0,0,0), (0,0,0)]),
+    Palette().from_ggr('bluefly.ggr', 20),
+    Palette().from_ggr('ib18.ggr', 20),
+    Palette().from_ggr('ib18.ggr', 50),
     ]
