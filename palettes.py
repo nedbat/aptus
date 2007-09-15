@@ -3,19 +3,48 @@
 
 import colorsys
 
-def make_step_palette(colors, steps):
-    pal = [None]*(len(colors)*steps)
-    for i in range(len(pal)):
-        color_index = i//steps
-        r0, g0, b0 = colors[color_index]
-        r1, g1, b1 = colors[(color_index + 1) % len(colors)]
-        step = float(i % steps)/steps
-        pal[i] = (
-            int(r0 + (r1 - r0) * step),
-            int(g0 + (g1 - g0) * step),
-            int(b0 + (b1 - b0) * step),
-            )
-    return pal
+class Palette:
+    def __init__(self):
+        self.incolor = (0,0,0)
+        self.colors = [(0,0,0),(255,255,255)]
+        self.phase = 0
+        
+    def set_colors(self, colors):
+        self.colors = colors[:]
+        return self
+
+    def set_rainbow(self, ncolors, s, v):
+        colors = []
+        for h in xrange(ncolors):
+            colors.append(map(lambda x:int(x*256),colorsys.hsv_to_rgb(h*1.0/ncolors,s,v)))
+        self.colors = colors
+        return self
+    
+    def set_rainbow_hls(self, ncolors, l, s):
+        colors = []
+        for h in xrange(ncolors):
+            colors.append(map(lambda x:int(x*256),colorsys.hls_to_rgb(h*1.0/ncolors,l,s)))
+        self.colors = colors
+        return self
+    
+    def stretch(self, steps):
+        colors = [None]*(len(self.colors)*steps)
+        for i in range(len(colors)):
+            color_index = i//steps
+            r0, g0, b0 = self.colors[color_index]
+            r1, g1, b1 = self.colors[(color_index + 1) % len(self.colors)]
+            step = float(i % steps)/steps
+            colors[i] = (
+                int(r0 + (r1 - r0) * step),
+                int(g0 + (g1 - g0) * step),
+                int(b0 + (b1 - b0) * step),
+                )
+        self.colors = colors    
+        return self
+    
+    def set_incolor(self, color):
+        self.incolor = color
+        return self
     
 # Colors taken from Xaos, to get the same rendering.
 xaos_colors = [
@@ -52,20 +81,21 @@ xaos_colors = [
     (31, 32, 16)
 ]
 
-the_palette = make_step_palette(xaos_colors, 8)
+xaos_palette = Palette().set_colors(xaos_colors).stretch(8)
 
-# Make an HSV palette
-ncolors = 16
-s = .7
-v = .9
-pal = []
-for h in xrange(ncolors):
-    pal.append(map(lambda x:int(x*256),colorsys.hsv_to_rgb(h*1.0/ncolors,s,v)))
-    #pal.append((64,64,64))
+
 
 # Swap adjacent colors to mix things up a bit.
 if 0:
     for i in range(0, len(the_palette), 2):
         the_palette[i+1], the_palette[i] = the_palette[i], the_palette[i+1]
 
-xthe_palette = [(255,192,192), (255,255,255)]
+
+
+all_palettes = [
+    xaos_palette,
+    Palette().set_rainbow(15, .7, .9),
+    Palette().set_rainbow_hls(15, .9, .7),
+    Palette().set_colors([(255,192,192), (255,255,255)]).set_incolor((192,192,255)),
+    Palette().set_colors([(255,255,255), (0,0,0), (0,0,0), (0,0,0)]),
+    ]

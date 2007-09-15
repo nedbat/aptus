@@ -3,7 +3,7 @@
 
 from timeutil import duration, future
 from options import MandOptions
-from palettes import the_palette
+from palettes import all_palettes
 
 import wx
 import numpy
@@ -64,6 +64,7 @@ class MandelbrotSet:
  
         self.maxiter = maxiter
         self.progress = NullProgressReporter()
+        self.counts = None
         
     def from_pixel(self, x, y):
         return self.x0+self.rx*x, self.y0-self.ry*y
@@ -82,6 +83,8 @@ class MandelbrotSet:
         return trace_boundary(mandelbrot_count, self.w, self.h, self.maxiter, progress_fn=self.progress.progress)
     
     def compute_pixels(self, trace=False):
+        if self.counts is not None:
+            return
         print "x, y %r step %r, maxiter %r, trace %r" % ((self.x0, self.y0), (self.rx, self.ry), self.maxiter, trace)
         clear_stats()
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
@@ -94,9 +97,9 @@ class MandelbrotSet:
         print get_stats()
         
     def color_pixels(self, palette):
-        palarray = numpy.array(palette, dtype=numpy.uint8)
-        pix = palarray[self.counts % len(palette)]
-        pix[self.counts == 0] = (0,0,0)
+        palarray = numpy.array(palette.colors, dtype=numpy.uint8)
+        pix = palarray[(self.counts+palette.phase) % palarray.shape[0]]
+        pix[self.counts == 0] = palette.incolor
         return pix
         
 class wxMandelbrotSetViewer(wx.Frame):
@@ -117,7 +120,9 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.xdiam, self.ydiam = xdiam, ydiam
         self.maxiter = maxiter
         self.set_view()
-
+        self.palette_index = 0
+        self.palette = all_palettes[0]
+        
     def set_view(self):
         self.cw, self.ch = self.GetClientSize()
         self.bitmap = wx.EmptyBitmap(self.cw, self.ch)
@@ -136,7 +141,7 @@ class wxMandelbrotSetViewer(wx.Frame):
         
         x0, y0 = self.xcenter - xradius, self.ycenter - yradius
         x1, y1 = self.xcenter + xradius, self.ycenter + yradius
-        
+        print "Coords: (%r,%r,%r,%r)" % (self.xcenter, self.ycenter, self.xdiam, self.ydiam)
         return MandelbrotSet(x0, y0, x1, y1, w, h, self.maxiter)
         
     def message(self, msg):
@@ -174,7 +179,23 @@ class wxMandelbrotSetViewer(wx.Frame):
             self.cmd_set_maxiter()
         elif event.KeyCode == ord('R'):
             self.cmd_redraw()
-            
+        elif event.KeyCode == ord(','):
+            if shift:
+                self.cmd_change_palette(-1)
+            else:
+                self.cmd_cycle_palette(-1)
+        elif event.KeyCode == ord('.'):
+            if shift:
+                self.cmd_change_palette(1)
+            else:
+                self.cmd_cycle_palette(1)
+        else:
+            revmap = dict([(getattr(wx,n), n) for n in dir(wx) if n.startswith('WXK')])
+            sym = revmap.get(event.KeyCode, "")
+            if not sym:
+                sym = "ord(%r)" % chr(event.KeyCode)
+            print "Unmapped key: %r, %s, shift=%r" % (event.KeyCode, sym, event.ShiftDown())
+
     def on_paint(self, event):
         if not self.dc:
             self.dc = self.draw()
@@ -185,15 +206,15 @@ class wxMandelbrotSetViewer(wx.Frame):
         wx.BeginBusyCursor()
         self.m.progress = ConsoleProgressReporter()
         self.m.compute_pixels(trace=self.trace)
-        pix = self.m.color_pixels(the_palette)
+        pix = self.m.color_pixels(self.palette)
         pix2 = None
         if 0:
             self.m.compute_pixels(trace=not self.trace)
-            pix2 = self.m.color_pixels(the_palette)
+            pix2 = self.m.color_pixels(self.palette)
         if 0:
             set_check_cycles(0)
             self.m.compute_pixels(trace=self.trace)
-            pix2 = self.m.color_pixels(the_palette)
+            pix2 = self.m.color_pixels(self.palette)
             set_check_cycles(1)
         if pix2 is not None:
             Image.fromarray(pix).save('one.png')
@@ -256,7 +277,7 @@ class wxMandelbrotSetViewer(wx.Frame):
                 m = self.choose_mandel(w*3, h*3)
                 m.progress = ConsoleProgressReporter()
                 m.compute_pixels(trace=self.trace)
-                pix = m.color_pixels(the_palette)
+                pix = m.color_pixels(self.palette)
                 im = Image.fromarray(pix)
                 im = im.resize((w,h), Image.ANTIALIAS)
                 im.save(dlg.GetPath())
@@ -277,6 +298,19 @@ class wxMandelbrotSetViewer(wx.Frame):
 
     def cmd_redraw(self):
         self.set_view()
+        
+    def cmd_cycle_palette(self, delta):
+        self.palette.phase += delta
+        self.palette.phase %= len(self.palette.colors)
+        self.dc = None
+        self.Refresh()
+        
+    def cmd_change_palette(self, delta):
+        self.palette_index += delta
+        self.palette_index %= len(all_palettes)
+        self.palette = all_palettes[self.palette_index]
+        self.dc = None
+        self.Refresh()
         
 class ConsoleProgressReporter:
     def begin(self):
