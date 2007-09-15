@@ -10,6 +10,9 @@ import colorsys, math
 class GimpGradient:
     """ Read and interpret a Gimp .ggr gradient file.
     """
+    def __init__(self, f):
+        self.read(f)
+        
     class _segment:
         pass
     
@@ -133,8 +136,7 @@ if __name__ == '__main__':
             self.Refresh()
 
     app = wx.PySimpleApp()
-    ggr = GimpGradient()
-    ggr.read(sys.argv[1])
+    ggr = GimpGradient(sys.argv[1])
     chunks = 0
     if len(sys.argv) > 2:
         chunks = int(sys.argv[2])
