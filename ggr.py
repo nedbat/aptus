@@ -1,4 +1,6 @@
 """ Read Gimp .ggr gradient files.
+    Ned Batchelder, http://nedbatchelder.com
+    This code is in the public domain.
 """
 
 import colorsys, math
@@ -93,6 +95,10 @@ if __name__ == '__main__':
 
     class GgrView(wx.Frame):
         def __init__(self, ggr, chunks):
+            """ Display the ggr file as a strip of colors.
+                If chunks is non-zero, then also display the gradient quantized
+                into that many chunks.
+            """
             super(GgrView, self).__init__(None, -1, 'Ggr: %s' % ggr.name)
             self.ggr = ggr
             self.chunks = chunks
@@ -117,8 +123,8 @@ if __name__ == '__main__':
                 chunkw = (cw // chunks) or 1
             for x in range(0, cw, chunkw):
                 c = map(lambda x:int(255*x), ggr.color(float(x)/cw))
-                dc.SetPen(wx.Pen(wx.Colour(*c),1))
-                dc.SetBrush(wx.Brush(wx.Colour(*c),wx.SOLID))
+                dc.SetPen(wx.Pen(wx.Colour(*c), 1))
+                dc.SetBrush(wx.Brush(wx.Colour(*c), wx.SOLID))
                 dc.DrawRectangle(x, y0, chunkw, y1-y0)
         
         def on_size(self, event):
