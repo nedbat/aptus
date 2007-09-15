@@ -56,6 +56,13 @@ class NullProgressReporter:
     def end(self):
         pass
     
+jumps = [
+    (-0.5,0.0,3.0,3.0),
+    (-1.8605294939875601,1.0475516319329809e-005,2.288818359375e-005,2.288818359375e-005),
+    (-1.8605327731370924,1.2700557708795141e-005,1.7881393432617188e-007,1.7881393432617188e-007),
+    (0.45687170535326038,-0.34780396997928614,0.005859375,0.005859375),
+    ]
+
 class MandelbrotSet:
     def __init__(self, x0, y0, x1, y1, w, h, maxiter=999):
         self.x0, self.y0 = x0, y0
@@ -122,6 +129,7 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.set_view()
         self.palette_index = 0
         self.palette = all_palettes[0]
+        self.jump_index = 0
         
     def set_view(self):
         self.cw, self.ch = self.GetClientSize()
@@ -170,31 +178,37 @@ class wxMandelbrotSetViewer(wx.Frame):
 
     def on_key_down(self, event):
         shift = event.ShiftDown()
-        if event.KeyCode == ord('S'):
+        keycode = event.KeyCode
+        if keycode == ord('S'):
             if shift:
                 self.cmd_save_big()
             else:
                 self.cmd_save()
-        elif event.KeyCode == ord('I'):
+        elif keycode == ord('I'):
             self.cmd_set_maxiter()
-        elif event.KeyCode == ord('R'):
+        elif keycode == ord('J'):
+            self.jump_index += 1
+            self.jump_index %= len(jumps)
+            self.xcenter, self.ycenter, self.xdiam, self.ydiam = jumps[self.jump_index]
+            self.set_view()
+        elif keycode == ord('R'):
             self.cmd_redraw()
-        elif event.KeyCode == ord(','):
+        elif keycode == ord(','):
             if shift:
                 self.cmd_change_palette(-1)
             else:
                 self.cmd_cycle_palette(-1)
-        elif event.KeyCode == ord('.'):
+        elif keycode == ord('.'):
             if shift:
                 self.cmd_change_palette(1)
             else:
                 self.cmd_cycle_palette(1)
         else:
             revmap = dict([(getattr(wx,n), n) for n in dir(wx) if n.startswith('WXK')])
-            sym = revmap.get(event.KeyCode, "")
+            sym = revmap.get(keycode, "")
             if not sym:
-                sym = "ord(%r)" % chr(event.KeyCode)
-            print "Unmapped key: %r, %s, shift=%r" % (event.KeyCode, sym, event.ShiftDown())
+                sym = "ord(%r)" % chr(keycode)
+            print "Unmapped key: %r, %s, shift=%r" % (keycode, sym, shift)
 
     def on_paint(self, event):
         if not self.dc:

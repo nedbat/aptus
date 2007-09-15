@@ -83,19 +83,10 @@ xaos_colors = [
 
 xaos_palette = Palette().set_colors(xaos_colors).stretch(8)
 
-
-
-# Swap adjacent colors to mix things up a bit.
-if 0:
-    for i in range(0, len(the_palette), 2):
-        the_palette[i+1], the_palette[i] = the_palette[i], the_palette[i+1]
-
-
-
 all_palettes = [
     xaos_palette,
     Palette().set_rainbow(15, .7, .9),
-    Palette().set_rainbow_hls(15, .9, .7),
+    Palette().set_rainbow_hls(15, .2, .7),
     Palette().set_colors([(255,192,192), (255,255,255)]).set_incolor((192,192,255)),
     Palette().set_colors([(255,255,255), (0,0,0), (0,0,0), (0,0,0)]),
     ]
