@@ -28,7 +28,7 @@
 - Generalized palette specification
 - Reading GIMP gradients as palettes
 - Xaos palette options:
-    - Palette shifting
+    + Palette shifting
     - Algorithmic palette
 - Rotation (simply store the pixel offsets as dx and dy computed from angle).
 

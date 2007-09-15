@@ -382,5 +382,6 @@ if __name__ == '__main__':
         opts.maxiter
         )
     f.trace = opts.trace
+    f.palette.phase = opts.palette_phase
     f.Show()
     app.MainLoop()
