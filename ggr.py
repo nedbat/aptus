@@ -99,12 +99,17 @@ if __name__ == '__main__':
         def on_paint(self, event):
             dc = wx.PaintDC(self.panel)
             cw, ch = self.GetClientSize()
-            self.paint_some(dc, 0, 0, ch/2)
-            self.paint_some(dc, self.chunks, ch/2, ch)
-            
+            if self.chunks:
+                self.paint_some(dc, 0, 0, ch/2)
+                self.paint_some(dc, self.chunks, ch/2, ch)
+            else:
+                self.paint_some(dc, 0, 0, ch)
+                
         def paint_some(self, dc, chunks, y0, y1):
             cw, ch = self.GetClientSize()
-            chunkw = (cw // (chunks or 99999)) or 1
+            chunkw = 1
+            if chunks:
+                chunkw = (cw // chunks) or 1
             for x in range(0, cw, chunkw):
                 c = map(lambda x:int(255*x), ggr.color(float(x)/cw))
                 dc.SetPen(wx.Pen(wx.Colour(*c),1))
@@ -117,7 +122,7 @@ if __name__ == '__main__':
     app = wx.PySimpleApp()
     ggr = GimpGradient()
     ggr.read(sys.argv[1])
-    chunks = 2000
+    chunks = 0
     if len(sys.argv) > 2:
         chunks = int(sys.argv[2])
     f = GgrView(ggr, chunks)
