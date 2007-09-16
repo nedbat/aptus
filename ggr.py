@@ -10,8 +10,9 @@ import colorsys, math
 class GimpGradient:
     """ Read and interpret a Gimp .ggr gradient file.
     """
-    def __init__(self, f):
-        self.read(f)
+    def __init__(self, f=None):
+        if f:
+            self.read(f)
         
     class _segment:
         pass
