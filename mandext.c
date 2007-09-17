@@ -2,7 +2,7 @@
 
 #include "Python.h"
 
-typedef double float_t;
+typedef long double float_t;
 
 typedef struct {
     float_t i, r;
@@ -37,6 +37,37 @@ fequal(float_t a, float_t b)
 }
 
 static PyObject *
+get_coords(PyObject *self, PyObject *args)
+{
+    int xi, yi;
+    
+    if (!PyArg_ParseTuple(args, "ii", &xi, &yi)) {
+        return NULL;
+    }
+
+    complex_t c;
+    c.r = xy0.r + xi*xyd.r;
+    c.i = xy0.i + yi*xyd.i;
+    
+    return Py_BuildValue("dd", (double)c.r, (double)c.i);
+}
+
+static void
+dump_number(float_t num)
+{
+    union {
+        float_t f;
+        char c[sizeof(float_t)];
+    } fc;
+    fc.f = num;
+    int i;
+    for (i = 0; i < sizeof(fc.c); i++) {
+        printf("%02x", (unsigned char)fc.c[i]);
+    }
+    printf("\n");
+}
+
+static PyObject *
 mandelbrot_count(PyObject *self, PyObject *args)
 {
     int xi, yi;
@@ -49,6 +80,8 @@ mandelbrot_count(PyObject *self, PyObject *args)
     complex_t c;
     c.r = xy0.r + xi*xyd.r;
     c.i = xy0.i + yi*xyd.i;
+    
+    //dump_number(c.r);
     
     complex_t z = {0,0};
     complex_t znew;
@@ -106,7 +139,7 @@ mandelbrot_count(PyObject *self, PyObject *args)
     }
 
     return Py_BuildValue("i", count);
-}	
+}
 
 static PyObject *
 set_params(PyObject *self, PyObject *args)
@@ -124,7 +157,7 @@ set_params(PyObject *self, PyObject *args)
 
     epsilon = xyd.r/2;
 
-    return Py_BuildValue("");    
+    return Py_BuildValue("ddddi", (double)xy0.r, (double)xy0.i, (double)xyd.r, (double)xyd.i, max_iter);
 }
 
 static PyObject *
@@ -173,6 +206,7 @@ mandext_methods[] = {
     {"float_sizes", float_sizes, METH_VARARGS, "Get sizes of float types"},
     {"clear_stats", clear_stats, METH_VARARGS, "Clear the statistic counters"},
     {"get_stats", get_stats, METH_VARARGS, "Get the statistics as a dictionary"},
+    {"get_coords", get_coords, METH_VARARGS, "xxx"},
     {NULL, NULL}
 };
 
