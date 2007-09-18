@@ -83,7 +83,6 @@ class MandelbrotSet:
                 c = mandelbrot_count(xi, -yi)
                 counts[yi,xi] = c
             self.progress.progress(float(yi+1)/self.h)
-            print get_coords(xi, -yi)
         return counts
     
     def compute_trace(self):
