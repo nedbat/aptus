@@ -82,7 +82,8 @@ class MandelbrotSet:
             for xi in xrange(self.w):
                 c = mandelbrot_count(xi, -yi)
                 counts[yi,xi] = c
-            self.progress.progress(float(yi+1)/self.h)
+            info = "%(totaliter)d iters, %(maxiter)d max, %(miniter)d min, %(maxedpoints)d maxed" % get_stats()
+            self.progress.progress(float(yi+1)/self.h, info)
         return counts
     
     def compute_trace(self):

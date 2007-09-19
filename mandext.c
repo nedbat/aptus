@@ -43,6 +43,8 @@ static struct {
     int     totaliter;      // Total number of iterations.
     int     totalcycles;    // Number of cycles detected.
     int     maxitercycle;   // Max iteration that was finally a cycle.
+    int     miniter;        // Minimum iteration count.
+    int     maxedpoints;    // Number of points that exceeded the maxiter.
 } stats;
 
 static int check_for_cycles = 1;
@@ -52,11 +54,19 @@ static int check_for_cycles = 1;
 
 static float_t epsilon;
 
+#ifdef BIFLOAT
+inline int
+fequal(bifloat_t a, bifloat_t b)
+{
+    return (a.p == b.p);
+}
+#else
 inline int
 fequal(float_t a, float_t b)
 {
     return fabs(a - b) < epsilon;
 }
+#endif
 
 static PyObject *
 get_coords(PyObject *self, PyObject *args)
@@ -109,6 +119,8 @@ mandelbrot_count(PyObject *self, PyObject *args)
     bicomplex_t z = {{0,0},{0,0}};
     bicomplex_t znew;
     bicomplex_t z2;
+
+    bicomplex_t cycle_check = z;
 #else
     complex_t c;
     c.r = xy0.r + xi*xyd.r;
@@ -121,10 +133,11 @@ mandelbrot_count(PyObject *self, PyObject *args)
     complex_t z2;
     
     complex_t cycle_check = z;
+#endif
+
     int cycle_period = INITIAL_CYCLE_PERIOD;
     int cycle_tries = CYCLE_TRIES;
     int cycle_countdown = cycle_period;
-#endif
 
     while (count <= max_iter) {
 
@@ -136,6 +149,9 @@ mandelbrot_count(PyObject *self, PyObject *args)
         if (z2.r.p + z2.r.d + z2.i.p + z2.i.d > 4.0) {
             if (count > stats.maxiter) {
                 stats.maxiter = count;
+            }
+            if (stats.miniter == 0 || count < stats.miniter) {
+                stats.miniter = count;
             }
             break;
         }
@@ -151,6 +167,9 @@ mandelbrot_count(PyObject *self, PyObject *args)
             if (count > stats.maxiter) {
                 stats.maxiter = count;
             }
+            if (stats.miniter == 0 || count < stats.miniter) {
+                stats.miniter = count;
+            }
             break;
         }
         znew.r = z2.r - z2.i + c.r;
@@ -161,7 +180,6 @@ mandelbrot_count(PyObject *self, PyObject *args)
 
         stats.totaliter++;
 
-#ifndef BIFLOAT
         if (check_for_cycles) {
             // Check for cycles
             if (fequal(z.r, cycle_check.r) && fequal(z.i, cycle_check.i)) {
@@ -185,10 +203,10 @@ mandelbrot_count(PyObject *self, PyObject *args)
                 }
             }
         }
-#endif
     }
 
     if (count > max_iter) {
+        stats.maxedpoints++;
         count = 0;
     }
 
@@ -237,6 +255,8 @@ clear_stats(PyObject *self, PyObject *args)
     stats.totaliter = 0;
     stats.totalcycles = 0;
     stats.maxitercycle = 0;
+    stats.miniter = 0;
+    stats.maxedpoints = 0;
     
     return Py_BuildValue("");
 }
@@ -244,11 +264,13 @@ clear_stats(PyObject *self, PyObject *args)
 static PyObject *
 get_stats(PyObject *self, PyObject *args)
 {
-    return Py_BuildValue("{sisisisi}",
+    return Py_BuildValue("{sisisisisisi}",
         "maxiter", stats.maxiter,
         "totaliter", stats.totaliter,
         "totalcycles", stats.totalcycles,
-        "maxitercycle", stats.maxitercycle
+        "maxitercycle", stats.maxitercycle,
+        "miniter", stats.miniter,
+        "maxedpoints", stats.maxedpoints
         );        
 }
 
