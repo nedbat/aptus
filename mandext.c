@@ -2,11 +2,33 @@
 
 #include "Python.h"
 
+#define BIFLOAT 1
+
 typedef long double float_t;
 
 typedef struct {
     float_t i, r;
 } complex_t;
+
+#ifdef BIFLOAT
+typedef struct {
+    float_t p, d;
+} bifloat_t;
+
+typedef struct {
+    bifloat_t i, r;
+} bicomplex_t;
+
+#define BIINIP(r,s) ((r) + (s))
+#define BIINID(r,s) ((s) - (BIINIP(r,s) - (r)))
+
+#define BIMULP(a,b) ((a).p * (b).p)
+#define BIMULD(a,b) (a.p * b.d + a.d * b.p + a.d * b.d)
+
+#define BIADDP(a,b) (a.p + b.p + a.d + b.d)
+#define BIADDD(a,b) (a.d + b.d - (BIADD_P(a,b) - (a.p + b.p)))
+
+#endif
 
 // Global Parameters to the module.
 static int max_iter;
@@ -77,10 +99,21 @@ mandelbrot_count(PyObject *self, PyObject *args)
     }
 
     int count = 0;
+#ifdef BIFLOAT
+    bicomplex_t c;
+    c.r.p = BIINIP(xy0.r, xi*xyd.r);
+    c.r.d = BIINID(xy0.r, xi*xyd.r);
+    c.i.p = BIINIP(xy0.i, yi*xyd.i);
+    c.i.d = BIINID(xy0.i, yi*xyd.i);
+
+    bicomplex_t z = {{0,0},{0,0}};
+    bicomplex_t znew;
+    bicomplex_t z2;
+#else
     complex_t c;
     c.r = xy0.r + xi*xyd.r;
     c.i = xy0.i + yi*xyd.i;
-    
+
     //dump_number(c.r);
     
     complex_t z = {0,0};
@@ -91,9 +124,27 @@ mandelbrot_count(PyObject *self, PyObject *args)
     int cycle_period = INITIAL_CYCLE_PERIOD;
     int cycle_tries = CYCLE_TRIES;
     int cycle_countdown = cycle_period;
-    
+#endif
+
     while (count <= max_iter) {
 
+#ifdef BIFLOAT
+        z2.r.p = BIMULP(z.r, z.r);
+        z2.r.d = BIMULD(z.r, z.r);
+        z2.i.p = BIMULP(z.i, z.i);
+        z2.i.d = BIMULD(z.i, z.i);
+        if (z2.r.p + z2.r.d + z2.i.p + z2.i.d > 4.0) {
+            if (count > stats.maxiter) {
+                stats.maxiter = count;
+            }
+            break;
+        }
+        znew.r.p = z2.r.p - z2.i.p + c.r.p;     // bifloat addition is trickier than this.
+        znew.r.d = z2.r.d - z2.i.d + c.r.d;
+        znew.i.p = 2 * BIMULP(z.i, z.r) + c.i.p;
+        znew.i.d = 2 * BIMULD(z.i, z.r) + c.i.d;
+        z = znew;
+#else
         z2.r = z.r * z.r;
         z2.i = z.i * z.i;
         if (z2.r + z2.i > 4.0) {
@@ -105,10 +156,12 @@ mandelbrot_count(PyObject *self, PyObject *args)
         znew.r = z2.r - z2.i + c.r;
         znew.i = 2 * z.i * z.r + c.i;
         z = znew;
+#endif
         count++;
 
         stats.totaliter++;
 
+#ifndef BIFLOAT
         if (check_for_cycles) {
             // Check for cycles
             if (fequal(z.r, cycle_check.r) && fequal(z.i, cycle_check.i)) {
@@ -132,6 +185,7 @@ mandelbrot_count(PyObject *self, PyObject *args)
                 }
             }
         }
+#endif
     }
 
     if (count > max_iter) {
