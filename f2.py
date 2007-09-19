@@ -4,7 +4,8 @@ class f2:
     """ Two floats, to get split precision.
     """
     def __init__(self, a, b):
-        self.a, self.b = float(a), float(b)
+        self.a = float(a) + float(b)
+        self.b = float(b) - (self.a - float(a))
         
     def __repr__(self):
         return "<%r+%r>" % (self.a, self.b)
@@ -60,16 +61,17 @@ if 0:
         f = f*f+p
         g = g*g+p
 
-dx = 5.5951715923569399e-018
-x = -0.70654266100607843
-y = -0.36491281470843084
-
-for xi in range(100):
-    p = c2(f2(x,xi*dx), f2(y,0))
-    z = c2(f2(0,0),f2(0,0))
+if __name__ == '__main__':
+    dx = 5.5951715923569399e-018
+    x = -0.70654266100607843
+    y = -0.36491281470843084
     
-    for i in range(10000):
-        z = z*z+p
-        if float(z.r) > 2.0:
-            print p, i
-            break
+    for xi in range(100):
+        p = c2(f2(x,xi*dx), f2(y,0))
+        z = c2(f2(0,0),f2(0,0))
+        
+        for i in range(10000):
+            z = z*z+p
+            if float(z.r) > 2.0:
+                print p, i
+                break
