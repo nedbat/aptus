@@ -2,7 +2,7 @@
 
 #include "Python.h"
 
-#define BIFLOAT 1
+//#define BIFLOAT 1
 
 typedef long double float_t;
 
@@ -26,7 +26,13 @@ typedef struct {
 #define BIMULD(a,b) (a.p * b.d + a.d * b.p + a.d * b.d)
 
 #define BIADDP(a,b) (a.p + b.p + a.d + b.d)
-#define BIADDD(a,b) (a.d + b.d - (BIADD_P(a,b) - (a.p + b.p)))
+#define BIADDD(a,b) (a.d + b.d - (BIADDP(a,b) - (a.p + b.p)))
+
+#define BISUBP(a,b) (a.p - b.p + a.d - b.d)
+#define BISUBD(a,b) (a.d - b.d - (BISUBP(a,b) - (a.p - b.p)))
+
+#define BINORMP(a) (a.p + a.d)
+#define BINORMD(a) (a.d - (BINORMP(a) - a.p))
 
 #endif
 
@@ -155,8 +161,15 @@ mandelbrot_count(PyObject *self, PyObject *args)
             }
             break;
         }
-        znew.r.p = z2.r.p - z2.i.p + c.r.p;     // bifloat addition is trickier than this.
-        znew.r.d = z2.r.d - z2.i.d + c.r.d;
+        bifloat_t tmp;
+        tmp.p = BISUBP(z2.r, z2.i);
+        tmp.d = BISUBD(z2.r, z2.i);
+        tmp.p += c.r.p;
+        tmp.d += c.r.d;
+        
+        znew.r.p = BINORMP(tmp);
+        znew.r.d = BINORMD(tmp);
+        
         znew.i.p = 2 * BIMULP(z.i, z.r) + c.i.p;
         znew.i.d = 2 * BIMULD(z.i, z.r) + c.i.d;
         z = znew;
