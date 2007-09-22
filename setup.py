@@ -24,6 +24,6 @@ setup(
         ],
     
     scripts = [
-        'scripts/aptus.py',
+        'scripts/aptusmain.py',
         ],    
     )
