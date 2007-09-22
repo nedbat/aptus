@@ -81,8 +81,11 @@ class Palette:
     def from_ggr(self, ggr_file, ncolors):
         from ggr import GimpGradient
         ggr = GimpGradient()
-        ggr.read(ggr_file)
-        self.colors = [ self._255(*ggr.color(float(c)/ncolors)) for c in range(ncolors) ]
+        try:
+            ggr.read(ggr_file)
+            self.colors = [ self._255(*ggr.color(float(c)/ncolors)) for c in range(ncolors) ]
+        except:
+            self.colors = [ (0,0,0), (255,0,0), (255,255,255) ]
         return self
     
 # Colors taken from Xaos, to get the same rendering.
