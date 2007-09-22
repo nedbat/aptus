@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # Started from http://www.howforge.com/mandelbrot-set-viewer-using-wxpython
 
 from aptus.timeutil import duration, future
@@ -370,10 +369,10 @@ class MandState:
         
     def _write_item(self, f, k, v):
         print >> f, ' "%s": %r,' % (k, v)
-        
-if __name__ == '__main__':
+
+def main(args):        
     opts = MandOptions()
-    opts.read_args(sys.argv[1:])
+    opts.read_args(args)
     
     app = wx.PySimpleApp()
     f = wxMandelbrotSetViewer(
