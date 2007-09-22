@@ -30,6 +30,35 @@ class Palette:
         self.colors = colors
         return self
     
+    def set_rainbow_ramps(self, npts, nsteps, hrange=(0.0,1.0), lrange=(.2,.8), srange=.6):
+        if isinstance(hrange, (int, float)):
+            hrange = (float(hrange), float(hrange))
+        if isinstance(lrange, (int, float)):
+            lrange = (float(lrange), float(lrange))
+        if isinstance(srange, (int, float)):
+            srange = (float(srange), float(srange))
+        
+        hlo, hhi = hrange
+        llo, lhi = lrange
+        slo, shi = srange
+        
+        colors = []
+        for pt in range(npts):
+            for step in range(nsteps):
+                hfrac = (pt*1.0/npts) + (step)*1.0/(npts * 2 * nsteps)
+                h = hlo + (hhi-hlo)*hfrac
+                l = llo + (lhi-llo)*step/nsteps
+                s = slo + (shi-slo)*step/nsteps
+                colors.append(self._255(*colorsys.hls_to_rgb(h, l, s)))
+            for step in range(nsteps):
+                hfrac = (pt*1.0/npts) + (step+nsteps)*1.0/(npts * 2 * nsteps)
+                h = hlo + (hhi-hlo)*hfrac
+                l = lhi - (lhi-llo)*step/nsteps
+                s = shi - (shi-slo)*step/nsteps
+                colors.append(self._255(*colorsys.hls_to_rgb(h, l, s)))
+        self.colors = colors
+        return self
+    
     def stretch(self, steps):
         colors = [None]*(len(self.colors)*steps)
         for i in range(len(colors)):
@@ -95,8 +124,14 @@ xaos_palette = Palette().set_colors(xaos_colors).stretch(8)
 
 all_palettes = [
     xaos_palette,
-    Palette().set_rainbow(15, .7, .9),
-    Palette().set_rainbow_hls(15, .2, .7),
+    Palette().set_rainbow_ramps(6, nsteps=10),
+    Palette().set_rainbow_ramps(6, nsteps=25, lrange=(.2,.6), srange=.6),
+    Palette().set_rainbow_ramps(24, nsteps=5, lrange=(.4,.6), srange=.7),
+    Palette().set_rainbow_ramps(1, nsteps=10, hrange=.7, lrange=(.4,.6), srange=.7),
+    Palette().set_rainbow_ramps(1, nsteps=10, hrange=.8, lrange=(.3,.7), srange=(.9,.1)),
+    Palette().set_rainbow(16, .7, .9),
+    Palette().set_rainbow_hls(16, .5, .7),
+    Palette().set_rainbow_ramps(4, nsteps=4, lrange=.5, srange=.7),
     Palette().set_colors([(255,192,192), (255,255,255)]).set_incolor((192,192,255)),
     Palette().set_colors([(255,255,255), (0,0,0), (0,0,0), (0,0,0)]),
     Palette().from_ggr('bluefly.ggr', 20),
