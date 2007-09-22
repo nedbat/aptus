@@ -1,18 +1,32 @@
 # Started from http://www.howforge.com/mandelbrot-set-viewer-using-wxpython
 
 from aptus.timeutil import duration, future
-from aptus.options import MandOptions
+from aptus.options import AptusOptions
 from aptus.palettes import all_palettes
 
-import wx
-import numpy
-import os, re, sys, time, traceback, zlib
+# Import third-party packages.
 
-# We use PIL, and need 1.1.6.
-import Image
+try:
+    import wx
+except:
+    raise Exception("Need wxPython, from http://www.wxpython.org/")
+
+try:
+    import numpy
+except:
+    raise Exception("Need numpy, from http://numpy.scipy.org/")
+
+try:
+    import Image
+except:
+    raise Exception("Need PIL, from http://www.pythonware.com/products/pil/")
 
 if not hasattr(Image, 'fromarray'):
-    raise Exception("Need PIL 1.1.6 or greater.")
+    raise Exception("Need PIL 1.1.6 or greater, from http://www.pythonware.com/products/pil/")
+
+import os, re, sys, time, traceback, zlib
+
+# Load our engine.
 
 try:
     from mandext import *
@@ -111,7 +125,7 @@ class MandelbrotSet:
         
 class wxMandelbrotSetViewer(wx.Frame):
     def __init__(self, xcenter, ycenter, xdiam, ydiam, w, h, maxiter):
-        super(wxMandelbrotSetViewer, self).__init__(None, -1, 'Mandelbrot Set')
+        super(wxMandelbrotSetViewer, self).__init__(None, -1, 'Aptus')
  
         chromew, chromeh = 8, 28
         self.SetSize((w+chromew, h+chromeh))
@@ -153,7 +167,7 @@ class wxMandelbrotSetViewer(wx.Frame):
         return MandelbrotSet(x0, y0, x1, y1, w, h, self.maxiter)
         
     def message(self, msg):
-        dlg = wx.MessageDialog(self, msg, 'Mand', wx.OK | wx.ICON_WARNING)
+        dlg = wx.MessageDialog(self, msg, 'Aptus', wx.OK | wx.ICON_WARNING)
         dlg.ShowModal()
         dlg.Destroy()
         
@@ -246,7 +260,7 @@ class wxMandelbrotSetViewer(wx.Frame):
     def cmd_save(self):
         wildcard = (
             "PNG image (*.png)|*.png|"     
-            "Mand state (*.mand)|*.mand|"
+            "Aptus state (*.aptus)|*.aptus|"
             "All files (*.*)|*.*"
             )
 
@@ -264,8 +278,8 @@ class wxMandelbrotSetViewer(wx.Frame):
                 fout = open(dlg.GetPath(), 'wb')
                 im.save(fout, 'PNG')
                 fout.close()
-            elif ext == 'mand':
-                ms = MandState()
+            elif ext == 'aptus':
+                ms = AptusState()
                 ms.w = self.cw
                 ms.h = self.ch
                 ms.counts = self.counts.tostring()
@@ -347,12 +361,12 @@ class ConsoleProgressReporter:
         total = time.time() - self.start
         print "Total: %s (%.2fs)" % (duration(total), total)
         
-class MandState:
+class AptusState:
     def write(self, f):
         if isinstance(f, basestring):
             f = open(f, 'wb')
         print >>f, '{'
-        self._write_item(f, 'what_is_this', 'A Mand state file, version 1')
+        self._write_item(f, 'what_is_this', 'An Aptus state file, version 1')
         self._write_item(f, 'w', self.w)
         self._write_item(f, 'h', self.h)
         self._write_item(f, 'counts', zlib.compress(self.counts).encode('base64').strip())
@@ -371,7 +385,7 @@ class MandState:
         print >> f, ' "%s": %r,' % (k, v)
 
 def main(args):        
-    opts = MandOptions()
+    opts = AptusOptions()
     opts.read_args(args)
     
     app = wx.PySimpleApp()
