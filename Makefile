@@ -2,10 +2,13 @@
 
 EXTENSION = mandext.pyd
 
+install:
+	python setup.py build install
+
 build: $(EXTENSION)
 
 $(EXTENSION): mandext.c setup.py
-	python setup.py build -cmingw32
+	python setup.py build 
 	cp build/lib.win32-2.4/mandext.pyd .
 
 clean:

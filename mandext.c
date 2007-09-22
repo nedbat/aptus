@@ -1,10 +1,11 @@
 // The Mandext C extension for computing Mandelbrot fractals (hopefully quickly).
 
 #include "Python.h"
+#include "numpy/arrayobject.h"
 
 //#define BIFLOAT 1
 
-typedef long double float_t;
+typedef double float_t;
 
 typedef struct {
     float_t i, r;
@@ -287,6 +288,30 @@ get_stats(PyObject *self, PyObject *args)
         );        
 }
 
+static PyObject *
+try_array(PyObject *self, PyObject *args)
+{
+    PyArrayObject *arr;
+    if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &arr)) {
+        return NULL;
+    }
+    
+    if (arr == NULL) {
+        return NULL;
+    }
+    
+    int i, j;
+    for (i = 0; i < PyArray_DIM(arr, 0); i++) {
+        for (j = 0; j < PyArray_DIM(arr, 1); j++) {
+            /* Change the type here depending on your array data type */
+            npy_uint32 val = *(npy_uint32 *)PyArray_GETPTR2(arr, i, j);
+            printf("[%d,%d] is %d\n", i, j, val);
+        }
+    }
+    
+    return Py_BuildValue("i", PyArray_ITEMSIZE(arr));
+}
+
 static PyMethodDef
 mandext_methods[] = {
     {"mandelbrot_count", mandelbrot_count, METH_VARARGS, "Compute a mandelbrot count for a point"},
@@ -296,6 +321,7 @@ mandext_methods[] = {
     {"clear_stats", clear_stats, METH_VARARGS, "Clear the statistic counters"},
     {"get_stats", get_stats, METH_VARARGS, "Get the statistics as a dictionary"},
     {"get_coords", get_coords, METH_VARARGS, "xxx"},
+    {"try_array", try_array, METH_VARARGS, ""},
     {NULL, NULL}
 };
 
@@ -303,4 +329,5 @@ void
 initmandext(void)
 {
     Py_InitModule("mandext", mandext_methods);
+    import_array();
 }
