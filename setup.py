@@ -20,5 +20,10 @@ setup(
             sources=["mandext.c"],
             include_dirs=[numpy.get_include()],
             #extra_compile_args=['-O3', '-ffast-math'],
-        )]
+            ),
+        ],
+    
+    scripts = [
+        'scripts/aptus.py',
+        ],    
     )
