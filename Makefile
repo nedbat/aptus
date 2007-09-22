@@ -19,3 +19,6 @@ clean:
 	-rm -f *.pyc */*.pyc */*/*.pyc */*/*/*.pyc
 	-rm -f *.pyo */*.pyo */*/*.pyo */*/*/*.pyo
 	-rm -f *.bak */*.bak */*/*.bak */*/*/*.bak
+
+kit:
+	python setup.py sdist --formats=gztar

@@ -5,19 +5,19 @@
 
 //#define BIFLOAT 1
 
-typedef double float_t;
+typedef double aptfloat;
 
 typedef struct {
-    float_t i, r;
+    aptfloat i, r;
 } complex_t;
 
 #ifdef BIFLOAT
 typedef struct {
-    float_t p, d;
-} bifloat_t;
+    aptfloat p, d;
+} biaptfloat;
 
 typedef struct {
-    bifloat_t i, r;
+    biaptfloat i, r;
 } bicomplex_t;
 
 #define BIINIP(r,s) ((r) + (s))
@@ -59,17 +59,17 @@ static int check_for_cycles = 1;
 #define INITIAL_CYCLE_PERIOD 7
 #define CYCLE_TRIES 10
 
-static float_t epsilon;
+static aptfloat epsilon;
 
 #ifdef BIFLOAT
 inline int
-fequal(bifloat_t a, bifloat_t b)
+fequal(biaptfloat a, biaptfloat b)
 {
     return (a.p == b.p);
 }
 #else
 inline int
-fequal(float_t a, float_t b)
+fequal(aptfloat a, aptfloat b)
 {
     return fabs(a - b) < epsilon;
 }
@@ -92,11 +92,11 @@ get_coords(PyObject *self, PyObject *args)
 }
 
 static void
-dump_number(float_t num)
+dump_number(aptfloat num)
 {
     union {
-        float_t f;
-        char c[sizeof(float_t)];
+        aptfloat f;
+        char c[sizeof(aptfloat)];
     } fc;
     fc.f = num;
     int i;
@@ -162,7 +162,7 @@ mandelbrot_count(PyObject *self, PyObject *args)
             }
             break;
         }
-        bifloat_t tmp;
+        biaptfloat tmp;
         tmp.p = BISUBP(z2.r, z2.i);
         tmp.d = BISUBD(z2.r, z2.i);
         tmp.p += c.r.p;
@@ -259,7 +259,7 @@ set_check_cycles(PyObject *self, PyObject *args)
 static PyObject *
 float_sizes(PyObject *self, PyObject *args)
 {
-    return Py_BuildValue("ii", sizeof(double), sizeof(float_t));
+    return Py_BuildValue("ii", sizeof(double), sizeof(aptfloat));
 }
 
 static PyObject *

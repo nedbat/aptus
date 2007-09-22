@@ -1,7 +1,11 @@
 # setup.py
 import distutils
 from distutils.core import setup, Extension
-import numpy
+
+try:
+    import numpy
+except:
+    raise Exception("Need numpy, from http://numpy.scipy.org/")
 
 version = "1.0"
 
