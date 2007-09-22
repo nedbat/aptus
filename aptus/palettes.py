@@ -134,7 +134,7 @@ all_palettes = [
     Palette().set_rainbow_ramps(4, nsteps=4, lrange=.5, srange=.7),
     Palette().set_colors([(255,192,192), (255,255,255)]).set_incolor((192,192,255)),
     Palette().set_colors([(255,255,255), (0,0,0), (0,0,0), (0,0,0)]),
-    Palette().from_ggr('bluefly.ggr', 20),
-    Palette().from_ggr('ib18.ggr', 20),
-    Palette().from_ggr('ib18.ggr', 50),
+    Palette().from_ggr('palettes/bluefly.ggr', 20),
+    Palette().from_ggr('palettes/ib18.ggr', 20),
+    Palette().from_ggr('palettes/ib18.ggr', 50),
     ]

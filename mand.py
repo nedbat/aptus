@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # Started from http://www.howforge.com/mandelbrot-set-viewer-using-wxpython
 
-from timeutil import duration, future
-from options import MandOptions
-from palettes import all_palettes
+from aptus.timeutil import duration, future
+from aptus.options import MandOptions
+from aptus.palettes import all_palettes
 
 import wx
 import numpy
