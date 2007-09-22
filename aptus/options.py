@@ -1,9 +1,9 @@
-""" Options handling for Mand.
+""" Options handling for Aptus.
 """
 
 import optparse, sys
 
-class MandOptions:
+class AptusOptions:
     def __init__(self):
         self.center = -0.5, 0.0
         self.diam = 3.0, 3.0
