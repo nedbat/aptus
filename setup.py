@@ -6,13 +6,19 @@ import numpy
 version = "1.0"
 
 setup(
-    name = "altus",
+    name = "Aptus",
     description = "Fast Mandelbrot calculation",
     version = version,
-    ext_modules = [Extension(
-        "mandext",
-        sources=["mandext.c"],
-        include_dirs=[numpy.get_include()],
-        #extra_compile_args=['-O3', '-ffast-math'],
+    
+    packages = [
+        'aptus'
+        ],
+    
+    ext_modules = [
+        Extension(
+            "aptus.mandext",
+            sources=["mandext.c"],
+            include_dirs=[numpy.get_include()],
+            #extra_compile_args=['-O3', '-ffast-math'],
         )]
     )
