@@ -29,7 +29,7 @@ import os, re, sys, time, traceback, zlib
 # Load our engine.
 
 try:
-    from mandext import *
+    from aptus_engine import *
 except:
     # Pure python (slow!) implementation of mandext interface.
     MAXITER = 999

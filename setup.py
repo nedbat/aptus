@@ -16,8 +16,8 @@ setup(
     
     ext_modules = [
         Extension(
-            "mandext",
-            sources=["mandext.c"],
+            "aptus_engine",
+            sources=["ext/aptus_engine.c"],
             include_dirs=[numpy.get_include()],
             #extra_compile_args=['-O3', '-ffast-math'],
             ),
