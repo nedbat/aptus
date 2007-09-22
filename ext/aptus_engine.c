@@ -1,4 +1,4 @@
-// The Mandext C extension for computing Mandelbrot fractals (hopefully quickly).
+// The Aptus Engine C extension for computing Mandelbrot fractals (hopefully quickly).
 
 #include "Python.h"
 #include "numpy/arrayobject.h"
@@ -326,8 +326,8 @@ mandext_methods[] = {
 };
 
 void
-initmandext(void)
+initaptus_engine(void)
 {
-    Py_InitModule("mandext", mandext_methods);
+    Py_InitModule("aptus_engine", mandext_methods);
     import_array();
 }
