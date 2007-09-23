@@ -127,19 +127,36 @@ static PyObject *
 mandelbrot_array(PyObject *self, PyObject *args)
 {
     PyArrayObject *arr;
-    if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &arr)) {
+    PyObject * progress;
+    PyObject * arglist;
+    PyObject * result;
+    
+    if (!PyArg_ParseTuple(args, "O!O", &PyArray_Type, &arr, &progress)) {
         return NULL;
     }
     
     if (arr == NULL) {
         return NULL;
     }
-    
+
+    if (!PyCallable_Check(progress)) {
+        PyErr_SetString(PyExc_TypeError, "progress must be callable");
+        return NULL;
+    }
+
+    int w = PyArray_DIM(arr, 1);
+    int h = PyArray_DIM(arr, 0);
     int xi, yi;
-    for (yi = 0; yi < PyArray_DIM(arr, 0); yi++) {
-        for (xi = 0; xi < PyArray_DIM(arr, 1); xi++) {
+    for (yi = 0; yi < h; yi++) {
+        for (xi = 0; xi < w; xi++) {
             *(npy_uint32 *)PyArray_GETPTR2(arr, yi, xi) = compute_count(xi, -yi);
         }
+
+        double frac_complete = ((double)yi+1)/h;
+        arglist = Py_BuildValue("(d)", frac_complete);
+        result = PyEval_CallObject(progress, arglist);
+        Py_DECREF(arglist);
+        Py_DECREF(result);
     }
     
     return Py_BuildValue("");

@@ -112,7 +112,7 @@ class MandelbrotSet:
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
         self.progress.begin()
         self.counts = numpy.zeros((self.h, self.w), dtype=numpy.uint32)
-        mandelbrot_array(self.counts)
+        mandelbrot_array(self.counts, self.progress.progress)
         self.progress.end()
         print get_stats()
 
