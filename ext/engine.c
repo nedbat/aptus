@@ -3,39 +3,11 @@
 #include "Python.h"
 #include "numpy/arrayobject.h"
 
-//#define BIFLOAT 1
-
 typedef double aptfloat;
 
 typedef struct {
     aptfloat i, r;
 } complex_t;
-
-#ifdef BIFLOAT
-typedef struct {
-    aptfloat p, d;
-} biaptfloat;
-
-typedef struct {
-    biaptfloat i, r;
-} bicomplex_t;
-
-#define BIINIP(r,s) ((r) + (s))
-#define BIINID(r,s) ((s) - (BIINIP(r,s) - (r)))
-
-#define BIMULP(a,b) ((a).p * (b).p)
-#define BIMULD(a,b) (a.p * b.d + a.d * b.p + a.d * b.d)
-
-#define BIADDP(a,b) (a.p + b.p + a.d + b.d)
-#define BIADDD(a,b) (a.d + b.d - (BIADDP(a,b) - (a.p + b.p)))
-
-#define BISUBP(a,b) (a.p - b.p + a.d - b.d)
-#define BISUBD(a,b) (a.d - b.d - (BISUBP(a,b) - (a.p - b.p)))
-
-#define BINORMP(a) (a.p + a.d)
-#define BINORMD(a) (a.d - (BINORMP(a) - a.p))
-
-#endif
 
 // Global Parameters to the module.
 static int max_iter;
@@ -61,114 +33,31 @@ static int check_for_cycles = 1;
 
 static aptfloat epsilon;
 
-#ifdef BIFLOAT
-inline int
-fequal(biaptfloat a, biaptfloat b)
-{
-    return (a.p == b.p);
-}
-#else
 inline int
 fequal(aptfloat a, aptfloat b)
 {
     return fabs(a - b) < epsilon;
-}
-#endif
-
-static PyObject *
-get_coords(PyObject *self, PyObject *args)
-{
-    int xi, yi;
-    
-    if (!PyArg_ParseTuple(args, "ii", &xi, &yi)) {
-        return NULL;
-    }
-
-    complex_t c;
-    c.r = xy0.r + xi*xyd.r;
-    c.i = xy0.i + yi*xyd.i;
-    
-    return Py_BuildValue("dd", (double)c.r, (double)c.i);
-}
-
-static void
-dump_number(aptfloat num)
-{
-    union {
-        aptfloat f;
-        char c[sizeof(aptfloat)];
-    } fc;
-    fc.f = num;
-    int i;
-    for (i = 0; i < sizeof(fc.c); i++) {
-        printf("%02x", (unsigned char)fc.c[i]);
-    }
-    printf("\n");
 }
 
 static int
 compute_count(int xi, int yi)
 {
     int count = 0;
-#ifdef BIFLOAT
-    bicomplex_t c;
-    c.r.p = BIINIP(xy0.r, xi*xyd.r);
-    c.r.d = BIINID(xy0.r, xi*xyd.r);
-    c.i.p = BIINIP(xy0.i, yi*xyd.i);
-    c.i.d = BIINID(xy0.i, yi*xyd.i);
-
-    bicomplex_t z = {{0,0},{0,0}};
-    bicomplex_t znew;
-    bicomplex_t z2;
-
-    bicomplex_t cycle_check = z;
-#else
     complex_t c;
     c.r = xy0.r + xi*xyd.r;
     c.i = xy0.i + yi*xyd.i;
 
-    //dump_number(c.r);
-    
     complex_t z = {0,0};
     complex_t znew;
     complex_t z2;
     
     complex_t cycle_check = z;
-#endif
 
     int cycle_period = INITIAL_CYCLE_PERIOD;
     int cycle_tries = CYCLE_TRIES;
     int cycle_countdown = cycle_period;
 
     while (count <= max_iter) {
-
-#ifdef BIFLOAT
-        z2.r.p = BIMULP(z.r, z.r);
-        z2.r.d = BIMULD(z.r, z.r);
-        z2.i.p = BIMULP(z.i, z.i);
-        z2.i.d = BIMULD(z.i, z.i);
-        if (z2.r.p + z2.r.d + z2.i.p + z2.i.d > 4.0) {
-            if (count > stats.maxiter) {
-                stats.maxiter = count;
-            }
-            if (stats.miniter == 0 || count < stats.miniter) {
-                stats.miniter = count;
-            }
-            break;
-        }
-        biaptfloat tmp;
-        tmp.p = BISUBP(z2.r, z2.i);
-        tmp.d = BISUBD(z2.r, z2.i);
-        tmp.p += c.r.p;
-        tmp.d += c.r.d;
-        
-        znew.r.p = BINORMP(tmp);
-        znew.r.d = BINORMD(tmp);
-        
-        znew.i.p = 2 * BIMULP(z.i, z.r) + c.i.p;
-        znew.i.d = 2 * BIMULD(z.i, z.r) + c.i.d;
-        z = znew;
-#else
         z2.r = z.r * z.r;
         z2.i = z.i * z.i;
         if (z2.r + z2.i > 4.0) {
@@ -183,7 +72,6 @@ compute_count(int xi, int yi)
         znew.r = z2.r - z2.i + c.r;
         znew.i = 2 * z.i * z.r + c.i;
         z = znew;
-#endif
         count++;
 
         stats.totaliter++;
@@ -327,13 +215,12 @@ mandext_methods[] = {
     {"float_sizes", float_sizes, METH_VARARGS, "Get sizes of float types"},
     {"clear_stats", clear_stats, METH_VARARGS, "Clear the statistic counters"},
     {"get_stats", get_stats, METH_VARARGS, "Get the statistics as a dictionary"},
-    {"get_coords", get_coords, METH_VARARGS, "xxx"},
     {NULL, NULL}
 };
 
 void
 initaptus_engine(void)
 {
-    Py_InitModule("aptus_engine", mandext_methods);
     import_array();
+    Py_InitModule("aptus_engine", mandext_methods);
 }
