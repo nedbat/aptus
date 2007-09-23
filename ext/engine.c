@@ -128,8 +128,6 @@ mandelbrot_array(PyObject *self, PyObject *args)
 {
     PyArrayObject *arr;
     PyObject * progress;
-    PyObject * arglist;
-    PyObject * result;
     
     if (!PyArg_ParseTuple(args, "O!O", &PyArray_Type, &arr, &progress)) {
         return NULL;
@@ -153,8 +151,8 @@ mandelbrot_array(PyObject *self, PyObject *args)
         }
 
         double frac_complete = ((double)yi+1)/h;
-        arglist = Py_BuildValue("(d)", frac_complete);
-        result = PyEval_CallObject(progress, arglist);
+        PyObject * arglist = Py_BuildValue("(d)", frac_complete);
+        PyObject * result = PyEval_CallObject(progress, arglist);
         Py_DECREF(arglist);
         Py_DECREF(result);
     }
