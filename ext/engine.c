@@ -106,15 +106,9 @@ dump_number(aptfloat num)
     printf("\n");
 }
 
-static PyObject *
-mandelbrot_count(PyObject *self, PyObject *args)
+static int
+compute_count(int xi, int yi)
 {
-    int xi, yi;
-    
-    if (!PyArg_ParseTuple(args, "ii", &xi, &yi)) {
-        return NULL;
-    }
-
     int count = 0;
 #ifdef BIFLOAT
     bicomplex_t c;
@@ -224,7 +218,43 @@ mandelbrot_count(PyObject *self, PyObject *args)
         count = 0;
     }
 
+    return count;
+}
+
+static PyObject *
+mandelbrot_count(PyObject *self, PyObject *args)
+{
+    int xi, yi;
+    
+    if (!PyArg_ParseTuple(args, "ii", &xi, &yi)) {
+        return NULL;
+    }
+
+    int count = compute_count(xi, yi);
+
     return Py_BuildValue("i", count);
+}
+    
+static PyObject *
+mandelbrot_array(PyObject *self, PyObject *args)
+{
+    PyArrayObject *arr;
+    if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &arr)) {
+        return NULL;
+    }
+    
+    if (arr == NULL) {
+        return NULL;
+    }
+    
+    int xi, yi;
+    for (yi = 0; yi < PyArray_DIM(arr, 0); yi++) {
+        for (xi = 0; xi < PyArray_DIM(arr, 1); xi++) {
+            *(npy_uint32 *)PyArray_GETPTR2(arr, yi, xi) = compute_count(xi, -yi);
+        }
+    }
+    
+    return Py_BuildValue("");
 }
 
 static PyObject *
@@ -288,40 +318,16 @@ get_stats(PyObject *self, PyObject *args)
         );        
 }
 
-static PyObject *
-try_array(PyObject *self, PyObject *args)
-{
-    PyArrayObject *arr;
-    if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &arr)) {
-        return NULL;
-    }
-    
-    if (arr == NULL) {
-        return NULL;
-    }
-    
-    int i, j;
-    for (i = 0; i < PyArray_DIM(arr, 0); i++) {
-        for (j = 0; j < PyArray_DIM(arr, 1); j++) {
-            /* Change the type here depending on your array data type */
-            npy_uint32 val = *(npy_uint32 *)PyArray_GETPTR2(arr, i, j);
-            printf("[%d,%d] is %d\n", i, j, val);
-        }
-    }
-    
-    return Py_BuildValue("i", PyArray_ITEMSIZE(arr));
-}
-
 static PyMethodDef
 mandext_methods[] = {
     {"mandelbrot_count", mandelbrot_count, METH_VARARGS, "Compute a mandelbrot count for a point"},
+    {"mandelbrot_array", mandelbrot_array, METH_VARARGS, ""},
     {"set_params", set_params, METH_VARARGS, "Set parameters"},
     {"set_check_cycles", set_check_cycles, METH_VARARGS, "Set more parameters"},
     {"float_sizes", float_sizes, METH_VARARGS, "Get sizes of float types"},
     {"clear_stats", clear_stats, METH_VARARGS, "Clear the statistic counters"},
     {"get_stats", get_stats, METH_VARARGS, "Get the statistics as a dictionary"},
     {"get_coords", get_coords, METH_VARARGS, "xxx"},
-    {"try_array", try_array, METH_VARARGS, ""},
     {NULL, NULL}
 };
 

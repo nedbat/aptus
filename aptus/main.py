@@ -107,8 +107,17 @@ class MandelbrotSet:
         if self.counts is not None:
             return
         print "x, y %r step %r, maxiter %r, trace %r" % ((self.x0, self.y0), (self.rx, self.ry), self.maxiter, trace)
+
         clear_stats()
-        print set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
+        set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
+        self.progress.begin()
+        self.counts = numpy.zeros((self.h, self.w), dtype=numpy.uint32)
+        mandelbrot_array(self.counts)
+        self.progress.end()
+        print get_stats()
+
+        clear_stats()
+        set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
         self.progress.begin()
         if trace:
             self.counts = self.compute_trace()
@@ -116,6 +125,7 @@ class MandelbrotSet:
             self.counts = self.compute()
         self.progress.end()
         print get_stats()
+
         
     def color_pixels(self, palette):
         palarray = numpy.array(palette.colors, dtype=numpy.uint8)
@@ -163,7 +173,7 @@ class wxMandelbrotSetViewer(wx.Frame):
         
         x0, y0 = self.xcenter - xradius, self.ycenter - yradius
         x1, y1 = self.xcenter + xradius, self.ycenter + yradius
-        print "Coords: (%r,%r,%r,%r)" % (self.xcenter, self.ycenter, self.xdiam, self.ydiam)
+        #print "Coords: (%r,%r,%r,%r)" % (self.xcenter, self.ycenter, self.xdiam, self.ydiam)
         return MandelbrotSet(x0, y0, x1, y1, w, h, self.maxiter)
         
     def message(self, msg):

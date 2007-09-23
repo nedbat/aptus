@@ -1,4 +1,8 @@
-# setup.py
+# setup.py for Aptus.
+"""\
+Aptus: A Mandelbrot set explorer and renderer.
+"""
+
 import distutils
 from distutils.core import setup, Extension
 
