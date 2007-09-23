@@ -1,15 +1,10 @@
-# Makefile for utility work on mand.py
+# Makefile for utility work on Aptus
 
-EXTENSION = mandext.pyd
+install: build
+	python setup.py install
 
-install:
-	python setup.py build install
-
-build: $(EXTENSION)
-
-$(EXTENSION): mandext.c setup.py
+build: 
 	python setup.py build 
-	cp build/lib.win32-2.4/mandext.pyd .
 
 clean:
 	-rm -rf build
@@ -20,5 +15,5 @@ clean:
 	-rm -f *.pyo */*.pyo */*/*.pyo */*/*/*.pyo
 	-rm -f *.bak */*.bak */*/*.bak */*/*/*.bak
 
-kit:
+kit: build
 	python setup.py sdist --formats=gztar
