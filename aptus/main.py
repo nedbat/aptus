@@ -115,7 +115,7 @@ class MandelbrotSet:
         mandelbrot_array(self.counts, self.progress.progress)
         self.progress.end()
         print get_stats()
-
+        """
         clear_stats()
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
         self.progress.begin()
@@ -125,7 +125,7 @@ class MandelbrotSet:
             self.counts = self.compute()
         self.progress.end()
         print get_stats()
-
+        """
         
     def color_pixels(self, palette):
         palarray = numpy.array(palette.colors, dtype=numpy.uint8)
@@ -409,3 +409,6 @@ def main(args):
     f.palette.phase = opts.palette_phase
     f.Show()
     app.MainLoop()
+
+if __name__ == '__main__':
+    main(sys.argv[1:])
