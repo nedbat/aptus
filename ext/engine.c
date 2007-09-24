@@ -356,58 +356,6 @@ done:
     return Py_BuildValue("");
 }
 
-static int
-foo_count(int xi, int yi)
-{
-    aptfloat f = 1.0;
-    
-    int i;
-    for (i = 0; i < max_iter; i++) {
-        f *= 1.0000001;
-    }
-    
-    return 27;
-}
-
-static PyObject *
-foo_point(PyObject *self, PyObject *args)
-{
-    int xi, yi;
-    
-    if (!PyArg_ParseTuple(args, "ii", &xi, &yi)) {
-        return NULL;
-    }
-
-    int count = foo_count(xi, yi);
-
-    return Py_BuildValue("i", count);
-}
-    
-static PyObject *
-foo_array(PyObject *self, PyObject *args)
-{
-    PyArrayObject *arr;
-    
-    if (!PyArg_ParseTuple(args, "O!", &PyArray_Type, &arr)) {
-        return NULL;
-    }
-    
-    if (arr == NULL) {
-        return NULL;
-    }
-
-    int w = PyArray_DIM(arr, 1);
-    int h = PyArray_DIM(arr, 0);
-    int xi, yi;
-    for (yi = 0; yi < h; yi++) {
-        for (xi = 0; xi < w; xi++) {
-            *(npy_uint32 *)PyArray_GETPTR2(arr, yi, xi) = foo_count(xi, -yi);
-        }
-    }
-    
-    return Py_BuildValue("");
-}
-
 static PyObject *
 set_params(PyObject *self, PyObject *args)
 {
@@ -470,7 +418,7 @@ get_stats(PyObject *self, PyObject *args)
 }
 
 static PyMethodDef
-mandext_methods[] = {
+aptus_engine_methods[] = {
     {"mandelbrot_point", mandelbrot_point, METH_VARARGS, "Compute a Mandelbrot count for a point"},
     {"mandelbrot_array", mandelbrot_array, METH_VARARGS, "Compute Mandelbrot counts for an array"},
     {"set_params", set_params, METH_VARARGS, "Set parameters"},
@@ -478,8 +426,6 @@ mandext_methods[] = {
     {"float_sizes", float_sizes, METH_VARARGS, "Get sizes of float types"},
     {"clear_stats", clear_stats, METH_VARARGS, "Clear the statistic counters"},
     {"get_stats", get_stats, METH_VARARGS, "Get the statistics as a dictionary"},
-    {"foo_point", foo_point, METH_VARARGS, ""},
-    {"foo_array", foo_array, METH_VARARGS, ""},
     {NULL, NULL}
 };
 
@@ -487,5 +433,5 @@ void
 initaptus_engine(void)
 {
     import_array();
-    Py_InitModule("aptus_engine", mandext_methods);
+    Py_InitModule("aptus_engine", aptus_engine_methods);
 }
