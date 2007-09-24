@@ -77,9 +77,14 @@ jumps = [
     ]
 
 class MandelbrotSet:
-    def __init__(self, x0, y0, x1, y1, w, h, maxiter=999):
-        self.x0, self.y0 = x0, y0
-        self.rx, self.ry = (x1-x0)/w, (y0-y1)/h
+    def __init__(self, xcenter, ycenter, xdiam, ydiam, w, h, maxiter=999):
+        pixsize = max(xdiam / w, ydiam / h)
+        xdiam, ydiam = pixsize * w, pixsize * h
+        
+        self.x0, self.y0 = xcenter - xdiam/2, ycenter - ydiam/2
+        #print "Coords: (%r,%r,%r,%r)" % (self.xcenter, self.ycenter, xdiam, ydiam)
+
+        self.xd, self.yd = pixsize, pixsize
         self.w, self.h = w, h
  
         self.maxiter = maxiter
@@ -87,15 +92,15 @@ class MandelbrotSet:
         self.counts = None
         
     def from_pixel(self, x, y):
-        return self.x0+self.rx*x, self.y0-self.ry*y
+        return self.x0+self.xd*x, self.y0+self.yd*y
 
     def compute_pixels(self, trace=False):
         if self.counts is not None:
             return
-        print "x, y %r step %r, maxiter %r, trace %r" % ((self.x0, self.y0), (self.rx, self.ry), self.maxiter, trace)
+        print "x, y %r step %r, maxiter %r, trace %r" % ((self.x0, self.y0), (self.xd, self.yd), self.maxiter, trace)
 
         clear_stats()
-        set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
+        set_params(self.x0, self.y0, self.xd, self.yd, self.maxiter)
         self.progress.begin()
         self.counts = numpy.zeros((self.h, self.w), dtype=numpy.uint32)
         mandelbrot_array(self.counts, self.progress.progress)
@@ -135,21 +140,12 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.bitmap = wx.EmptyBitmap(self.cw, self.ch)
         self.dc = None
 
-        #self.rubberBand = rubberband.RubberBand(drawingSurface=self.panel)
-        #self.rubberBand.reset(aspectRatio=1.0*self.cw/self.ch)
-
-        self.m = self.choose_mandel(self.cw, self.ch)
+        self.m = self.create_mandel(self.cw, self.ch)
         self.check_size = False
         self.Refresh()
 
-    def choose_mandel(self, w, h):
-        scale = max(self.xdiam / w, self.ydiam / h)
-        xradius, yradius = scale * w / 2, scale * h / 2
-        
-        x0, y0 = self.xcenter - xradius, self.ycenter - yradius
-        x1, y1 = self.xcenter + xradius, self.ycenter + yradius
-        #print "Coords: (%r,%r,%r,%r)" % (self.xcenter, self.ycenter, self.xdiam, self.ydiam)
-        return MandelbrotSet(x0, y0, x1, y1, w, h, self.maxiter)
+    def create_mandel(self, w, h):
+        return MandelbrotSet(self.xcenter, self.ycenter, self.xdiam, self.ydiam, w, h, self.maxiter)
         
     def message(self, msg):
         dlg = wx.MessageDialog(self, msg, 'Aptus', wx.OK | wx.ICON_WARNING)
@@ -287,7 +283,7 @@ class wxMandelbrotSetViewer(wx.Frame):
             ext = dlg.GetFilename().split('.')[-1].lower()
             if ext == 'png':
                 w, h = 1680, 1050
-                m = self.choose_mandel(w*3, h*3)
+                m = self.create_mandel(w*3, h*3)
                 m.progress = ConsoleProgressReporter()
                 m.compute_pixels(trace=self.trace)
                 pix = m.color_pixels(self.palette)

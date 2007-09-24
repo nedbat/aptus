@@ -183,7 +183,7 @@ mandelbrot_array(PyObject *self, PyObject *args)
             // Examine the current pixel.
             s = STATUS(xi, yi);
             if (s == 0) {
-                c = compute_count(xi, -yi);
+                c = compute_count(xi, yi);
                 COUNTS(xi, yi) = c;
                 num_pixels++;
                 STATUS(xi, yi) = s = 1;
@@ -248,7 +248,7 @@ mandelbrot_array(PyObject *self, PyObject *args)
                     // Get the count of the next position.
                     int c2;
                     if (STATUS(curx, cury) == 0) {
-                        c2 = compute_count(curx, -cury);
+                        c2 = compute_count(curx, cury);
                         COUNTS(curx, cury) = c2;
                         num_pixels++;
                         STATUS(curx, cury) = 1;
