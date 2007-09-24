@@ -34,7 +34,7 @@ def trace_boundary(count_fn, w, h, maxiter, threshold=10000, progress_fn=None):
             comp_c = c or maxiter
             if s == 1 and comp_c >= threshold:
                 # Start a boundary trace.
-                status[yi,xi] == 2
+                status[yi,xi] = 2
                 curdir = DOWN
                 curx, cury = xi, yi
                 orig_pt = (xi, yi)

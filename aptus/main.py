@@ -93,7 +93,7 @@ class MandelbrotSet:
         counts = numpy.zeros((self.h, self.w), dtype=numpy.uint32)
         for yi in xrange(self.h):
             for xi in xrange(self.w):
-                c = mandelbrot_count(xi, -yi)
+                c = mandelbrot_point(xi, -yi)
                 counts[yi,xi] = c
             info = "%(totaliter)d iters, %(maxiter)d max, %(miniter)d min, %(maxedpoints)d maxed" % get_stats()
             self.progress.progress(float(yi+1)/self.h, info)
@@ -108,13 +108,6 @@ class MandelbrotSet:
             return
         print "x, y %r step %r, maxiter %r, trace %r" % ((self.x0, self.y0), (self.rx, self.ry), self.maxiter, trace)
 
-        clear_stats()
-        set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
-        self.progress.begin()
-        self.counts = numpy.zeros((self.h, self.w), dtype=numpy.uint32)
-        mandelbrot_array(self.counts, self.progress.progress)
-        self.progress.end()
-        print get_stats()
         """
         clear_stats()
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
@@ -127,6 +120,14 @@ class MandelbrotSet:
         print get_stats()
         """
         
+        clear_stats()
+        set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
+        self.progress.begin()
+        self.counts = numpy.zeros((self.h, self.w), dtype=numpy.uint32)
+        mandelbrot_array(self.counts, self.progress.progress)
+        self.progress.end()
+        print get_stats()
+
     def color_pixels(self, palette):
         palarray = numpy.array(palette.colors, dtype=numpy.uint8)
         pix = palarray[(self.counts+palette.phase) % palarray.shape[0]]

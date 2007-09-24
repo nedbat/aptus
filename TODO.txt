@@ -11,7 +11,7 @@
 - Take some more optimizations from Xaos: http://www.delorie.com/gnu/docs/xaos/xaos_29.html
     - Do iterations in batches of 8 to avoid the bailout comparison.
 - Optimize boundary.py so we can use it for high iterations
-- Boundary checking in C
++ Boundary checking in C
 - Fracint computes the miniter by running the edges (where the min must be), then
     uses it to skip the bailout check until reaching the miniter.
 

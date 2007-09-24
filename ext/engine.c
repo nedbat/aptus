@@ -110,7 +110,7 @@ compute_count(int xi, int yi)
 }
 
 static PyObject *
-mandelbrot_count(PyObject *self, PyObject *args)
+mandelbrot_point(PyObject *self, PyObject *args)
 {
     int xi, yi;
     
@@ -142,20 +142,216 @@ mandelbrot_array(PyObject *self, PyObject *args)
         return NULL;
     }
 
+    // Allocate structures
     int w = PyArray_DIM(arr, 1);
     int h = PyArray_DIM(arr, 0);
+    int num_pixels = 0;
+    int num_trace = 0;
+    char info[100];
+    
+    // status is an array of the status of the pixels.
+    //  0: hasn't been computed yet.
+    //  1: computed, but not filled.
+    //  2: computed and filled.
+    char * status = malloc(w*h);
+    if (status == NULL) {
+        PyErr_SetString(PyExc_MemoryError, "couldn't allocate status");
+        return NULL;
+    }
+    memset(status, 0, w*h);
+
+    // points is an array of points on a boundary.
+    typedef struct { int x, y; } pt;
+    int ptsalloced = 10000;
+    pt * points = malloc(sizeof(pt)*ptsalloced);
+    int ptsstored = 0;
+    
+#define STATUS(x,y) status[(y)*w+(x)]
+#define COUNTS(x,y) *(npy_uint32 *)PyArray_GETPTR2(arr, (y), (x))
+#define DIR_DOWN    0
+#define DIR_LEFT    1
+#define DIR_UP      2
+#define DIR_RIGHT   3
+
+    // Loop the pixels.
     int xi, yi;
     for (yi = 0; yi < h; yi++) {
         for (xi = 0; xi < w; xi++) {
-            *(npy_uint32 *)PyArray_GETPTR2(arr, yi, xi) = compute_count(xi, -yi);
-        }
+            char s;
+            int c;
+            
+            // Examine the current pixel.
+            s = STATUS(xi, yi);
+            if (s == 0) {
+                c = compute_count(xi, -yi);
+                COUNTS(xi, yi) = c;
+                num_pixels++;
+                STATUS(xi, yi) = s = 1;
+            }
+            else {
+                c = COUNTS(xi, yi);
+            }
+            
+            // A pixel that's been calculated but not traced needs to be traced.
+            if (s == 1) {
+                char curdir = DIR_DOWN;
+                int curx = xi, cury = yi;
+                int origx = xi, origy = yi;
+                int lastx = xi, lasty = yi;
+                int start = 1;
+                
+                STATUS(xi, yi) = 2;
+                ptsstored = 0;
+                
+                // Walk the boundary
+                for (;;) {
+                    // Eventually, we reach our starting point. Stop.
+                    if (!start && curx == origx && cury == origy && curdir == DIR_DOWN) {
+                        break;
+                    }
+                    
+                    // Move to the next position. If we're off the field, turn left.
+                    switch (curdir) {
+                    case DIR_DOWN:
+                        if (cury >= h-1) {
+                            curdir = DIR_RIGHT;
+                            continue;
+                        }
+                        cury++;
+                        break;
 
-        double frac_complete = ((double)yi+1)/h;
-        PyObject * arglist = Py_BuildValue("(d)", frac_complete);
+                    case DIR_LEFT:
+                        if (curx <= 0) {
+                            curdir = DIR_DOWN;
+                            continue;
+                        }
+                        curx--;
+                        break;
+                    
+                    case DIR_UP:
+                        if (cury <= 0) {
+                            curdir = DIR_LEFT;
+                            continue;
+                        }
+                        cury--;
+                        break;
+                    
+                    case DIR_RIGHT:
+                        if (curx >= w-1) {
+                            curdir = DIR_UP;
+                            continue;
+                        }
+                        curx++;
+                        break;
+                    }
+                    
+                    // Get the count of the next position.
+                    int c2;
+                    if (STATUS(curx, cury) == 0) {
+                        c2 = compute_count(curx, -cury);
+                        COUNTS(curx, cury) = c2;
+                        num_pixels++;
+                        STATUS(curx, cury) = 1;
+                    }
+                    else {
+                        c2 = COUNTS(curx, cury);
+                    }
+                    
+                    // If the same color, turn right, else turn left.
+                    if (c2 == c) {
+                        STATUS(curx, cury) = 2;
+                        // Append the point to the points list, growing dynamically
+                        // if we have to.
+                        if (ptsstored == ptsalloced) {
+                            //printf("Upping points to %d\n", ptsalloced*2);
+                            pt * newpoints = malloc(sizeof(pt)*ptsalloced*2);
+                            if (newpoints == NULL) {
+                                goto done;  // Should treat error differently.
+                            }
+                            memcpy(newpoints, points, sizeof(pt)*ptsalloced);
+                            ptsalloced *= 2;
+                            free(points);
+                            points = newpoints;
+                        }
+                        points[ptsstored].x = curx;
+                        points[ptsstored].y = cury;
+                        ptsstored++;
+                        lastx = curx;
+                        lasty = cury;
+                        curdir = (curdir+1) % 4;    // Turn right
+                    }
+                    else {
+                        curx = lastx;
+                        cury = lasty;
+                        curdir = (curdir+3) % 4;    // Turn left
+                    }
+                    
+                    start = 0;
+                } // end for boundary points
+                
+                // If we saved any boundary points, then we flood fill.
+                if (ptsstored > 0) {
+                    num_trace++;
+                    
+                    // Flood fill the region. The points list has all the boundary
+                    // points, so we only need to fill left and right from each of
+                    // those.
+                    int pi;
+                    for (pi = 0; pi < ptsstored; pi++) {
+                        int ptx = points[pi].x;
+                        int pty = points[pi].y;
+                        curx = ptx;
+                        // Fill left.
+                        for (;;) {
+                            curx--;
+                            if (curx < 0) {
+                                break;
+                            }
+                            if (STATUS(curx, pty) != 0) {
+                                break;
+                            }
+                            COUNTS(curx, pty) = c;
+                            num_pixels++;
+                            STATUS(curx, pty) = 2;
+                        }
+                        // Fill right.
+                        for (;;) {
+                            curx++;
+                            if (curx > w-1) {
+                                break;
+                            }
+                            if (STATUS(curx, pty) != 0) {
+                                break;
+                            }
+                            COUNTS(curx, pty) = c;
+                            num_pixels++;
+                            STATUS(curx, pty) = 2;
+                        }
+                    } // end for points to fill
+                    
+
+                    double frac_complete = ((double)num_pixels)/(w*h);
+                    sprintf(info, "trace %d", c);
+                    PyObject * arglist = Py_BuildValue("(ds)", frac_complete, info);
+                    PyObject * result = PyEval_CallObject(progress, arglist);
+                    Py_DECREF(arglist);
+                    Py_DECREF(result);
+                } // end if points
+            } // end if needs trace
+        } // end for xi
+
+        double frac_complete = ((double)num_pixels)/(w*h);
+        sprintf(info, "scan %d", yi+1);
+        PyObject * arglist = Py_BuildValue("(ds)", frac_complete, info);
         PyObject * result = PyEval_CallObject(progress, arglist);
         Py_DECREF(arglist);
         Py_DECREF(result);
-    }
+    } // end for yi
+    
+    // Clean up.
+done:
+    free(status);
+    free(points);
     
     return Py_BuildValue("");
 }
@@ -275,8 +471,8 @@ get_stats(PyObject *self, PyObject *args)
 
 static PyMethodDef
 mandext_methods[] = {
-    {"mandelbrot_count", mandelbrot_count, METH_VARARGS, "Compute a mandelbrot count for a point"},
-    {"mandelbrot_array", mandelbrot_array, METH_VARARGS, ""},
+    {"mandelbrot_point", mandelbrot_point, METH_VARARGS, "Compute a mandelbrot count for a point"},
+    {"mandelbrot_array", mandelbrot_array, METH_VARARGS, "Compute mandelbrot counts for an array"},
     {"set_params", set_params, METH_VARARGS, "Set parameters"},
     {"set_check_cycles", set_check_cycles, METH_VARARGS, "Set more parameters"},
     {"float_sizes", float_sizes, METH_VARARGS, "Get sizes of float types"},
