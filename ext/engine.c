@@ -471,8 +471,8 @@ get_stats(PyObject *self, PyObject *args)
 
 static PyMethodDef
 mandext_methods[] = {
-    {"mandelbrot_point", mandelbrot_point, METH_VARARGS, "Compute a mandelbrot count for a point"},
-    {"mandelbrot_array", mandelbrot_array, METH_VARARGS, "Compute mandelbrot counts for an array"},
+    {"mandelbrot_point", mandelbrot_point, METH_VARARGS, "Compute a Mandelbrot count for a point"},
+    {"mandelbrot_array", mandelbrot_array, METH_VARARGS, "Compute Mandelbrot counts for an array"},
     {"set_params", set_params, METH_VARARGS, "Set parameters"},
     {"set_check_cycles", set_check_cycles, METH_VARARGS, "Set more parameters"},
     {"float_sizes", float_sizes, METH_VARARGS, "Get sizes of float types"},
