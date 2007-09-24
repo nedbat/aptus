@@ -88,38 +88,12 @@ class MandelbrotSet:
         
     def from_pixel(self, x, y):
         return self.x0+self.rx*x, self.y0-self.ry*y
- 
-    def compute(self):
-        counts = numpy.zeros((self.h, self.w), dtype=numpy.uint32)
-        for yi in xrange(self.h):
-            for xi in xrange(self.w):
-                c = mandelbrot_point(xi, -yi)
-                counts[yi,xi] = c
-            info = "%(totaliter)d iters, %(maxiter)d max, %(miniter)d min, %(maxedpoints)d maxed" % get_stats()
-            self.progress.progress(float(yi+1)/self.h, info)
-        return counts
-    
-    def compute_trace(self):
-        from boundary import trace_boundary
-        return trace_boundary(mandelbrot_count, self.w, self.h, self.maxiter, progress_fn=self.progress.progress)
-    
+
     def compute_pixels(self, trace=False):
         if self.counts is not None:
             return
         print "x, y %r step %r, maxiter %r, trace %r" % ((self.x0, self.y0), (self.rx, self.ry), self.maxiter, trace)
 
-        """
-        clear_stats()
-        set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
-        self.progress.begin()
-        if trace:
-            self.counts = self.compute_trace()
-        else:
-            self.counts = self.compute()
-        self.progress.end()
-        print get_stats()
-        """
-        
         clear_stats()
         set_params(self.x0, self.y0, self.rx, self.ry, self.maxiter)
         self.progress.begin()
