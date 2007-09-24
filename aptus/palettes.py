@@ -1,4 +1,4 @@
-""" Palettes for Mand.
+""" Palettes for Aptus.
 """
 
 import colorsys

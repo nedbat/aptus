@@ -21,7 +21,11 @@
 - Status bar for progress and stats presentation.
 - GUI progress indicator.
 - Paint partial progress in the window.
-
+- Palette editor.
+- Multiple windows.
+- Back button
+    - with a list of places you've been (with thumbnails).
+    
 * Beauty
 
 + HSV palette
@@ -32,11 +36,12 @@
     - Algorithmic palette
 - Rotation (simply store the pixel offsets as dx and dy computed from angle).
 - Continuous coloring (http://linas.org/art-gallery/escape/smooth.html)
+- A palette specification, so the complete specs for a pic can be stored.
 
 * Power
 
 - Editable parameters for things like cycle checking epsilon.
-- Refactor mandext.c so that it defines a class, rather than having all those globals.
+- Refactor engine.c so that it defines a class, rather than having all those globals.
 - Command line invocation (refactor a bunch of stuff)
 - Multi-precision floats
 - Interruptable rendering: write partial counts (and all other state) to a file and restart.
