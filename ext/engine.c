@@ -356,12 +356,16 @@ done:
     return Py_BuildValue("");
 }
 
+// set_geometry
+
+#define set_geometry_doc "Set the geometry, x0, y0, xd, yd"
+
 static PyObject *
-set_params(PyObject *self, PyObject *args)
+set_geometry(PyObject *self, PyObject *args)
 {
     double lx0, ly0, lxd, lyd;
     
-    if (!PyArg_ParseTuple(args, "ddddi", &lx0, &ly0, &lxd, &lyd, &max_iter)) {
+    if (!PyArg_ParseTuple(args, "dddd", &lx0, &ly0, &lxd, &lyd)) {
         return NULL;
     }
     
@@ -372,7 +376,17 @@ set_params(PyObject *self, PyObject *args)
 
     epsilon = xyd.r/2;
 
-    return Py_BuildValue("ddddi", (double)xy0.r, (double)xy0.i, (double)xyd.r, (double)xyd.i, max_iter);
+    return Py_BuildValue("");
+}
+
+static PyObject *
+set_maxiter(PyObject *self, PyObject *args)
+{
+    if (!PyArg_ParseTuple(args, "i", &max_iter)) {
+        return NULL;
+    }
+
+    return Py_BuildValue("");    
 }
 
 static PyObject *
@@ -421,7 +435,8 @@ static PyMethodDef
 aptus_engine_methods[] = {
     {"mandelbrot_point", mandelbrot_point, METH_VARARGS, "Compute a Mandelbrot count for a point"},
     {"mandelbrot_array", mandelbrot_array, METH_VARARGS, "Compute Mandelbrot counts for an array"},
-    {"set_params", set_params, METH_VARARGS, "Set parameters"},
+    {"set_geometry", set_geometry, METH_VARARGS, set_geometry_doc},
+    {"set_maxiter", set_maxiter, METH_VARARGS, "Set the maximum iteration"},
     {"set_check_cycles", set_check_cycles, METH_VARARGS, "Set more parameters"},
     {"float_sizes", float_sizes, METH_VARARGS, "Get sizes of float types"},
     {"clear_stats", clear_stats, METH_VARARGS, "Clear the statistic counters"},

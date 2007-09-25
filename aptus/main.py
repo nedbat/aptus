@@ -47,10 +47,13 @@ except:
             i += 1
         return i
 
-    def set_params(x0, y0, xd, yd, maxiter):
-        global X0, Y0, XD, YD, MAXITER
+    def set_geometry(x0, y0, xd, yd):
+        global X0, Y0, XD, YD
         X0, Y0 = x0, y0
         XD, YD = xd, yd
+
+    def set_maxiter(maxiter):
+        global MAXITER
         MAXITER = maxiter
 
     def clear_stats():
@@ -100,7 +103,8 @@ class MandelbrotSet:
         print "x, y %r step %r, maxiter %r, trace %r" % ((self.x0, self.y0), (self.xd, self.yd), self.maxiter, trace)
 
         clear_stats()
-        set_params(self.x0, self.y0, self.xd, self.yd, self.maxiter)
+        set_geometry(self.x0, self.y0, self.xd, self.yd)
+        set_maxiter(self.maxiter)
         self.progress.begin()
         self.counts = numpy.zeros((self.h, self.w), dtype=numpy.uint32)
         mandelbrot_array(self.counts, self.progress.progress)
