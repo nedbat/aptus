@@ -29,7 +29,7 @@ import os, re, sys, time, traceback, zlib
 # Load our engine.
 
 try:
-    from aptus_engine import *
+    from aptus_engine import AptEngine
 except:
     # Pure python (slow!) implementation of mandext interface.
     MAXITER = 999
@@ -79,15 +79,15 @@ jumps = [
     (0.45687170535326038,-0.34780396997928614,0.005859375,0.005859375),
     ]
 
-class MandelbrotSet:
+class MandelbrotSet(AptEngine):
     def __init__(self, xcenter, ycenter, xdiam, ydiam, w, h, maxiter=999):
         pixsize = max(xdiam / w, ydiam / h)
         xdiam, ydiam = pixsize * w, pixsize * h
         
-        self.x0, self.y0 = xcenter - xdiam/2, ycenter - ydiam/2
+        self.xy0 = (xcenter - xdiam/2, ycenter - ydiam/2)
+        self.xyd = (pixsize, pixsize)
         #print "Coords: (%r,%r,%r,%r)" % (self.xcenter, self.ycenter, xdiam, ydiam)
 
-        self.xd, self.yd = pixsize, pixsize
         self.w, self.h = w, h
  
         self.maxiter = maxiter
@@ -95,21 +95,19 @@ class MandelbrotSet:
         self.counts = None
         
     def from_pixel(self, x, y):
-        return self.x0+self.xd*x, self.y0+self.yd*y
+        return self.xy0[0]+self.xyd[0]*x, self.xy0[1]+self.xyd[1]*y
 
     def compute_pixels(self, trace=False):
         if self.counts is not None:
             return
-        print "x, y %r step %r, maxiter %r, trace %r" % ((self.x0, self.y0), (self.xd, self.yd), self.maxiter, trace)
+        print "x, y %r step %r, maxiter %r, trace %r" % (self.xy0, self.xyd, self.maxiter, trace)
 
-        clear_stats()
-        set_geometry(self.x0, self.y0, self.xd, self.yd)
-        set_maxiter(self.maxiter)
+        self.clear_stats()
         self.progress.begin()
         self.counts = numpy.zeros((self.h, self.w), dtype=numpy.uint32)
-        mandelbrot_array(self.counts, self.progress.progress)
+        self.mandelbrot_array(self.counts, self.progress.progress)
         self.progress.end()
-        print get_stats()
+        print self.get_stats()
 
     def color_pixels(self, palette):
         palarray = numpy.array(palette.colors, dtype=numpy.uint8)
