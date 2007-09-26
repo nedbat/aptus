@@ -17,7 +17,7 @@ typedef struct {
     PyObject_HEAD
     aptcomplex xy0;         // upper-left point (a pair of floats)
     aptcomplex xyd;         // delta per pixel (a pair of floats)
-    int max_iter;           // max iteration count.
+    int maxiter;            // max iteration count.
 } AptEngine;
 
 static void
@@ -37,7 +37,7 @@ AptEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         self->xy0.r = 0.0;
         self->xyd.i = 0.001;
         self->xyd.r = 0.001;
-        self->max_iter = 999;
+        self->maxiter = 999;
     }
 
     return (PyObject *)self;
@@ -95,6 +95,27 @@ AptEngine_set_xy0(AptEngine *self, PyObject *value, void *closure)
     return 0;
 }
 
+static PyObject *
+AptEngine_get_xyd(AptEngine *self, void *closure)
+{
+    return Py_BuildValue("dd", self->xyd.r, self->xyd.i);
+}
+
+static int
+AptEngine_set_xyd(AptEngine *self, PyObject *value, void *closure)
+{
+    if (value == NULL) {
+        PyErr_SetString(PyExc_TypeError, "Cannot delete the xyd attribute");
+        return -1;
+    }
+  
+    if (!PyArg_ParseTuple(value, "dd", &self->xyd.r, &self->xyd.i)) {
+        return -1;
+    }
+
+    return 0;
+}
+
 // Statistics.
 
 static struct {
@@ -137,7 +158,7 @@ compute_count(AptEngine * self, int xi, int yi)
     int cycle_tries = CYCLE_TRIES;
     int cycle_countdown = cycle_period;
 
-    while (count <= self->max_iter) {
+    while (count <= self->maxiter) {
         z2.r = z.r * z.r;
         z2.i = z.i * z.i;
         if (z2.r + z2.i > 4.0) {
@@ -181,7 +202,7 @@ compute_count(AptEngine * self, int xi, int yi)
         }
     }
 
-    if (count > self->max_iter) {
+    if (count > self->maxiter) {
         stats.maxedpoints++;
         count = 0;
     }
@@ -214,6 +235,8 @@ static char mandelbrot_array_doc[] = "Compute Mandelbrot counts for an array";
 static PyObject *
 mandelbrot_array(AptEngine *self, PyObject *args)
 {
+    printf("xy0: %f, %f\n", self->xy0.r, self->xy0.i);
+    printf("xyd: %f, %f\n", self->xyd.r, self->xyd.i);
     PyArrayObject *arr;
     PyObject * progress;
     
@@ -511,17 +534,18 @@ AptEngine_methods[] = {
     { NULL, NULL }
 };
 
-static PyGetSetDef AptEngine_getsetters[] = {
+static PyGetSetDef
+AptEngine_getsetters[] = {
     { "xy0", (getter)AptEngine_get_xy0, (setter)AptEngine_set_xy0, "Upper-left corner coordinates", NULL },
+    { "xyd", (getter)AptEngine_get_xyd, (setter)AptEngine_set_xyd, "Pixel offsets", NULL },
     { NULL }
 };
 
-static PyMemberDef AptEngine_members[] = {
-    {"max_iter", T_INT, offsetof(AptEngine, max_iter), 0, "limit on iterations"},
+static PyMemberDef
+AptEngine_members[] = {
+    {"maxiter", T_INT, offsetof(AptEngine, maxiter), 0, "limit on iterations"},
     { NULL }
 };
-
-
 
 static PyTypeObject AptEngineType = {
     PyObject_HEAD_INIT(NULL)
@@ -570,15 +594,6 @@ static PyTypeObject AptEngineType = {
 
 static PyMethodDef
 aptus_engine_methods[] = {
-    /*
-    { "mandelbrot_point",   mandelbrot_point,   METH_VARARGS, mandelbrot_point_doc },
-    { "mandelbrot_array",   mandelbrot_array,   METH_VARARGS, mandelbrot_array_doc },
-    { "set_geometry",       set_geometry,       METH_VARARGS, set_geometry_doc },
-    { "set_maxiter",        set_maxiter,        METH_VARARGS, set_maxiter },
-    { "set_check_cycles",   set_check_cycles,   METH_VARARGS, set_check_cycles_doc },
-    { "clear_stats",        clear_stats,        METH_VARARGS, clear_stats_doc },
-    { "get_stats",          get_stats,          METH_VARARGS, get_stats_doc },
-    */
     { "float_sizes",        float_sizes,        METH_VARARGS, "Get sizes of float types"},
     { NULL, NULL }
 };
