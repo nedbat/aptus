@@ -17,7 +17,20 @@ typedef struct {
     PyObject_HEAD
     aptcomplex xy0;         // upper-left point (a pair of floats)
     aptcomplex xyd;         // delta per pixel (a pair of floats)
+    
     int maxiter;            // max iteration count.
+    int check_for_cycles;
+    aptfloat epsilon;
+    
+    struct {
+        int     maxiter;        // Max iteration that isn't in the set.
+        int     totaliter;      // Total number of iterations.
+        int     totalcycles;    // Number of cycles detected.
+        int     maxitercycle;   // Max iteration that was finally a cycle.
+        int     miniter;        // Minimum iteration count.
+        int     maxedpoints;    // Number of points that exceeded the maxiter.
+    } stats;
+
 } AptEngine;
 
 static void
@@ -38,6 +51,7 @@ AptEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         self->xyd.i = 0.001;
         self->xyd.r = 0.001;
         self->maxiter = 999;
+        self->check_for_cycles = 1;
     }
 
     return (PyObject *)self;
@@ -46,33 +60,8 @@ AptEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static int
 AptEngine_init(AptEngine *self, PyObject *args, PyObject *kwds)
 {
-    /*
-    PyObject *first=NULL, *last=NULL, *tmp;
-
-    static char *kwlist[] = {"first", "last", "number", NULL};
-
-    if (! PyArg_ParseTupleAndKeywords(args, kwds, "|OOi", kwlist, 
-                                      &first, &last, 
-                                      &self->number))
-        return -1; 
-
-    if (first) {
-        tmp = self->first;
-        Py_INCREF(first);
-        self->first = first;
-        Py_XDECREF(tmp);
-    }
-
-    if (last) {
-        tmp = self->last;
-        Py_INCREF(last);
-        self->last = last;
-        Py_XDECREF(tmp);
-    }
-    */
     return 0;
 }
-
 
 static PyObject *
 AptEngine_get_xy0(AptEngine *self, void *closure)
@@ -113,31 +102,18 @@ AptEngine_set_xyd(AptEngine *self, PyObject *value, void *closure)
         return -1;
     }
 
+    self->epsilon = self->xyd.r/2;
+    
     return 0;
 }
-
-// Statistics.
-
-static struct {
-    int     maxiter;        // Max iteration that isn't in the set.
-    int     totaliter;      // Total number of iterations.
-    int     totalcycles;    // Number of cycles detected.
-    int     maxitercycle;   // Max iteration that was finally a cycle.
-    int     miniter;        // Minimum iteration count.
-    int     maxedpoints;    // Number of points that exceeded the maxiter.
-} stats;
-
-static int check_for_cycles = 1;
 
 #define INITIAL_CYCLE_PERIOD 7
 #define CYCLE_TRIES 10
 
-static aptfloat epsilon;
-
 inline int
-fequal(aptfloat a, aptfloat b)
+fequal(AptEngine * self, aptfloat a, aptfloat b)
 {
-    return fabs(a - b) < epsilon;
+    return fabs(a - b) < self->epsilon;
 }
 
 static int
@@ -162,11 +138,11 @@ compute_count(AptEngine * self, int xi, int yi)
         z2.r = z.r * z.r;
         z2.i = z.i * z.i;
         if (z2.r + z2.i > 4.0) {
-            if (count > stats.maxiter) {
-                stats.maxiter = count;
+            if (count > self->stats.maxiter) {
+                self->stats.maxiter = count;
             }
-            if (stats.miniter == 0 || count < stats.miniter) {
-                stats.miniter = count;
+            if (self->stats.miniter == 0 || count < self->stats.miniter) {
+                self->stats.miniter = count;
             }
             break;
         }
@@ -175,15 +151,15 @@ compute_count(AptEngine * self, int xi, int yi)
         z = znew;
         count++;
 
-        stats.totaliter++;
+        self->stats.totaliter++;
 
-        if (check_for_cycles) {
+        if (self->check_for_cycles) {
             // Check for cycles
-            if (fequal(z.r, cycle_check.r) && fequal(z.i, cycle_check.i)) {
+            if (fequal(self, z.r, cycle_check.r) && fequal(self, z.i, cycle_check.i)) {
                 // We're in a cycle!
-                stats.totalcycles++;
-                if (count > stats.maxitercycle) {
-                    stats.maxitercycle = count;
+                self->stats.totalcycles++;
+                if (count > self->stats.maxitercycle) {
+                    self->stats.maxitercycle = count;
                 }
                 count = 0;
                 //count = cycle_period;
@@ -203,7 +179,7 @@ compute_count(AptEngine * self, int xi, int yi)
     }
 
     if (count > self->maxiter) {
-        stats.maxedpoints++;
+        self->stats.maxedpoints++;
         count = 0;
     }
 
@@ -235,8 +211,6 @@ static char mandelbrot_array_doc[] = "Compute Mandelbrot counts for an array";
 static PyObject *
 mandelbrot_array(AptEngine *self, PyObject *args)
 {
-    printf("xy0: %f, %f\n", self->xy0.r, self->xy0.i);
-    printf("xyd: %f, %f\n", self->xyd.r, self->xyd.i);
     PyArrayObject *arr;
     PyObject * progress;
     
@@ -374,7 +348,6 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                         // Append the point to the points list, growing dynamically
                         // if we have to.
                         if (ptsstored == ptsalloced) {
-                            //printf("Upping points to %d\n", ptsalloced*2);
                             pt * newpoints = malloc(sizeof(pt)*ptsalloced*2);
                             if (newpoints == NULL) {
                                 goto done;  // Should treat error differently.
@@ -467,33 +440,19 @@ done:
     return Py_BuildValue("");
 }
 
-// set_check_cycles
-
-static char set_check_cycles_doc[] = "Set whether to check for cycles or not";
-
-static PyObject *
-set_check_cycles(PyObject *self, PyObject *args)
-{
-    if (!PyArg_ParseTuple(args, "i", &check_for_cycles)) {
-        return NULL;
-    }
-
-    return Py_BuildValue("");    
-}
-
 // clear_stats
 
 static char clear_stats_doc[] = "Clear the statistic counters";
 
 static PyObject *
-clear_stats(PyObject *self, PyObject *args)
+clear_stats(AptEngine *self)
 {
-    stats.maxiter = 0;
-    stats.totaliter = 0;
-    stats.totalcycles = 0;
-    stats.maxitercycle = 0;
-    stats.miniter = 0;
-    stats.maxedpoints = 0;
+    self->stats.maxiter = 0;
+    self->stats.totaliter = 0;
+    self->stats.totalcycles = 0;
+    self->stats.maxitercycle = 0;
+    self->stats.miniter = 0;
+    self->stats.maxedpoints = 0;
     
     return Py_BuildValue("");
 }
@@ -503,15 +462,15 @@ clear_stats(PyObject *self, PyObject *args)
 static char get_stats_doc[] = "Get the statistics as a dictionary";
 
 static PyObject *
-get_stats(PyObject *self, PyObject *args)
+get_stats(AptEngine *self, PyObject *args)
 {
     return Py_BuildValue("{sisisisisisi}",
-        "maxiter", stats.maxiter,
-        "totaliter", stats.totaliter,
-        "totalcycles", stats.totalcycles,
-        "maxitercycle", stats.maxitercycle,
-        "miniter", stats.miniter,
-        "maxedpoints", stats.maxedpoints
+        "maxiter", self->stats.maxiter,
+        "totaliter", self->stats.totaliter,
+        "totalcycles", self->stats.totalcycles,
+        "maxitercycle", self->stats.maxitercycle,
+        "miniter", self->stats.miniter,
+        "maxedpoints", self->stats.maxedpoints
         );        
 }
 
@@ -523,15 +482,10 @@ float_sizes(PyObject *self, PyObject *args)
 
 // Type definition
 
-static PyMethodDef
-AptEngine_methods[] = {
-    { "mandelbrot_point",   (PyCFunction) mandelbrot_point,   METH_VARARGS, mandelbrot_point_doc },
-    { "mandelbrot_array",   (PyCFunction) mandelbrot_array,   METH_VARARGS, mandelbrot_array_doc },
-    { "set_check_cycles",   (PyCFunction) set_check_cycles,   METH_VARARGS, set_check_cycles_doc },
-    { "clear_stats",        (PyCFunction) clear_stats,        METH_VARARGS, clear_stats_doc },
-    { "get_stats",          (PyCFunction) get_stats,          METH_VARARGS, get_stats_doc },
-    { "float_sizes",        (PyCFunction) float_sizes,        METH_VARARGS, "Get sizes of float types"},
-    { NULL, NULL }
+static PyMemberDef
+AptEngine_members[] = {
+    {"maxiter", T_INT, offsetof(AptEngine, maxiter), 0, "limit on iterations"},
+    { NULL }
 };
 
 static PyGetSetDef
@@ -541,13 +495,17 @@ AptEngine_getsetters[] = {
     { NULL }
 };
 
-static PyMemberDef
-AptEngine_members[] = {
-    {"maxiter", T_INT, offsetof(AptEngine, maxiter), 0, "limit on iterations"},
-    { NULL }
+static PyMethodDef
+AptEngine_methods[] = {
+    { "mandelbrot_point",   (PyCFunction) mandelbrot_point,   METH_VARARGS, mandelbrot_point_doc },
+    { "mandelbrot_array",   (PyCFunction) mandelbrot_array,   METH_VARARGS, mandelbrot_array_doc },
+    { "clear_stats",        (PyCFunction) clear_stats,        METH_NOARGS,  clear_stats_doc },
+    { "get_stats",          (PyCFunction) get_stats,          METH_VARARGS, get_stats_doc },
+    { NULL, NULL }
 };
 
-static PyTypeObject AptEngineType = {
+static PyTypeObject
+AptEngineType = {
     PyObject_HEAD_INIT(NULL)
     0,                         /*ob_size*/
     "AptEngine.AptEngine",     /*tp_name*/
