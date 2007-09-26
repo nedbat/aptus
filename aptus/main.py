@@ -3,64 +3,18 @@
 from aptus.timeutil import duration, future
 from aptus.options import AptusOptions
 from aptus.palettes import all_palettes
+from aptus.importer import importer
 
 # Import third-party packages.
 
-try:
-    import wx
-except:
-    raise Exception("Need wxPython, from http://www.wxpython.org/")
+wx = importer('wx')
+numpy = importer('numpy')
+Image = importer('Image')
 
-try:
-    import numpy
-except:
-    raise Exception("Need numpy, from http://numpy.scipy.org/")
-
-try:
-    import Image
-except:
-    raise Exception("Need PIL, from http://www.pythonware.com/products/pil/")
-
-if not hasattr(Image, 'fromarray'):
-    raise Exception("Need PIL 1.1.6 or greater, from http://www.pythonware.com/products/pil/")
+# Import our extension engine.
+AptEngine = importer('AptEngine')
 
 import os, re, sys, time, traceback, zlib
-
-# Load our engine.
-
-try:
-    from aptus_engine import AptEngine
-except:
-    # Pure python (slow!) implementation of mandext interface.
-    MAXITER = 999
-    X0, Y0 = 0, 0
-    XD, YD = 0, 0
-    
-    def mandelbrot_count(xi, yi):
-        p = complex(X0+xi*XD, Y0+yi*YD)
-        i = 0
-        z = 0+0j
-        while abs(z) < 2:
-            if i >= MAXITER:
-                return 0
-            z = z*z+p
-            i += 1
-        return i
-
-    def set_geometry(x0, y0, xd, yd):
-        global X0, Y0, XD, YD
-        X0, Y0 = x0, y0
-        XD, YD = xd, yd
-
-    def set_maxiter(maxiter):
-        global MAXITER
-        MAXITER = maxiter
-
-    def clear_stats():
-        pass
-
-    def get_stats():
-        return {}
 
 class NullProgressReporter:
     def begin(self):
