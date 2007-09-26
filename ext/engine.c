@@ -109,6 +109,10 @@ compute_count(int xi, int yi)
     return count;
 }
 
+// mandelbrot_point
+
+static char mandelbrot_point_doc[] = "Compute a Mandelbrot count for a point";
+
 static PyObject *
 mandelbrot_point(PyObject *self, PyObject *args)
 {
@@ -122,7 +126,11 @@ mandelbrot_point(PyObject *self, PyObject *args)
 
     return Py_BuildValue("i", count);
 }
-    
+
+// mandelbrot_array
+
+static char mandelbrot_array_doc[] = "Compute Mandelbrot counts for an array";
+
 static PyObject *
 mandelbrot_array(PyObject *self, PyObject *args)
 {
@@ -358,7 +366,7 @@ done:
 
 // set_geometry
 
-#define set_geometry_doc "Set the geometry, x0, y0, xd, yd"
+static char set_geometry_doc[] = "Set the geometry, x0, y0, xd, yd";
 
 static PyObject *
 set_geometry(PyObject *self, PyObject *args)
@@ -379,6 +387,10 @@ set_geometry(PyObject *self, PyObject *args)
     return Py_BuildValue("");
 }
 
+// set_maxiter
+
+static char set_maxiter_doc[] = "Set the maximum iteration";
+
 static PyObject *
 set_maxiter(PyObject *self, PyObject *args)
 {
@@ -388,6 +400,10 @@ set_maxiter(PyObject *self, PyObject *args)
 
     return Py_BuildValue("");    
 }
+
+// set_check_cycles
+
+static char set_check_cycles_doc[] = "Set whether to check for cycles or not";
 
 static PyObject *
 set_check_cycles(PyObject *self, PyObject *args)
@@ -399,11 +415,9 @@ set_check_cycles(PyObject *self, PyObject *args)
     return Py_BuildValue("");    
 }
 
-static PyObject *
-float_sizes(PyObject *self, PyObject *args)
-{
-    return Py_BuildValue("ii", sizeof(double), sizeof(aptfloat));
-}
+// clear_stats
+
+static char clear_stats_doc[] = "Clear the statistic counters";
 
 static PyObject *
 clear_stats(PyObject *self, PyObject *args)
@@ -418,6 +432,10 @@ clear_stats(PyObject *self, PyObject *args)
     return Py_BuildValue("");
 }
 
+// get_stats
+
+static char get_stats_doc[] = "Get the statistics as a dictionary";
+
 static PyObject *
 get_stats(PyObject *self, PyObject *args)
 {
@@ -431,17 +449,25 @@ get_stats(PyObject *self, PyObject *args)
         );        
 }
 
+static PyObject *
+float_sizes(PyObject *self, PyObject *args)
+{
+    return Py_BuildValue("ii", sizeof(double), sizeof(aptfloat));
+}
+
+// Module definition
+
 static PyMethodDef
 aptus_engine_methods[] = {
-    {"mandelbrot_point", mandelbrot_point, METH_VARARGS, "Compute a Mandelbrot count for a point"},
-    {"mandelbrot_array", mandelbrot_array, METH_VARARGS, "Compute Mandelbrot counts for an array"},
-    {"set_geometry", set_geometry, METH_VARARGS, set_geometry_doc},
-    {"set_maxiter", set_maxiter, METH_VARARGS, "Set the maximum iteration"},
-    {"set_check_cycles", set_check_cycles, METH_VARARGS, "Set more parameters"},
-    {"float_sizes", float_sizes, METH_VARARGS, "Get sizes of float types"},
-    {"clear_stats", clear_stats, METH_VARARGS, "Clear the statistic counters"},
-    {"get_stats", get_stats, METH_VARARGS, "Get the statistics as a dictionary"},
-    {NULL, NULL}
+    { "mandelbrot_point",   mandelbrot_point,   METH_VARARGS, mandelbrot_point_doc },
+    { "mandelbrot_array",   mandelbrot_array,   METH_VARARGS, mandelbrot_array_doc },
+    { "set_geometry",       set_geometry,       METH_VARARGS, set_geometry_doc },
+    { "set_maxiter",        set_maxiter,        METH_VARARGS, set_maxiter },
+    { "set_check_cycles",   set_check_cycles,   METH_VARARGS, set_check_cycles_doc },
+    { "clear_stats",        clear_stats,        METH_VARARGS, clear_stats_doc },
+    { "get_stats",          get_stats,          METH_VARARGS, get_stats_doc },
+    { "float_sizes",        float_sizes,        METH_VARARGS, "Get sizes of float types"},
+    { NULL, NULL }
 };
 
 void
