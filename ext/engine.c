@@ -2,18 +2,98 @@
 
 #include "Python.h"
 #include "numpy/arrayobject.h"
+#include "structmember.h"
 
+// Type definitions.
 typedef double aptfloat;
 
 typedef struct {
     aptfloat i, r;
-} complex_t;
+} aptcomplex;
 
-// Global Parameters to the module.
-static int max_iter;
+// The Engine type.
 
-static complex_t xy0;
-static complex_t xyd;
+typedef struct {
+    PyObject_HEAD
+    aptcomplex xy0;         // upper-left point (a pair of floats)
+    aptcomplex xyd;         // delta per pixel (a pair of floats)
+    int max_iter;           // max iteration count.
+} AptEngine;
+
+static void
+AptEngine_dealloc(AptEngine * self)
+{
+    self->ob_type->tp_free((PyObject*)self);
+}
+
+static PyObject *
+AptEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    AptEngine * self;
+
+    self = (AptEngine *)type->tp_alloc(type, 0);
+    if (self != NULL) {
+        self->xy0.i = 0.0;
+        self->xy0.r = 0.0;
+        self->xyd.i = 0.001;
+        self->xyd.r = 0.001;
+        self->max_iter = 999;
+    }
+
+    return (PyObject *)self;
+}
+
+static int
+AptEngine_init(AptEngine *self, PyObject *args, PyObject *kwds)
+{
+    /*
+    PyObject *first=NULL, *last=NULL, *tmp;
+
+    static char *kwlist[] = {"first", "last", "number", NULL};
+
+    if (! PyArg_ParseTupleAndKeywords(args, kwds, "|OOi", kwlist, 
+                                      &first, &last, 
+                                      &self->number))
+        return -1; 
+
+    if (first) {
+        tmp = self->first;
+        Py_INCREF(first);
+        self->first = first;
+        Py_XDECREF(tmp);
+    }
+
+    if (last) {
+        tmp = self->last;
+        Py_INCREF(last);
+        self->last = last;
+        Py_XDECREF(tmp);
+    }
+    */
+    return 0;
+}
+
+
+static PyObject *
+AptEngine_get_xy0(AptEngine *self, void *closure)
+{
+    return Py_BuildValue("dd", self->xy0.r, self->xy0.i);
+}
+
+static int
+AptEngine_set_xy0(AptEngine *self, PyObject *value, void *closure)
+{
+    if (value == NULL) {
+        PyErr_SetString(PyExc_TypeError, "Cannot delete the xy0 attribute");
+        return -1;
+    }
+  
+    if (!PyArg_ParseTuple(value, "dd", &self->xy0.r, &self->xy0.i)) {
+        return -1;
+    }
+
+    return 0;
+}
 
 // Statistics.
 
@@ -40,24 +120,24 @@ fequal(aptfloat a, aptfloat b)
 }
 
 static int
-compute_count(int xi, int yi)
+compute_count(AptEngine * self, int xi, int yi)
 {
     int count = 0;
-    complex_t c;
-    c.r = xy0.r + xi*xyd.r;
-    c.i = xy0.i + yi*xyd.i;
+    aptcomplex c;
+    c.r = self->xy0.r + xi*self->xyd.r;
+    c.i = self->xy0.i + yi*self->xyd.i;
 
-    complex_t z = {0,0};
-    complex_t znew;
-    complex_t z2;
+    aptcomplex z = {0,0};
+    aptcomplex znew;
+    aptcomplex z2;
     
-    complex_t cycle_check = z;
+    aptcomplex cycle_check = z;
 
     int cycle_period = INITIAL_CYCLE_PERIOD;
     int cycle_tries = CYCLE_TRIES;
     int cycle_countdown = cycle_period;
 
-    while (count <= max_iter) {
+    while (count <= self->max_iter) {
         z2.r = z.r * z.r;
         z2.i = z.i * z.i;
         if (z2.r + z2.i > 4.0) {
@@ -101,7 +181,7 @@ compute_count(int xi, int yi)
         }
     }
 
-    if (count > max_iter) {
+    if (count > self->max_iter) {
         stats.maxedpoints++;
         count = 0;
     }
@@ -114,7 +194,7 @@ compute_count(int xi, int yi)
 static char mandelbrot_point_doc[] = "Compute a Mandelbrot count for a point";
 
 static PyObject *
-mandelbrot_point(PyObject *self, PyObject *args)
+mandelbrot_point(AptEngine *self, PyObject *args)
 {
     int xi, yi;
     
@@ -122,7 +202,7 @@ mandelbrot_point(PyObject *self, PyObject *args)
         return NULL;
     }
 
-    int count = compute_count(xi, yi);
+    int count = compute_count(self, xi, yi);
 
     return Py_BuildValue("i", count);
 }
@@ -132,7 +212,7 @@ mandelbrot_point(PyObject *self, PyObject *args)
 static char mandelbrot_array_doc[] = "Compute Mandelbrot counts for an array";
 
 static PyObject *
-mandelbrot_array(PyObject *self, PyObject *args)
+mandelbrot_array(AptEngine *self, PyObject *args)
 {
     PyArrayObject *arr;
     PyObject * progress;
@@ -191,7 +271,7 @@ mandelbrot_array(PyObject *self, PyObject *args)
             // Examine the current pixel.
             s = STATUS(xi, yi);
             if (s == 0) {
-                c = compute_count(xi, yi);
+                c = compute_count(self, xi, yi);
                 COUNTS(xi, yi) = c;
                 num_pixels++;
                 STATUS(xi, yi) = s = 1;
@@ -256,7 +336,7 @@ mandelbrot_array(PyObject *self, PyObject *args)
                     // Get the count of the next position.
                     int c2;
                     if (STATUS(curx, cury) == 0) {
-                        c2 = compute_count(curx, cury);
+                        c2 = compute_count(self, curx, cury);
                         COUNTS(curx, cury) = c2;
                         num_pixels++;
                         STATUS(curx, cury) = 1;
@@ -364,43 +444,6 @@ done:
     return Py_BuildValue("");
 }
 
-// set_geometry
-
-static char set_geometry_doc[] = "Set the geometry, x0, y0, xd, yd";
-
-static PyObject *
-set_geometry(PyObject *self, PyObject *args)
-{
-    double lx0, ly0, lxd, lyd;
-    
-    if (!PyArg_ParseTuple(args, "dddd", &lx0, &ly0, &lxd, &lyd)) {
-        return NULL;
-    }
-    
-    xy0.r = lx0;
-    xy0.i = ly0;
-    xyd.r = lxd;
-    xyd.i = lyd;
-
-    epsilon = xyd.r/2;
-
-    return Py_BuildValue("");
-}
-
-// set_maxiter
-
-static char set_maxiter_doc[] = "Set the maximum iteration";
-
-static PyObject *
-set_maxiter(PyObject *self, PyObject *args)
-{
-    if (!PyArg_ParseTuple(args, "i", &max_iter)) {
-        return NULL;
-    }
-
-    return Py_BuildValue("");    
-}
-
 // set_check_cycles
 
 static char set_check_cycles_doc[] = "Set whether to check for cycles or not";
@@ -455,10 +498,79 @@ float_sizes(PyObject *self, PyObject *args)
     return Py_BuildValue("ii", sizeof(double), sizeof(aptfloat));
 }
 
+// Type definition
+
+static PyMethodDef
+AptEngine_methods[] = {
+    { "mandelbrot_point",   (PyCFunction) mandelbrot_point,   METH_VARARGS, mandelbrot_point_doc },
+    { "mandelbrot_array",   (PyCFunction) mandelbrot_array,   METH_VARARGS, mandelbrot_array_doc },
+    { "set_check_cycles",   (PyCFunction) set_check_cycles,   METH_VARARGS, set_check_cycles_doc },
+    { "clear_stats",        (PyCFunction) clear_stats,        METH_VARARGS, clear_stats_doc },
+    { "get_stats",          (PyCFunction) get_stats,          METH_VARARGS, get_stats_doc },
+    { "float_sizes",        (PyCFunction) float_sizes,        METH_VARARGS, "Get sizes of float types"},
+    { NULL, NULL }
+};
+
+static PyGetSetDef AptEngine_getsetters[] = {
+    { "xy0", (getter)AptEngine_get_xy0, (setter)AptEngine_set_xy0, "Upper-left corner coordinates", NULL },
+    { NULL }
+};
+
+static PyMemberDef AptEngine_members[] = {
+    {"max_iter", T_INT, offsetof(AptEngine, max_iter), 0, "limit on iterations"},
+    { NULL }
+};
+
+
+
+static PyTypeObject AptEngineType = {
+    PyObject_HEAD_INIT(NULL)
+    0,                         /*ob_size*/
+    "AptEngine.AptEngine",     /*tp_name*/
+    sizeof(AptEngine),         /*tp_basicsize*/
+    0,                         /*tp_itemsize*/
+    (destructor)AptEngine_dealloc, /*tp_dealloc*/
+    0,                         /*tp_print*/
+    0,                         /*tp_getattr*/
+    0,                         /*tp_setattr*/
+    0,                         /*tp_compare*/
+    0,                         /*tp_repr*/
+    0,                         /*tp_as_number*/
+    0,                         /*tp_as_sequence*/
+    0,                         /*tp_as_mapping*/
+    0,                         /*tp_hash */
+    0,                         /*tp_call*/
+    0,                         /*tp_str*/
+    0,                         /*tp_getattro*/
+    0,                         /*tp_setattro*/
+    0,                         /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
+    "AptEngine objects",       /* tp_doc */
+    0,		               /* tp_traverse */
+    0,		               /* tp_clear */
+    0,		               /* tp_richcompare */
+    0,		               /* tp_weaklistoffset */
+    0,		               /* tp_iter */
+    0,		               /* tp_iternext */
+    AptEngine_methods,         /* tp_methods */
+    AptEngine_members,         /* tp_members */
+    AptEngine_getsetters,      /* tp_getset */
+    0,                         /* tp_base */
+    0,                         /* tp_dict */
+    0,                         /* tp_descr_get */
+    0,                         /* tp_descr_set */
+    0,                         /* tp_dictoffset */
+    (initproc)AptEngine_init,  /* tp_init */
+    0,                         /* tp_alloc */
+    AptEngine_new,             /* tp_new */
+};
+
+
 // Module definition
 
 static PyMethodDef
 aptus_engine_methods[] = {
+    /*
     { "mandelbrot_point",   mandelbrot_point,   METH_VARARGS, mandelbrot_point_doc },
     { "mandelbrot_array",   mandelbrot_array,   METH_VARARGS, mandelbrot_array_doc },
     { "set_geometry",       set_geometry,       METH_VARARGS, set_geometry_doc },
@@ -466,6 +578,7 @@ aptus_engine_methods[] = {
     { "set_check_cycles",   set_check_cycles,   METH_VARARGS, set_check_cycles_doc },
     { "clear_stats",        clear_stats,        METH_VARARGS, clear_stats_doc },
     { "get_stats",          get_stats,          METH_VARARGS, get_stats_doc },
+    */
     { "float_sizes",        float_sizes,        METH_VARARGS, "Get sizes of float types"},
     { NULL, NULL }
 };
@@ -474,5 +587,19 @@ void
 initaptus_engine(void)
 {
     import_array();
-    Py_InitModule("aptus_engine", aptus_engine_methods);
+    
+    PyObject* m;
+
+    if (PyType_Ready(&AptEngineType) < 0) {
+        return;
+    }
+
+    m = Py_InitModule3("aptus_engine", aptus_engine_methods, "Fast Aptusia Mandelbrot engine.");
+
+    if (m == NULL) {
+        return;
+    }
+
+    Py_INCREF(&AptEngineType);
+    PyModule_AddObject(m, "AptEngine", (PyObject *)&AptEngineType);
 }
