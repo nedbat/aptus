@@ -73,28 +73,28 @@ class NullProgressReporter:
         pass
     
 jumps = [
-    (-0.5,0.0,3.0,3.0),
-    (-1.8605294939875601,1.0475516319329809e-005,2.288818359375e-005,2.288818359375e-005),
-    (-1.8605327731370924,1.2700557708795141e-005,1.7881393432617188e-007,1.7881393432617188e-007),
-    (0.45687170535326038,-0.34780396997928614,0.005859375,0.005859375),
+    ((-0.5,0.0), (3.0,3.0)),
+    ((-1.8605294939875601,1.0475516319329809e-005), (2.288818359375e-005,2.288818359375e-005)),
+    ((-1.8605327731370924,1.2700557708795141e-005), (1.7881393432617188e-007,1.7881393432617188e-007)),
+    ((0.45687170535326038,-0.34780396997928614), (0.005859375,0.005859375)),
     ]
 
 class MandelbrotSet(AptEngine):
-    def __init__(self, xcenter, ycenter, xdiam, ydiam, w, h, maxiter=999):
-        pixsize = max(xdiam / w, ydiam / h)
-        xdiam, ydiam = pixsize * w, pixsize * h
+    def __init__(self, center, diam, size, maxiter=999):
+        pixsize = max(diam[0] / size[0], diam[1] / size[1])
+        diam = pixsize * size[0], pixsize * size[1]
         
-        self.xy0 = (xcenter - xdiam/2, ycenter - ydiam/2)
+        self.xy0 = (center[0] - diam[0]/2, center[1] - diam[1]/2)
         self.xyd = (pixsize, pixsize)
         #print "Coords: (%r,%r,%r,%r)" % (self.xcenter, self.ycenter, xdiam, ydiam)
 
-        self.w, self.h = w, h
+        self.size = size
  
         self.maxiter = maxiter
         self.progress = NullProgressReporter()
         self.counts = None
         
-    def from_pixel(self, x, y):
+    def coords_from_pixel(self, x, y):
         return self.xy0[0]+self.xyd[0]*x, self.xy0[1]+self.xyd[1]*y
 
     def compute_pixels(self, trace=False):
@@ -104,7 +104,7 @@ class MandelbrotSet(AptEngine):
 
         self.clear_stats()
         self.progress.begin()
-        self.counts = numpy.zeros((self.h, self.w), dtype=numpy.uint32)
+        self.counts = numpy.zeros(self.size, dtype=numpy.uint32)
         self.mandelbrot_array(self.counts, self.progress.progress)
         self.progress.end()
         print self.get_stats()
@@ -116,11 +116,11 @@ class MandelbrotSet(AptEngine):
         return pix
         
 class wxMandelbrotSetViewer(wx.Frame):
-    def __init__(self, xcenter, ycenter, xdiam, ydiam, w, h, maxiter):
+    def __init__(self, center, diam, size, maxiter):
         super(wxMandelbrotSetViewer, self).__init__(None, -1, 'Aptus')
  
         chromew, chromeh = 8, 28
-        self.SetSize((w+chromew, h+chromeh))
+        self.SetSize((size[0]+chromew, size[1]+chromeh))
         self.panel = wx.Panel(self)
         self.panel.Bind(wx.EVT_PAINT, self.on_paint)
         self.panel.Bind(wx.EVT_LEFT_UP, self.on_zoom_in)
@@ -129,8 +129,8 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.panel.Bind(wx.EVT_IDLE, self.on_idle)
         self.panel.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         
-        self.xcenter, self.ycenter = xcenter, ycenter
-        self.xdiam, self.ydiam = xdiam, ydiam
+        self.center = center
+        self.diam = diam
         self.maxiter = maxiter
         self.set_view()
         self.palette_index = 0
@@ -147,7 +147,7 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.Refresh()
 
     def create_mandel(self, w, h):
-        return MandelbrotSet(self.xcenter, self.ycenter, self.xdiam, self.ydiam, w, h, self.maxiter)
+        return MandelbrotSet(self.center, self.diam, (w, h), self.maxiter)
         
     def message(self, msg):
         dlg = wx.MessageDialog(self, msg, 'Aptus', wx.OK | wx.ICON_WARNING)
@@ -155,15 +155,13 @@ class wxMandelbrotSetViewer(wx.Frame):
         dlg.Destroy()
         
     def on_zoom_in(self, event):
-        self.xcenter, self.ycenter = self.m.from_pixel(event.GetX(), event.GetY())
-        self.xdiam /= 2.0
-        self.ydiam /= 2.0
+        self.center = self.m.coords_from_pixel(event.GetX(), event.GetY())
+        self.diam = (self.diam[0]/2.0, self.diam[1]/2.0)
         self.set_view()
  
     def on_zoom_out(self, event):
-        self.xcenter, self.ycenter = self.m.from_pixel(event.GetX(), event.GetY())
-        self.xdiam *= 2.0
-        self.ydiam *= 2.0
+        self.center = self.m.coords_from_pixel(event.GetX(), event.GetY())
+        self.diam = (self.diam[0]*2.0, self.diam[1]*2.0)
         self.set_view()
  
     def on_size(self, event):
@@ -186,7 +184,7 @@ class wxMandelbrotSetViewer(wx.Frame):
         elif keycode == ord('J'):
             self.jump_index += 1
             self.jump_index %= len(jumps)
-            self.xcenter, self.ycenter, self.xdiam, self.ydiam = jumps[self.jump_index]
+            self.center, self.diam = jumps[self.jump_index]
             self.set_view()
         elif keycode == ord('R'):
             self.cmd_redraw()
@@ -373,9 +371,9 @@ def main(args):
     
     app = wx.PySimpleApp()
     f = wxMandelbrotSetViewer(
-        opts.center[0], opts.center[1],
-        opts.diam[0], opts.diam[1],
-        opts.size[0], opts.size[1],
+        opts.center,
+        opts.diam,
+        opts.size,
         opts.maxiter
         )
     f.trace = opts.trace

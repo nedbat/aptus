@@ -2,6 +2,7 @@
 
 - If client size is queried while minimized, it comes back as zero, and a divide by zero error happens.
 - Proper prompting about overwriting existing files.
+- If you zoom out too far, boundary tracing makes the whole set disappear.
 
 * Speed
 
@@ -10,10 +11,11 @@
     - http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
 - Take some more optimizations from Xaos: http://www.delorie.com/gnu/docs/xaos/xaos_29.html
     - Do iterations in batches of 8 to avoid the bailout comparison.
-- Optimize boundary.py so we can use it for high iterations
+x Optimize boundary.py so we can use it for high iterations
 + Boundary checking in C
 - Fracint computes the miniter by running the edges (where the min must be), then
     uses it to skip the bailout check until reaching the miniter.
+- Go through the bitblting python code to see if we can skip some of the steps.
 
 * UI
 
@@ -45,6 +47,7 @@
 - Command line invocation (refactor a bunch of stuff)
 - Multi-precision floats
 - Interruptable rendering: write partial counts (and all other state) to a file and restart.
+- Draggable rectangle in addition to click-to-zoom.
 
 * Knowledge
 
