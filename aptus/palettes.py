@@ -12,25 +12,21 @@ class Palette:
     def _255(self, *vals):
         return map(lambda x:int(x*255), vals)
     
+    def _1(self, *vals):
+        return map(lambda x:x/255.0, vals)
+    
     def set_colors(self, colors):
         self.colors = colors[:]
         return self
 
-    def set_rainbow(self, ncolors, s, v):
-        colors = []
-        for h in xrange(ncolors):
-            colors.append(self._255(*colorsys.hsv_to_rgb(h*1.0/ncolors,s,v)))
-        self.colors = colors
-        return self
-    
-    def set_rainbow_hls(self, ncolors, l, s):
+    def set_rainbow(self, ncolors, l, s):
         colors = []
         for h in xrange(ncolors):
             colors.append(self._255(*colorsys.hls_to_rgb(h*1.0/ncolors,l,s)))
         self.colors = colors
         return self
     
-    def set_rainbow_ramps(self, npts, nsteps, hrange=(0.0,1.0), lrange=(.2,.8), srange=.6):
+    def set_rainbow_ramps(self, npts, nsteps=1, hrange=(0.0,1.0), lrange=(.2,.8), srange=.6):
         if isinstance(hrange, (int, float)):
             hrange = (float(hrange), float(hrange))
         if isinstance(lrange, (int, float)):
@@ -59,18 +55,26 @@ class Palette:
         self.colors = colors
         return self
     
-    def stretch(self, steps):
+    def stretch(self, steps, hsl=False):
         colors = [None]*(len(self.colors)*steps)
         for i in range(len(colors)):
             color_index = i//steps
-            r0, g0, b0 = self.colors[color_index]
-            r1, g1, b1 = self.colors[(color_index + 1) % len(self.colors)]
+            a0, b0, c0 = self.colors[color_index]
+            a1, b1, c1 = self.colors[(color_index + 1) % len(self.colors)]
+            if hsl:
+                a0, b0, c0 = colorsys.rgb_to_hls(*self._1(a0, b0, c0))
+                a1, b1, c1 = colorsys.rgb_to_hls(*self._1(a1, b1, c1))
+                if a1 < a0:
+                    a1 += 1
             step = float(i % steps)/steps
-            colors[i] = (
-                int(r0 + (r1 - r0) * step),
-                int(g0 + (g1 - g0) * step),
-                int(b0 + (b1 - b0) * step),
+            ax, bx, cx = (
+                a0 + (a1 - a0) * step,
+                b0 + (b1 - b0) * step,
+                c0 + (c1 - c0) * step,
                 )
+            if hsl:
+                ax, bx, cx = self._255(*colorsys.hls_to_rgb(ax, bx, cx))
+            colors[i] = (int(ax), int(bx), int(cx))
         self.colors = colors    
         return self
     
@@ -123,21 +127,59 @@ xaos_colors = [
     (31, 32, 16)
 ]
 
-xaos_palette = Palette().set_colors(xaos_colors).stretch(8)
-
 all_palettes = [
-    xaos_palette,
+    Palette().set_colors(xaos_colors).stretch(8),
+    Palette().set_rainbow_ramps(6, nsteps=1).stretch(10, hsl=True),
     Palette().set_rainbow_ramps(6, nsteps=10),
+    Palette().set_rainbow_ramps(6, nsteps=1).stretch(10),
     Palette().set_rainbow_ramps(6, nsteps=25, lrange=(.2,.6), srange=.6),
     Palette().set_rainbow_ramps(24, nsteps=5, lrange=(.4,.6), srange=.7),
     Palette().set_rainbow_ramps(1, nsteps=10, hrange=.7, lrange=(.4,.6), srange=.7),
     Palette().set_rainbow_ramps(1, nsteps=10, hrange=.8, lrange=(.3,.7), srange=(.9,.1)),
-    Palette().set_rainbow(16, .7, .9),
-    Palette().set_rainbow_hls(16, .5, .7),
-    Palette().set_rainbow_ramps(4, nsteps=4, lrange=.5, srange=.7),
+    Palette().set_rainbow(16, .5, .7),
+    Palette().set_rainbow_ramps(4, nsteps=2, lrange=.5, srange=.7),
     Palette().set_colors([(255,192,192), (255,255,255)]).set_incolor((192,192,255)),
     Palette().set_colors([(255,255,255), (0,0,0), (0,0,0), (0,0,0)]),
+    Palette().set_rainbow_ramps(1, nsteps=128, hrange=.333, lrange=(0.2,0.8), srange=.5),
     Palette().from_ggr('palettes/bluefly.ggr', 20),
     Palette().from_ggr('palettes/ib18.ggr', 20),
     Palette().from_ggr('palettes/ib18.ggr', 50),
     ]
+
+# A simple viewer to see the palettes.
+if __name__ == '__main__':
+    import sys, wx
+
+    class PalettesView(wx.Frame):
+        def __init__(self, palettes):
+            super(PalettesView, self).__init__(None, -1, 'All palettes')
+            self.palettes = palettes
+            self.SetSize((800, 300))
+            self.panel = wx.Panel(self)
+            self.panel.Bind(wx.EVT_PAINT, self.on_paint)
+            self.panel.Bind(wx.EVT_SIZE, self.on_size)
+
+        def on_paint(self, event):
+            dc = wx.PaintDC(self.panel)
+            cw, ch = self.GetClientSize()
+            stripe_height = ch/len(self.palettes)
+            for y, pal in enumerate(self.palettes):
+                self.paint_palette(dc, pal, y*stripe_height, stripe_height)
+                
+        def paint_palette(self, dc, pal, y0, height):
+            cw, ch = self.GetClientSize()
+            ncolors = len(pal.colors)
+            width = float(cw)/ncolors
+            for c in range(0, ncolors):
+                dc.SetPen(wx.Pen(wx.Colour(*pal.colors[c]), 1))
+                dc.SetBrush(wx.Brush(wx.Colour(*pal.colors[c]), wx.SOLID))
+                #dc.DrawRectangle(chunkw*c, y0, chunkw, height)
+                dc.DrawRectangle(int(c*width), y0, int(width+1), height)
+        
+        def on_size(self, event):
+            self.Refresh()
+
+    app = wx.PySimpleApp()
+    f = PalettesView(all_palettes)
+    f.Show()
+    app.MainLoop()
