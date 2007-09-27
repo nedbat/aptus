@@ -54,11 +54,11 @@ class MandelbrotSet(AptEngine):
     def compute_pixels(self, trace=False):
         if self.counts is not None:
             return
-        print "x, y %r step %r, maxiter %r, trace %r" % (self.xy0, self.xyd, self.maxiter, trace)
+        print "x, y %r step %r, maxiter %r, trace %r, size %r" % (self.xy0, self.xyd, self.maxiter, trace, self.size)
 
         self.clear_stats()
         self.progress.begin()
-        self.counts = numpy.zeros(self.size, dtype=numpy.uint32)
+        self.counts = numpy.zeros((self.size[1], self.size[0]), dtype=numpy.uint32)
         self.mandelbrot_array(self.counts, self.progress.progress)
         self.progress.end()
         print self.get_stats()
