@@ -53,10 +53,10 @@ class AptusMandelbrot(AptEngine):
     def coords_from_pixel(self, x, y):
         return self.xy0[0]+self.xyd[0]*x, self.xy0[1]+self.xyd[1]*y
 
-    def compute_pixels(self, trace=False):
+    def compute_pixels(self):
         if self.counts is not None:
             return
-        print "x, y %r step %r, iter_limit %r, trace %r, size %r" % (self.xy0, self.xyd, self.iter_limit, trace, self.size)
+        print "x, y %r step %r, iter_limit %r, size %r" % (self.xy0, self.xyd, self.iter_limit, self.size)
 
         self.clear_stats()
         self.progress.begin()
@@ -175,15 +175,12 @@ class AptusView(wx.Frame):
     def draw(self):
         wx.BeginBusyCursor()
         self.m.progress = ConsoleProgressReporter()
-        self.m.compute_pixels(trace=self.trace)
+        self.m.compute_pixels()
         pix = self.m.color_pixels(self.palette)
         pix2 = None
         if 0:
-            self.m.compute_pixels(trace=not self.trace)
-            pix2 = self.m.color_pixels(self.palette)
-        if 0:
             set_check_cycles(0)
-            self.m.compute_pixels(trace=self.trace)
+            self.m.compute_pixels()
             pix2 = self.m.color_pixels(self.palette)
             set_check_cycles(1)
         if pix2 is not None:
@@ -245,7 +242,7 @@ class AptusView(wx.Frame):
                 w, h = 1680, 1050
                 m = self.create_mandel(w*3, h*3)
                 m.progress = ConsoleProgressReporter()
-                m.compute_pixels(trace=self.trace)
+                m.compute_pixels()
                 pix = m.color_pixels(self.palette)
                 im = Image.fromarray(pix)
                 im = im.resize((w,h), Image.ANTIALIAS)
@@ -313,7 +310,6 @@ def main(args):
         opts.size,
         opts.iter_limit
         )
-    f.trace = opts.trace
     f.palette.phase = opts.palette_phase
     f.Show()
     app.MainLoop()
