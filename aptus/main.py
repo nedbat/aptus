@@ -1,7 +1,7 @@
 # Started from http://www.howforge.com/mandelbrot-set-viewer-using-wxpython
 
 from aptus.timeutil import duration, future
-from aptus.options import AptusOptions
+from aptus.options import AptusOptions, AptusState
 from aptus.palettes import all_palettes
 from aptus.importer import importer
 
@@ -302,31 +302,6 @@ class ConsoleProgressReporter:
         total = time.time() - self.start
         print "Total: %s (%.2fs)" % (duration(total), total)
         
-class AptusState:
-    def write(self, f):
-        if isinstance(f, basestring):
-            f = open(f, 'wb')
-        print >>f, '{"Aptus state":1,'
-        self._write_item(f, 'center', list(self.center))
-        self._write_item(f, 'diam', list(self.diam))
-        self._write_item(f, 'iter_limit', self.iter_limit)
-        self._write_item(f, 'size', list(self.size), last=True)
-        print >>f, '}'
-    
-    def read(self, f):
-        if isinstance(f, basestring):
-            f = open(f, 'rb')
-        # This is dangerous!
-        d = eval(f.read())
-        self.size = d['size']
-        
-    def _write_item(self, f, k, v, last=False):
-        if last:
-            trailing = ""
-        else:
-            trailing = ","
-        print >> f, '"%s": %r%s' % (k, v, trailing)
-
 def main(args):        
     opts = AptusOptions()
     opts.read_args(args)
