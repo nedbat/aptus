@@ -18,7 +18,7 @@ typedef struct {
     aptcomplex xy0;         // upper-left point (a pair of floats)
     aptcomplex xyd;         // delta per pixel (a pair of floats)
     
-    int maxiter;            // max iteration count.
+    int iter_limit;         // limit on iteration count.
     int check_for_cycles;
     aptfloat epsilon;
     
@@ -50,7 +50,7 @@ AptEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         self->xy0.r = 0.0;
         self->xyd.i = 0.001;
         self->xyd.r = 0.001;
-        self->maxiter = 999;
+        self->iter_limit = 999;
         self->check_for_cycles = 1;
     }
 
@@ -134,7 +134,7 @@ compute_count(AptEngine * self, int xi, int yi)
     int cycle_tries = CYCLE_TRIES;
     int cycle_countdown = cycle_period;
 
-    while (count <= self->maxiter) {
+    while (count <= self->iter_limit) {
         z2.r = z.r * z.r;
         z2.i = z.i * z.i;
         if (z2.r + z2.i > 4.0) {
@@ -178,7 +178,7 @@ compute_count(AptEngine * self, int xi, int yi)
         }
     }
 
-    if (count > self->maxiter) {
+    if (count > self->iter_limit) {
         self->stats.maxedpoints++;
         count = 0;
     }
@@ -484,7 +484,7 @@ float_sizes(PyObject *self, PyObject *args)
 
 static PyMemberDef
 AptEngine_members[] = {
-    {"maxiter", T_INT, offsetof(AptEngine, maxiter), 0, "limit on iterations"},
+    {"iter_limit", T_INT, offsetof(AptEngine, iter_limit), 0, "limit on iterations"},
     { NULL }
 };
 

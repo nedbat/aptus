@@ -8,13 +8,13 @@ class AptusOptions:
         self.center = -0.5, 0.0
         self.diam = 3.0, 3.0
         self.size = 600, 600
-        self.maxiter = 999
+        self.iter_limit = 999
         self.trace = False
         self.palette_phase = 0
         
     def read_args(self, argv):
         parser = optparse.OptionParser()
-        parser.add_option("-i", "--maxiter", dest="maxiter", help="set the maximum iteration count")
+        parser.add_option("-i", "--iterlimit", dest="iter_limit", help="set the limit on the iteration count")
         parser.add_option("--phase", dest="palette_phase", help="set the palette phase", metavar="PHASE")
         parser.add_option("-s", "--size", dest="size", help="set the pixel size of the image", metavar="WIDxHGT")
         parser.add_option("-t", "--trace", dest="trace", action="store_true", help="use boundary tracing")
@@ -26,11 +26,11 @@ class AptusOptions:
             xaos.read(sys.argv[1])
             self.center = xaos.center
             self.diam = xaos.diam
-            self.maxiter = xaos.maxiter
+            self.iter_limit = xaos.maxiter
             self.palette_phase = xaos.palette_phase
             
-        if options.maxiter:
-            self.maxiter = int(options.maxiter)
+        if options.iter_limit:
+            self.iter_limit = int(options.iter_limit)
         if options.palette_phase:
             self.palette_phase = int(options.palette_phase)
         if options.size:
