@@ -65,9 +65,9 @@ class AptusMandelbrot(AptEngine):
         self.progress.end()
         print self.get_stats()
 
-    def color_pixels(self, palette):
+    def color_pixels(self, palette, phase):
         palarray = numpy.array(palette.colors, dtype=numpy.uint8)
-        pix = palarray[(self.counts+palette.phase) % palarray.shape[0]]
+        pix = palarray[(self.counts+phase) % palarray.shape[0]]
         pix[self.counts == 0] = palette.incolor
         return pix
 
@@ -96,6 +96,7 @@ class AptusView(wx.Frame):
         self.set_view()
         self.palette_index = 0
         self.palette = all_palettes[0]
+        self.palette_phase = 0
         self.jump_index = 0
         
     def set_view(self):
@@ -176,12 +177,12 @@ class AptusView(wx.Frame):
         wx.BeginBusyCursor()
         self.m.progress = ConsoleProgressReporter()
         self.m.compute_pixels()
-        pix = self.m.color_pixels(self.palette)
+        pix = self.m.color_pixels(self.palette, self.palette_phase)
         pix2 = None
         if 0:
             set_check_cycles(0)
             self.m.compute_pixels()
-            pix2 = self.m.color_pixels(self.palette)
+            pix2 = self.m.color_pixels(self.palette, self.palette_phase)
             set_check_cycles(1)
         if pix2 is not None:
             Image.fromarray(pix).save('one.png')
@@ -221,6 +222,8 @@ class AptusView(wx.Frame):
                 ms = AptusState()
                 self.m.write_state(ms)
                 ms.size = self.size
+                ms.palette = self.palette
+                ms.palette_phase = self.palette_phase
                 ms.write(dlg.GetPath())
             else:
                 self.message("Don't understand how to write file '%s'" % dlg.GetFilename())
@@ -243,7 +246,7 @@ class AptusView(wx.Frame):
                 m = self.create_mandel((w*3, h*3))
                 m.progress = ConsoleProgressReporter()
                 m.compute_pixels()
-                pix = m.color_pixels(self.palette)
+                pix = m.color_pixels(self.palette, self.palette_phase)
                 im = Image.fromarray(pix)
                 im = im.resize((w,h), Image.ANTIALIAS)
                 im.save(dlg.GetPath())
@@ -266,8 +269,7 @@ class AptusView(wx.Frame):
         self.set_view()
         
     def cmd_cycle_palette(self, delta):
-        self.palette.phase += delta
-        self.palette.phase %= len(self.palette.colors)
+        self.palette_phase += delta
         self.dc = None
         self.Refresh()
         
@@ -275,6 +277,7 @@ class AptusView(wx.Frame):
         self.palette_index += delta
         self.palette_index %= len(all_palettes)
         self.palette = all_palettes[self.palette_index]
+        self.palette_phase = 0
         self.dc = None
         self.Refresh()
         
@@ -310,7 +313,9 @@ def main(args):
         opts.size,
         opts.iter_limit
         )
-    f.palette.phase = opts.palette_phase
+    if opts.palette:
+        f.palette = opts.palette
+    f.palette_phase = opts.palette_phase
     f.Show()
     app.MainLoop()
 
