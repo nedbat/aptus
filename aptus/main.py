@@ -240,7 +240,7 @@ class AptusView(wx.Frame):
             ext = dlg.GetFilename().split('.')[-1].lower()
             if ext == 'png':
                 w, h = 1680, 1050
-                m = self.create_mandel(w*3, h*3)
+                m = self.create_mandel((w*3, h*3))
                 m.progress = ConsoleProgressReporter()
                 m.compute_pixels()
                 pix = m.color_pixels(self.palette)
