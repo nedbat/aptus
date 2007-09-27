@@ -35,14 +35,16 @@ jumps = [
 
 class AptusMandelbrot(AptEngine):
     def __init__(self, center, diam, size, maxiter=999):
-        pixsize = max(diam[0] / size[0], diam[1] / size[1])
+        self.center = center
+        self.diam = diam
+        self.size = size
+        
+        pixsize = max(self.diam[0] / size[0], self.diam[1] / size[1])
         diam = pixsize * size[0], pixsize * size[1]
         
         self.xy0 = (center[0] - diam[0]/2, center[1] - diam[1]/2)
         self.xyd = (pixsize, pixsize)
         #print "Coords: (%r,%r,%r,%r)" % (self.xcenter, self.ycenter, xdiam, ydiam)
-
-        self.size = size
  
         self.maxiter = maxiter
         self.progress = NullProgressReporter()
@@ -68,6 +70,11 @@ class AptusMandelbrot(AptEngine):
         pix = palarray[(self.counts+palette.phase) % palarray.shape[0]]
         pix[self.counts == 0] = palette.incolor
         return pix
+
+    def write_state(self, aptus_state):
+        aptus_state.center = self.center
+        aptus_state.diam = self.diam
+        aptus_state.maxiter = self.maxiter
         
 class AptusView(wx.Frame):
     def __init__(self, center, diam, size, maxiter):
@@ -215,6 +222,7 @@ class AptusView(wx.Frame):
                 fout.close()
             elif ext == 'aptus':
                 ms = AptusState()
+                self.m.write_state(ms)
                 ms.size = self.size
                 ms.write(dlg.GetPath())
             else:
@@ -298,9 +306,11 @@ class AptusState:
     def write(self, f):
         if isinstance(f, basestring):
             f = open(f, 'wb')
-        print >>f, '{'
-        self._write_item(f, 'what_is_this', 'An Aptus state file, version 1')
-        self._write_item(f, 'size', self.size)
+        print >>f, '{"Aptus state":1,'
+        self._write_item(f, 'center', list(self.center))
+        self._write_item(f, 'diam', list(self.diam))
+        self._write_item(f, 'maxiter', self.maxiter)
+        self._write_item(f, 'size', list(self.size), last=True)
         print >>f, '}'
     
     def read(self, f):
@@ -310,8 +320,12 @@ class AptusState:
         d = eval(f.read())
         self.size = d['size']
         
-    def _write_item(self, f, k, v):
-        print >> f, ' "%s": %r,' % (k, v)
+    def _write_item(self, f, k, v, last=False):
+        if last:
+            trailing = ""
+        else:
+            trailing = ","
+        print >> f, '"%s": %r%s' % (k, v, trailing)
 
 def main(args):        
     opts = AptusOptions()
