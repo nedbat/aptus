@@ -34,7 +34,7 @@ jumps = [
     ]
 
 class AptusMandelbrot(AptEngine):
-    def __init__(self, center, diam, size, maxiter=999):
+    def __init__(self, center, diam, size, iter_limit=999):
         self.center = center
         self.diam = diam
         self.size = size
@@ -46,7 +46,7 @@ class AptusMandelbrot(AptEngine):
         self.xyd = (pixsize, pixsize)
         #print "Coords: (%r,%r,%r,%r)" % (self.xcenter, self.ycenter, xdiam, ydiam)
  
-        self.maxiter = maxiter
+        self.iter_limit = iter_limit
         self.progress = NullProgressReporter()
         self.counts = None
         
@@ -56,7 +56,7 @@ class AptusMandelbrot(AptEngine):
     def compute_pixels(self, trace=False):
         if self.counts is not None:
             return
-        print "x, y %r step %r, maxiter %r, trace %r, size %r" % (self.xy0, self.xyd, self.maxiter, trace, self.size)
+        print "x, y %r step %r, iter_limit %r, trace %r, size %r" % (self.xy0, self.xyd, self.iter_limit, trace, self.size)
 
         self.clear_stats()
         self.progress.begin()
@@ -74,10 +74,10 @@ class AptusMandelbrot(AptEngine):
     def write_state(self, aptus_state):
         aptus_state.center = self.center
         aptus_state.diam = self.diam
-        aptus_state.maxiter = self.maxiter
+        aptus_state.iter_limit = self.iter_limit
         
 class AptusView(wx.Frame):
-    def __init__(self, center, diam, size, maxiter):
+    def __init__(self, center, diam, size, iter_limit):
         super(AptusView, self).__init__(None, -1, 'Aptus')
  
         chromew, chromeh = 8, 28
@@ -92,7 +92,7 @@ class AptusView(wx.Frame):
         
         self.center = center
         self.diam = diam
-        self.maxiter = maxiter
+        self.iter_limit = iter_limit
         self.set_view()
         self.palette_index = 0
         self.palette = all_palettes[0]
@@ -108,7 +108,7 @@ class AptusView(wx.Frame):
         self.Refresh()
 
     def create_mandel(self, size):
-        return AptusMandelbrot(self.center, self.diam, size, self.maxiter)
+        return AptusMandelbrot(self.center, self.diam, size, self.iter_limit)
         
     def message(self, msg):
         dlg = wx.MessageDialog(self, msg, 'Aptus', wx.OK | wx.ICON_WARNING)
@@ -141,7 +141,7 @@ class AptusView(wx.Frame):
             else:
                 self.cmd_save()
         elif keycode == ord('I'):
-            self.cmd_set_maxiter()
+            self.cmd_set_iter_limit()
         elif keycode == ord('J'):
             self.jump_index += 1
             self.jump_index %= len(jumps)
@@ -251,17 +251,17 @@ class AptusView(wx.Frame):
                 im = im.resize((w,h), Image.ANTIALIAS)
                 im.save(dlg.GetPath())
 
-    def cmd_set_maxiter(self):
+    def cmd_set_iter_limit(self):
         dlg = wx.TextEntryDialog(
-                self, 'Maximum iteration count:',
-                'Maxiter', str(self.maxiter)
+                self, 'Iteration limit:',
+                'Set the iteration limit', str(self.iter_limit)
                 )
 
         if dlg.ShowModal() == wx.ID_OK:
             try:
-                self.maxiter = int(dlg.GetValue())
+                self.iter_limit = int(dlg.GetValue())
             except Exception, e:
-                self.message("Couldn't set maxiter: %s" % e)
+                self.message("Couldn't set iter_limit: %s" % e)
 
         dlg.Destroy()
 
@@ -309,7 +309,7 @@ class AptusState:
         print >>f, '{"Aptus state":1,'
         self._write_item(f, 'center', list(self.center))
         self._write_item(f, 'diam', list(self.diam))
-        self._write_item(f, 'maxiter', self.maxiter)
+        self._write_item(f, 'iter_limit', self.iter_limit)
         self._write_item(f, 'size', list(self.size), last=True)
         print >>f, '}'
     
@@ -336,7 +336,7 @@ def main(args):
         opts.center,
         opts.diam,
         opts.size,
-        opts.maxiter
+        opts.iter_limit
         )
     f.trace = opts.trace
     f.palette.phase = opts.palette_phase
