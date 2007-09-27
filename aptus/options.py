@@ -9,7 +9,6 @@ class AptusOptions:
         self.diam = 3.0, 3.0
         self.size = 600, 600
         self.iter_limit = 999
-        self.trace = False
         self.palette_phase = 0
         
     def read_args(self, argv):
@@ -17,7 +16,6 @@ class AptusOptions:
         parser.add_option("-i", "--iterlimit", dest="iter_limit", help="set the limit on the iteration count")
         parser.add_option("--phase", dest="palette_phase", help="set the palette phase", metavar="PHASE")
         parser.add_option("-s", "--size", dest="size", help="set the pixel size of the image", metavar="WIDxHGT")
-        parser.add_option("-t", "--trace", dest="trace", action="store_true", help="use boundary tracing")
         
         options, args = parser.parse_args(argv)
 
@@ -45,8 +43,6 @@ class AptusOptions:
             self.palette_phase = int(options.palette_phase)
         if options.size:
             self.size = map(int, options.size.split('x'))
-        if options.trace:
-            self.trace = True
 
 class AptusState:
     """ A serialization class for the state of an Aptus rendering.
