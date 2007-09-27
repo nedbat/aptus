@@ -33,7 +33,7 @@ jumps = [
     ((0.45687170535326038,-0.34780396997928614), (0.005859375,0.005859375)),
     ]
 
-class MandelbrotSet(AptEngine):
+class AptusMandelbrot(AptEngine):
     def __init__(self, center, diam, size, maxiter=999):
         pixsize = max(diam[0] / size[0], diam[1] / size[1])
         diam = pixsize * size[0], pixsize * size[1]
@@ -69,9 +69,9 @@ class MandelbrotSet(AptEngine):
         pix[self.counts == 0] = palette.incolor
         return pix
         
-class wxMandelbrotSetViewer(wx.Frame):
+class AptusView(wx.Frame):
     def __init__(self, center, diam, size, maxiter):
-        super(wxMandelbrotSetViewer, self).__init__(None, -1, 'Aptus')
+        super(AptusView, self).__init__(None, -1, 'Aptus')
  
         chromew, chromeh = 8, 28
         self.SetSize((size[0]+chromew, size[1]+chromeh))
@@ -101,7 +101,7 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.Refresh()
 
     def create_mandel(self, size):
-        return MandelbrotSet(self.center, self.diam, size, self.maxiter)
+        return AptusMandelbrot(self.center, self.diam, size, self.maxiter)
         
     def message(self, msg):
         dlg = wx.MessageDialog(self, msg, 'Aptus', wx.OK | wx.ICON_WARNING)
@@ -318,7 +318,7 @@ def main(args):
     opts.read_args(args)
     
     app = wx.PySimpleApp()
-    f = wxMandelbrotSetViewer(
+    f = AptusView(
         opts.center,
         opts.diam,
         opts.size,
