@@ -2,6 +2,7 @@
 """
 
 import optparse, sys
+from aptus.palettes import Palette
 
 class AptusOptions:
     def __init__(self):
@@ -9,6 +10,7 @@ class AptusOptions:
         self.diam = 3.0, 3.0
         self.size = 600, 600
         self.iter_limit = 999
+        self.palette = None
         self.palette_phase = 0
         
     def read_args(self, argv):
@@ -28,6 +30,8 @@ class AptusOptions:
                 self.diam = aptusstate.diam
                 self.iter_limit = aptusstate.iter_limit
                 self.size = aptusstate.size
+                self.palette = aptusstate.palette
+                self.palette_phase = aptusstate.palette_phase
                 
             if fname.endswith('.xpf'):
                 xaos = XaosState()
@@ -54,7 +58,9 @@ class AptusState:
         self._write_item(f, 'center', list(self.center))
         self._write_item(f, 'diam', list(self.diam))
         self._write_item(f, 'iter_limit', self.iter_limit)
-        self._write_item(f, 'size', list(self.size), last=True)
+        self._write_item(f, 'size', list(self.size))
+        self._write_item(f, 'palette', self.palette.spec)
+        self._write_item(f, 'palette_phase', self.palette_phase, last=True)
         print >>f, '}'
     
     def read(self, f):
@@ -66,6 +72,8 @@ class AptusState:
         self.center = d['center']
         self.diam = d['diam']
         self.iter_limit = d['iter_limit']
+        self.palette = Palette().from_spec(d['palette'])
+        self.palette_phase = d['palette_phase']
         
     def _write_item(self, f, k, v, last=False):
         if last:
