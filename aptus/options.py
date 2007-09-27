@@ -22,12 +22,22 @@ class AptusOptions:
         options, args = parser.parse_args(argv)
 
         if len(args) > 0:
-            xaos = XaosState()
-            xaos.read(sys.argv[1])
-            self.center = xaos.center
-            self.diam = xaos.diam
-            self.iter_limit = xaos.maxiter
-            self.palette_phase = xaos.palette_phase
+            fname = args[0]
+            if fname.endswith('.aptus'):
+                aptusstate = AptusState()
+                aptusstate.read(fname)
+                self.center = aptusstate.center
+                self.diam = aptusstate.diam
+                self.iter_limit = aptusstate.iter_limit
+                self.size = aptusstate.size
+                
+            if fname.endswith('.xpf'):
+                xaos = XaosState()
+                xaos.read(fname)
+                self.center = xaos.center
+                self.diam = xaos.diam
+                self.iter_limit = xaos.maxiter
+                self.palette_phase = xaos.palette_phase
             
         if options.iter_limit:
             self.iter_limit = int(options.iter_limit)
@@ -37,7 +47,37 @@ class AptusOptions:
             self.size = map(int, options.size.split('x'))
         if options.trace:
             self.trace = True
-            
+
+class AptusState:
+    """ A serialization class for the state of an Aptus rendering.
+    """
+    def write(self, f):
+        if isinstance(f, basestring):
+            f = open(f, 'wb')
+        print >>f, '{"Aptus state":1,'
+        self._write_item(f, 'center', list(self.center))
+        self._write_item(f, 'diam', list(self.diam))
+        self._write_item(f, 'iter_limit', self.iter_limit)
+        self._write_item(f, 'size', list(self.size), last=True)
+        print >>f, '}'
+    
+    def read(self, f):
+        if isinstance(f, basestring):
+            f = open(f, 'rb')
+        # This is dangerous!
+        d = eval(f.read())
+        self.size = d['size']
+        self.center = d['center']
+        self.diam = d['diam']
+        self.iter_limit = d['iter_limit']
+        
+    def _write_item(self, f, k, v, last=False):
+        if last:
+            trailing = ""
+        else:
+            trailing = ","
+        print >> f, '"%s": %r%s' % (k, v, trailing)
+
 class XaosState:
     """ The state of a Xaos rendering.
     """
