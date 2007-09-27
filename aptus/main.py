@@ -92,16 +92,16 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.jump_index = 0
         
     def set_view(self):
-        self.cw, self.ch = self.GetClientSize()
-        self.bitmap = wx.EmptyBitmap(self.cw, self.ch)
+        self.size = self.GetClientSize()
+        self.bitmap = wx.EmptyBitmap(*self.size)
         self.dc = None
 
-        self.m = self.create_mandel(self.cw, self.ch)
+        self.m = self.create_mandel(self.size)
         self.check_size = False
         self.Refresh()
 
-    def create_mandel(self, w, h):
-        return MandelbrotSet(self.center, self.diam, (w, h), self.maxiter)
+    def create_mandel(self, size):
+        return MandelbrotSet(self.center, self.diam, size, self.maxiter)
         
     def message(self, msg):
         dlg = wx.MessageDialog(self, msg, 'Aptus', wx.OK | wx.ICON_WARNING)
@@ -122,7 +122,7 @@ class wxMandelbrotSetViewer(wx.Frame):
         self.check_size = True
         
     def on_idle(self, event):
-        if self.check_size and self.GetClientSize() != (self.cw, self.ch):
+        if self.check_size and self.GetClientSize() != self.size:
             self.set_view()
 
     def on_key_down(self, event):
@@ -163,7 +163,7 @@ class wxMandelbrotSetViewer(wx.Frame):
         if not self.dc:
             self.dc = self.draw()
         dc = wx.PaintDC(self.panel)
-        dc.Blit(0, 0, self.cw, self.ch, self.dc, 0, 0)
+        dc.Blit(0, 0, self.size[0], self.size[1], self.dc, 0, 0)
  
     def draw(self):
         wx.BeginBusyCursor()
@@ -184,7 +184,7 @@ class wxMandelbrotSetViewer(wx.Frame):
             Image.fromarray(pix2).save('two.png')
             wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pix, pix2)))
             print wrong_count
-        img = wx.EmptyImage(self.cw, self.ch)
+        img = wx.EmptyImage(*self.size)
         img.SetData(pix.tostring())
         dc = wx.MemoryDC()
         dc.SelectObject(self.bitmap)
@@ -215,9 +215,7 @@ class wxMandelbrotSetViewer(wx.Frame):
                 fout.close()
             elif ext == 'aptus':
                 ms = AptusState()
-                ms.w = self.cw
-                ms.h = self.ch
-                ms.counts = self.counts.tostring()
+                ms.size = self.size
                 ms.write(dlg.GetPath())
             else:
                 self.message("Don't understand how to write file '%s'" % dlg.GetFilename())
@@ -302,9 +300,7 @@ class AptusState:
             f = open(f, 'wb')
         print >>f, '{'
         self._write_item(f, 'what_is_this', 'An Aptus state file, version 1')
-        self._write_item(f, 'w', self.w)
-        self._write_item(f, 'h', self.h)
-        self._write_item(f, 'counts', zlib.compress(self.counts).encode('base64').strip())
+        self._write_item(f, 'size', self.size)
         print >>f, '}'
     
     def read(self, f):
@@ -312,9 +308,7 @@ class AptusState:
             f = open(f, 'rb')
         # This is dangerous!
         d = eval(f.read())
-        self.w = d['w']
-        self.h = d['h']
-        self.counts = zlib.decompress(d['counts'].decode('base64'))
+        self.size = d['size']
         
     def _write_item(self, f, k, v):
         print >> f, ' "%s": %r,' % (k, v)
