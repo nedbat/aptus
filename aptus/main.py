@@ -16,6 +16,8 @@ AptEngine = importer('AptEngine')
 
 import os, re, sys, time, traceback, zlib
 
+__version__ = '1.0'
+
 class NullProgressReporter:
     def begin(self):
         pass
@@ -33,6 +35,16 @@ jumps = [
     ((0.45687170535326038,-0.34780396997928614), (0.005859375,0.005859375)),
     ]
 
+class AptusApp:
+    """ A mixin class for any Aptus application.
+    """
+    def write_image(self, im, fpath):
+        # PNG info mojo from: http://blog.modp.com/2007/08/python-pil-and-png-metadata-take-2.html
+        from PIL import PngImagePlugin
+        info = PngImagePlugin.PngInfo()
+        info.add_text("Software", "Aptus %s" % __version__)
+        im.save(fpath, 'PNG', pnginfo=info)
+        
 class AptusMandelbrot(AptEngine):
     def __init__(self, center, diam, size, iter_limit=999):
         self.center = center
@@ -76,7 +88,7 @@ class AptusMandelbrot(AptEngine):
         aptus_state.diam = self.diam
         aptus_state.iter_limit = self.iter_limit
         
-class AptusView(wx.Frame):
+class AptusView(wx.Frame, AptusApp):
     def __init__(self, center, diam, size, iter_limit):
         super(AptusView, self).__init__(None, -1, 'Aptus')
  
@@ -109,6 +121,16 @@ class AptusView(wx.Frame):
         self.check_size = False
         self.Refresh()
 
+    def dilate_view(self, center, scale):
+        """ Change the view by a certain scale factor, keeping the center in the
+            same spot.
+        """
+        cx = center[0] + (self.size[0]/2 - center[0]) * scale
+        cy = center[1] + (self.size[1]/2 - center[1]) * scale
+        self.center = self.m.coords_from_pixel(cx, cy)
+        self.diam = (self.diam[0]*scale, self.diam[1]*scale)
+        self.set_view()
+        
     def create_mandel(self, size):
         return AptusMandelbrot(self.center, self.diam, size, self.iter_limit)
         
@@ -131,16 +153,6 @@ class AptusView(wx.Frame):
             scale = (scale - 1.0)/10 + 1.0
         self.dilate_view(event.GetPosition(), scale)
  
-    def dilate_view(self, center, scale):
-        """ Change the view by a certain scale factor, keeping the center in the
-            same spot.
-        """
-        cx = center[0] + (self.size[0]/2 - center[0]) * scale
-        cy = center[1] + (self.size[1]/2 - center[1]) * scale
-        self.center = self.m.coords_from_pixel(cx, cy)
-        self.diam = (self.diam[0]*scale, self.diam[1]*scale)
-        self.set_view()
-        
     def on_size(self, event):
         self.check_size = True
         
@@ -232,9 +244,7 @@ class AptusView(wx.Frame):
                 image = wx.ImageFromBitmap(self.bitmap)
                 im = Image.new('RGB', (image.GetWidth(), image.GetHeight()))
                 im.fromstring(image.GetData())
-                fout = open(dlg.GetPath(), 'wb')
-                im.save(fout, 'PNG')
-                fout.close()
+                self.write_image(im, dlg.GetPath())
             elif ext == 'aptus':
                 ms = AptusState()
                 self.m.write_state(ms)
@@ -266,7 +276,7 @@ class AptusView(wx.Frame):
                 pix = m.color_pixels(self.palette, self.palette_phase)
                 im = Image.fromarray(pix)
                 im = im.resize((w,h), Image.ANTIALIAS)
-                im.save(dlg.GetPath())
+                self.write_image(im, dlg.GetPath())
 
     def cmd_set_iter_limit(self):
         dlg = wx.TextEntryDialog(
@@ -281,7 +291,8 @@ class AptusView(wx.Frame):
                 self.message("Couldn't set iter_limit: %s" % e)
 
         dlg.Destroy()
-
+        self.cmd_redraw()
+        
     def cmd_redraw(self):
         self.set_view()
         
