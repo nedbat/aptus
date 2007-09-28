@@ -235,7 +235,7 @@ class AptusView(wx.Frame, AptusApp):
 
         dlg = wx.FileDialog(
             self, message="Save", defaultDir=os.getcwd(), 
-            defaultFile="", style=wx.SAVE, wildcard=wildcard, 
+            defaultFile="", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard=wildcard, 
             )
 
         if dlg.ShowModal() == wx.ID_OK:
@@ -263,7 +263,7 @@ class AptusView(wx.Frame, AptusApp):
 
         dlg = wx.FileDialog(
             self, message="Save big image", defaultDir=os.getcwd(), 
-            defaultFile="", style=wx.SAVE, wildcard=wildcard, 
+            defaultFile="", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard=wildcard, 
             )
 
         if dlg.ShowModal() == wx.ID_OK:

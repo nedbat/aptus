@@ -1,9 +1,9 @@
 * Bugs
 
 - If client size is queried while minimized, it comes back as zero, and a divide by zero error happens.
-- Proper prompting about overwriting existing files.
++ Proper prompting about overwriting existing files.
 - If you zoom out too far, boundary tracing makes the whole set disappear.
-- Progress can decided there's 0 sec left, and shows an empty string.
+- Progress can decide there's 0 sec left, and shows an empty string.
 
 * Speed
 
@@ -28,7 +28,9 @@ x Optimize boundary.py so we can use it for high iterations
 - Multiple windows.
 - Back button
     - with a list of places you've been (with thumbnails).
-    
+- Draggable rectangle in addition to click-to-zoom.
+- Open command to load aptus state files.
+
 * Beauty
 
 + HSV palette
@@ -39,7 +41,7 @@ x Optimize boundary.py so we can use it for high iterations
     - Algorithmic palette
 - Rotation (simply store the pixel offsets as dx and dy computed from angle).
 - Continuous coloring (http://linas.org/art-gallery/escape/smooth.html)
-- A palette specification, so the complete specs for a pic can be stored.
++ A palette specification, so the complete specs for a pic can be stored.
 
 * Power
 
@@ -48,7 +50,6 @@ x Optimize boundary.py so we can use it for high iterations
 - Command line invocation (refactor a bunch of stuff)
 - Multi-precision floats
 - Interruptable rendering: write partial counts (and all other state) to a file and restart.
-- Draggable rectangle in addition to click-to-zoom.
 
 * Knowledge
 
