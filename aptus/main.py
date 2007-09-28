@@ -84,8 +84,8 @@ class AptusView(wx.Frame):
         self.SetSize((size[0]+chromew, size[1]+chromeh))
         self.panel = wx.Panel(self)
         self.panel.Bind(wx.EVT_PAINT, self.on_paint)
-        self.panel.Bind(wx.EVT_LEFT_UP, self.on_zoom_in)
-        self.panel.Bind(wx.EVT_RIGHT_UP, self.on_zoom_out)
+        self.panel.Bind(wx.EVT_LEFT_UP, self.on_left_up)
+        self.panel.Bind(wx.EVT_RIGHT_UP, self.on_right_up)
         self.panel.Bind(wx.EVT_SIZE, self.on_size)
         self.panel.Bind(wx.EVT_IDLE, self.on_idle)
         self.panel.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
@@ -98,6 +98,7 @@ class AptusView(wx.Frame):
         self.palette = all_palettes[0]
         self.palette_phase = 0
         self.jump_index = 0
+        self.zoom = 2.0
         
     def set_view(self):
         self.size = self.GetClientSize()
@@ -116,16 +117,30 @@ class AptusView(wx.Frame):
         dlg.ShowModal()
         dlg.Destroy()
         
-    def on_zoom_in(self, event):
-        self.center = self.m.coords_from_pixel(event.GetX(), event.GetY())
-        self.diam = (self.diam[0]/2.0, self.diam[1]/2.0)
-        self.set_view()
+    # Event handlers
+    
+    def on_left_up(self, event):
+        scale = self.zoom
+        if event.ControlDown():
+            scale = (scale - 1.0)/10 + 1.0
+        self.dilate_view(event.GetPosition(), 1.0/scale)
  
-    def on_zoom_out(self, event):
-        self.center = self.m.coords_from_pixel(event.GetX(), event.GetY())
-        self.diam = (self.diam[0]*2.0, self.diam[1]*2.0)
-        self.set_view()
+    def on_right_up(self, event):
+        scale = self.zoom
+        if event.ControlDown():
+            scale = (scale - 1.0)/10 + 1.0
+        self.dilate_view(event.GetPosition(), scale)
  
+    def dilate_view(self, center, scale):
+        """ Change the view by a certain scale factor, keeping the center in the
+            same spot.
+        """
+        cx = center[0] + (self.size[0]/2 - center[0]) * scale
+        cy = center[1] + (self.size[1]/2 - center[1]) * scale
+        self.center = self.m.coords_from_pixel(cx, cy)
+        self.diam = (self.diam[0]*scale, self.diam[1]*scale)
+        self.set_view()
+        
     def on_size(self, event):
         self.check_size = True
         
@@ -165,7 +180,7 @@ class AptusView(wx.Frame):
             sym = revmap.get(keycode, "")
             if not sym:
                 sym = "ord(%r)" % chr(keycode)
-            print "Unmapped key: %r, %s, shift=%r" % (keycode, sym, shift)
+            #print "Unmapped key: %r, %s, shift=%r" % (keycode, sym, shift)
 
     def on_paint(self, event):
         if not self.dc:
@@ -197,6 +212,8 @@ class AptusView(wx.Frame):
         wx.EndBusyCursor()
         return dc
 
+    # Command handlers.
+    
     def cmd_save(self):
         wildcard = (
             "PNG image (*.png)|*.png|"     
