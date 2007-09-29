@@ -128,8 +128,7 @@ class AptusView(wx.Frame, AptusApp):
         
     def set_view(self):
         self.size = self.GetClientSize()
-        self.bitmap = wx.EmptyBitmap(*self.size)
-        self.dc = None
+        self.bitmap = None
 
         self.m = self.create_mandel(self.size)
         self.check_size = False
@@ -209,10 +208,10 @@ class AptusView(wx.Frame, AptusApp):
             print "Unmapped key: %r, %s, shift=%r" % (keycode, sym, shift)
 
     def on_paint(self, event):
-        if not self.dc:
-            self.dc = self.draw()
+        if not self.bitmap:
+            self.bitmap = self.draw()
         dc = wx.PaintDC(self.panel)
-        dc.Blit(0, 0, self.size[0], self.size[1], self.dc, 0, 0)
+        dc.DrawBitmap(self.bitmap, 0, 0, False)
  
     def draw(self):
         wx.BeginBusyCursor()
@@ -230,13 +229,9 @@ class AptusView(wx.Frame, AptusApp):
             Image.fromarray(pix2).save('two.png')
             wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pix, pix2)))
             print wrong_count
-        img = wx.EmptyImage(*self.size)
-        img.SetData(pix.tostring())
-        dc = wx.MemoryDC()
-        dc.SelectObject(self.bitmap)
-        dc.DrawBitmap(img.ConvertToBitmap(), 0, 0, False)
+        bmp = wx.BitmapFromBuffer(pix.shape[0], pix.shape[1], pix)
         wx.EndBusyCursor()
-        return dc
+        return bmp
 
     # Command handlers.
     
@@ -309,7 +304,7 @@ class AptusView(wx.Frame, AptusApp):
         
     def cmd_cycle_palette(self, delta):
         self.palette_phase += delta
-        self.dc = None
+        self.bitmap = None
         self.Refresh()
         
     def cmd_change_palette(self, delta):
@@ -317,7 +312,7 @@ class AptusView(wx.Frame, AptusApp):
         self.palette_index %= len(all_palettes)
         self.palette = all_palettes[self.palette_index]
         self.palette_phase = 0
-        self.dc = None
+        self.bitmap = None
         self.Refresh()
         
 class ConsoleProgressReporter:
