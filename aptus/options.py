@@ -3,6 +3,9 @@
 
 import optparse, sys
 from aptus.palettes import Palette
+from aptus.importer import importer
+
+Image = importer('Image')
 
 class AptusOptions:
     def __init__(self):
@@ -22,31 +25,47 @@ class AptusOptions:
         options, args = parser.parse_args(argv)
 
         if len(args) > 0:
-            fname = args[0]
-            if fname.endswith('.aptus'):
-                aptusstate = AptusState()
-                aptusstate.read(fname)
-                self.center = aptusstate.center
-                self.diam = aptusstate.diam
-                self.iter_limit = aptusstate.iter_limit
-                self.size = aptusstate.size
-                self.palette = aptusstate.palette
-                self.palette_phase = aptusstate.palette_phase
-                
-            if fname.endswith('.xpf'):
-                xaos = XaosState()
-                xaos.read(fname)
-                self.center = xaos.center
-                self.diam = xaos.diam
-                self.iter_limit = xaos.maxiter
-                self.palette_phase = xaos.palette_phase
-            
+            self.opts_from_file(args[0])
+
         if options.iter_limit:
             self.iter_limit = int(options.iter_limit)
         if options.palette_phase:
             self.palette_phase = int(options.palette_phase)
         if options.size:
             self.size = map(int, options.size.split('x'))
+
+    def opts_from_file(self, fname):
+        if fname.endswith('.aptus'):
+            aptst = AptusState()
+            aptst.read(fname)
+            self.opts_from_aptst(aptst)
+            
+        elif fname.endswith('.xpf'):
+            xaos = XaosState()
+            xaos.read(fname)
+            self.center = xaos.center
+            self.diam = xaos.diam
+            self.iter_limit = xaos.maxiter
+            self.palette_phase = xaos.palette_phase
+        
+        elif fname.endswith('.png'):
+            im = Image.open(fname)
+            if "Aptus State" in im.info:
+                aptst = AptusState()
+                aptst.read_string(im.info["Aptus State"])
+                self.opts_from_aptst(aptst)
+            else:
+                raise Exception("PNG file has no Aptus state information: %s" % fname)
+        else:
+            raise Exception("Don't know how to read options from %s" % fname)
+    
+    def opts_from_aptst(self, aptst):
+        self.center = aptst.center
+        self.diam = aptst.diam
+        self.iter_limit = aptst.iter_limit
+        self.size = aptst.size
+        self.palette = aptst.palette
+        self.palette_phase = aptst.palette_phase
 
 class AptusState:
     """ A serialization class for the state of an Aptus rendering.
@@ -70,15 +89,18 @@ class AptusState:
     def read(self, f):
         if isinstance(f, basestring):
             f = open(f, 'rb')
+        return self.read_string(f.read())
+    
+    def read_string(self, s):
         # This is dangerous!
-        d = eval(f.read())
+        d = eval(s)
         self.size = d['size']
         self.center = d['center']
         self.diam = d['diam']
         self.iter_limit = d['iter_limit']
         self.palette = Palette().from_spec(d['palette'])
         self.palette_phase = d['palette_phase']
-        
+
     def _write_item(self, k, v):
         return '"%s": %r' % (k, v)
 
