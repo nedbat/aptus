@@ -173,6 +173,7 @@ all_palettes = [
     Palette().gradient('palettes/bluefly.ggr', 20),
     Palette().gradient('palettes/ib18.ggr', 20),
     Palette().gradient('palettes/ib18.ggr', 50),
+    Palette().gradient('palettes/DEM_screen.ggr', 20),
     ]
 
 # A simple viewer to see the palettes.
