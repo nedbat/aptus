@@ -201,12 +201,12 @@ class AptusView(wx.Frame, AptusApp):
                 self.cmd_change_palette(1)
             else:
                 self.cmd_cycle_palette(1)
-        else:
+        elif 0:
             revmap = dict([(getattr(wx,n), n) for n in dir(wx) if n.startswith('WXK')])
             sym = revmap.get(keycode, "")
             if not sym:
                 sym = "ord(%r)" % chr(keycode)
-            #print "Unmapped key: %r, %s, shift=%r" % (keycode, sym, shift)
+            print "Unmapped key: %r, %s, shift=%r" % (keycode, sym, shift)
 
     def on_paint(self, event):
         if not self.dc:
