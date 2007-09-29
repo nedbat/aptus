@@ -54,14 +54,18 @@ class AptusState:
     def write(self, f):
         if isinstance(f, basestring):
             f = open(f, 'wb')
-        print >>f, '{"Aptus state":1,'
-        self._write_item(f, 'center', list(self.center))
-        self._write_item(f, 'diam', list(self.diam))
-        self._write_item(f, 'iter_limit', self.iter_limit)
-        self._write_item(f, 'size', list(self.size))
-        self._write_item(f, 'palette', self.palette.spec)
-        self._write_item(f, 'palette_phase', self.palette_phase, last=True)
-        print >>f, '}'
+        f.write(self.write_string())
+        
+    def write_string(self):
+        lines = []
+        lines.append(self._write_item('Aptus state', 1))
+        lines.append(self._write_item('center', list(self.center)))
+        lines.append(self._write_item('diam', list(self.diam)))
+        lines.append(self._write_item('iter_limit', self.iter_limit))
+        lines.append(self._write_item('size', list(self.size)))
+        lines.append(self._write_item('palette', self.palette.spec))
+        lines.append(self._write_item('palette_phase', self.palette_phase))
+        return "{" + ",\n".join(lines) + "\n}\n"
     
     def read(self, f):
         if isinstance(f, basestring):
@@ -75,12 +79,8 @@ class AptusState:
         self.palette = Palette().from_spec(d['palette'])
         self.palette_phase = d['palette_phase']
         
-    def _write_item(self, f, k, v, last=False):
-        if last:
-            trailing = ""
-        else:
-            trailing = ","
-        print >> f, '"%s": %r%s' % (k, v, trailing)
+    def _write_item(self, k, v):
+        return '"%s": %r' % (k, v)
 
 class XaosState:
     """ The state of a Xaos rendering.

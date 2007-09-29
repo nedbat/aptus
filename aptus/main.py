@@ -6,7 +6,6 @@ from aptus.palettes import all_palettes
 from aptus.importer import importer
 
 # Import third-party packages.
-
 wx = importer('wx')
 numpy = importer('numpy')
 Image = importer('Image')
@@ -38,20 +37,39 @@ jumps = [
 class AptusApp:
     """ A mixin class for any Aptus application.
     """
+    def __init__(self):
+        self.center = -0.5, 0.0
+        self.diam = 3.0, 3.0
+        self.size = 600, 600
+        self.iter_limit = 999
+        self.palette = None
+        self.palette_phase = 0
+        
     def write_image(self, im, fpath):
         # PNG info mojo from: http://blog.modp.com/2007/08/python-pil-and-png-metadata-take-2.html
         from PIL import PngImagePlugin
+        aptst = AptusState()
+        self.write_state(aptst)
         info = PngImagePlugin.PngInfo()
         info.add_text("Software", "Aptus %s" % __version__)
+        info.add_text("Aptus State", aptst.write_string())
         im.save(fpath, 'PNG', pnginfo=info)
+    
+    def write_state(self, aptst):
+        """ Write our state to an AptusState instance.
+        """
+        aptst.center = self.center
+        aptst.diam = self.diam
+        aptst.iter_limit = self.iter_limit
+        aptst.size = self.size
+        aptst.palette = self.palette
+        aptst.palette_phase = self.palette_phase
         
 class AptusMandelbrot(AptEngine):
-    def __init__(self, center, diam, size, iter_limit=999):
-        self.center = center
-        self.diam = diam
+    def __init__(self, center, diam, size, iter_limit):
         self.size = size
         
-        pixsize = max(self.diam[0] / size[0], self.diam[1] / size[1])
+        pixsize = max(diam[0] / size[0], diam[1] / size[1])
         diam = pixsize * size[0], pixsize * size[1]
         
         self.xy0 = (center[0] - diam[0]/2, center[1] - diam[1]/2)
@@ -83,14 +101,10 @@ class AptusMandelbrot(AptEngine):
         pix[self.counts == 0] = palette.incolor
         return pix
 
-    def write_state(self, aptus_state):
-        aptus_state.center = self.center
-        aptus_state.diam = self.diam
-        aptus_state.iter_limit = self.iter_limit
-        
 class AptusView(wx.Frame, AptusApp):
     def __init__(self, center, diam, size, iter_limit):
-        super(AptusView, self).__init__(None, -1, 'Aptus')
+        wx.Frame.__init__(self, None, -1, 'Aptus')
+        AptusApp.__init__(self)
  
         chromew, chromeh = 8, 28
         self.SetSize((size[0]+chromew, size[1]+chromeh))
@@ -246,12 +260,9 @@ class AptusView(wx.Frame, AptusApp):
                 im.fromstring(image.GetData())
                 self.write_image(im, dlg.GetPath())
             elif ext == 'aptus':
-                ms = AptusState()
-                self.m.write_state(ms)
-                ms.size = self.size
-                ms.palette = self.palette
-                ms.palette_phase = self.palette_phase
-                ms.write(dlg.GetPath())
+                aptst = AptusState()
+                self.write_state(aptst)
+                aptst.write(dlg.GetPath())
             else:
                 self.message("Don't understand how to write file '%s'" % dlg.GetFilename())
                 
