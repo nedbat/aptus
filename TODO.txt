@@ -18,6 +18,7 @@ x Optimize boundary.py so we can use it for high iterations
     uses it to skip the bailout check until reaching the miniter.
 + Go through the bitblting python code to see if we can skip some of the steps.
 - A custom coloring endpoint in the engine to replace the multiple numpy operations.
+- When dragging the image, only re-calc the parts that have been exposed.
 
 * UI
 
@@ -31,6 +32,10 @@ x Optimize boundary.py so we can use it for high iterations
     - with a list of places you've been (with thumbnails).
 + Draggable rectangle in addition to click-to-zoom.
 - Open command to load aptus state files.
+- Mac: app icon
+- Mac: use apple-key rather than control.
+- Custom bookmarks (like the J key).
+- Help
 
 * Beauty
 
