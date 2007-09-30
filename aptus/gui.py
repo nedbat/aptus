@@ -158,7 +158,8 @@ class AptusView(wx.Frame, AptusApp):
         
     def on_idle(self, event):
         if self.check_size and self.GetClientSize() != self.size:
-            self.set_view()
+            if self.GetClientSize() != (0,0):
+                self.set_view()
 
     def on_key_down(self, event):
         shift = event.ShiftDown()
