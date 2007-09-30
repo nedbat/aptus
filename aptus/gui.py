@@ -60,6 +60,10 @@ class AptusView(wx.Frame, AptusApp):
         """ Change the view by a certain scale factor, keeping the center in the
             same spot.
         """
+        # Refuse to zoom out so that the whole escape circle is visible: it makes
+        # boundary tracing erase the entire thing!
+        if self.diam[0] * scale >= 3.9:
+            return
         cx = center[0] + (self.size[0]/2 - center[0]) * scale
         cy = center[1] + (self.size[1]/2 - center[1]) * scale
         self.center = self.m.coords_from_pixel(cx, cy)
