@@ -37,6 +37,7 @@ class AptusView(wx.Frame, AptusApp):
         self.panel.Bind(wx.EVT_SIZE, self.on_size)
         self.panel.Bind(wx.EVT_IDLE, self.on_idle)
         self.panel.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
+        self.panel.Bind(wx.EVT_KEY_UP, self.on_key_up)
 
         # AptusApp values        
         self.center = center
@@ -53,9 +54,16 @@ class AptusView(wx.Frame, AptusApp):
         self.reset_rubberband()
         self.set_view()
         
+        # Panning information.
+        self.panning = False
+        self.pt_pan= None
+        self.pan_locked = False
+        
         # Set the window icon
         ib = wx.IconBundle()
-        ib.AddIconFromFile(data_file("aptusicon.ico"), wx.BITMAP_TYPE_ANY)
+        #ib.AddIconFromFile(data_file("aptusicon.ico"), wx.BITMAP_TYPE_ANY)
+        ib.AddIconFromFile(data_file("aptusicon32.png"), wx.BITMAP_TYPE_ANY)
+        ib.AddIconFromFile(data_file("aptusicon16red.png"), wx.BITMAP_TYPE_ANY)
         self.SetIcons(ib)
 
     def set_view(self):
@@ -96,13 +104,15 @@ class AptusView(wx.Frame, AptusApp):
         dc = wx.ClientDC(self.panel)
         dc.SetLogicalFunction(wx.XOR)
         dc.SetBrush(wx.Brush(wx.WHITE, wx.TRANSPARENT))
-        dc.SetPen(wx.Pen(wx.WHITE, 1, wx.DOT))
+        dc.SetPen(wx.Pen(wx.WHITE, 1, wx.SOLID))
         dc.DrawRectangle(*rect)
 
     def set_cursor(self):
         # Set the proper cursor:
         if self.rubberbanding:
             self.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
+        elif self.panning:
+            self.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
         else:
             self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
         
@@ -111,7 +121,10 @@ class AptusView(wx.Frame, AptusApp):
     def on_left_down(self, event):
         self.pt_down = event.GetPosition()
         self.rubberbanding = False
-        
+        if self.panning:
+            self.pt_pan = self.pt_down
+            self.pan_locked = False
+            
     def on_motion(self, event):
         self.set_cursor()
         
@@ -120,37 +133,58 @@ class AptusView(wx.Frame, AptusApp):
             return
         
         mx, my = event.GetPosition()
-        if not self.rubberbanding:
-            # Start rubberbanding when we have a 10-pixel rectangle at least.
-            if abs(self.pt_down[0] - mx) > 10 or abs(self.pt_down[1] - my) > 10:
-                self.rubberbanding = True
-
-        if self.rubberbanding:
-            if self.rubberrect:
-                # Erase the old rectangle.
+        
+        if self.panning:
+            if self.pt_pan != (mx, my):
+                # We've moved the image: redraw it.
+                self.pt_pan = (mx, my)
+                self.pan_locked = True
+                dc = wx.ClientDC(self.panel)
+                dc.SetBrush(wx.Brush(wx.Colour(128,128,128), wx.SOLID))
+                dc.SetPen(wx.Pen(wx.Colour(128,128,128), 1, wx.SOLID))
+                dc.DrawRectangle(0, 0, self.size[0], self.size[1])
+                dc.DrawBitmap(self.bitmap, self.pt_pan[0]-self.pt_down[0], self.pt_pan[1]-self.pt_down[1], False)
+                
+        else:
+            if not self.rubberbanding:
+                # Start rubberbanding when we have a 10-pixel rectangle at least.
+                if abs(self.pt_down[0] - mx) > 10 or abs(self.pt_down[1] - my) > 10:
+                    self.rubberbanding = True
+    
+            if self.rubberbanding:
+                if self.rubberrect:
+                    # Erase the old rectangle.
+                    self.xor_rectangle(self.rubberrect)
+                    
+                self.rubberrect = (self.pt_down[0], self.pt_down[1], mx-self.pt_down[0], my-self.pt_down[1]) 
                 self.xor_rectangle(self.rubberrect)
                 
-            self.rubberrect = (self.pt_down[0], self.pt_down[1], mx-self.pt_down[0], my-self.pt_down[1]) 
-            self.xor_rectangle(self.rubberrect)
-            
     def on_left_up(self, event):
+        mx, my = event.GetPosition()
         if self.rubberbanding:
             # Set a new view that encloses the rectangle.
             ulx, uly = self.m.coords_from_pixel(*self.pt_down)
-            lrx, lry = self.m.coords_from_pixel(*event.GetPosition())
+            lrx, lry = self.m.coords_from_pixel(mx, my)
             self.center = ((ulx+lrx)/2, (uly+lry)/2)
             self.diam = (abs(ulx-lrx), abs(uly-lry))
-            
+            self.set_view()
+        elif self.panning:
+            cx, cy = self.size[0]/2, self.size[1]/2
+            cx -= mx - self.pt_down[0]
+            cy -= my - self.pt_down[1]
+            self.center = self.m.coords_from_pixel(cx, cy)
             self.set_view()
         elif self.pt_down:
             # Single-click: zoom in.
             scale = self.zoom
             if event.ControlDown():
                 scale = (scale - 1.0)/10 + 1.0
-            self.dilate_view(event.GetPosition(), 1.0/scale)
+            self.dilate_view((mx, my), 1.0/scale)
 
         self.reset_rubberband()        
-         
+        self.panning = False
+        self.pan_locked = False
+        
     def on_right_up(self, event):
         scale = self.zoom
         if event.ControlDown():
@@ -198,6 +232,8 @@ class AptusView(wx.Frame, AptusApp):
                 self.cmd_change_palette(1)
             else:
                 self.cmd_cycle_palette(1)
+        elif keycode == ord(' '):
+            self.panning = True
         elif 0:
             revmap = dict([(getattr(wx,n), n) for n in dir(wx) if n.startswith('WXK')])
             sym = revmap.get(keycode, "")
@@ -205,6 +241,12 @@ class AptusView(wx.Frame, AptusApp):
                 sym = "ord(%r)" % chr(keycode)
             print "Unmapped key: %r, %s, shift=%r" % (keycode, sym, shift)
 
+    def on_key_up(self, event):
+        keycode = event.KeyCode
+        if keycode == ord(' '):
+            if not self.pan_locked:
+                self.panning = False
+            
     def on_paint(self, event):
         if not self.bitmap:
             self.bitmap = self.draw()

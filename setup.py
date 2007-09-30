@@ -29,6 +29,7 @@ setup(
     package_data = {
         'aptus': [
             '*.ico',
+            '*.png',
             'palettes/*.ggr',
             ]
         },

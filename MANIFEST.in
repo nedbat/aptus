@@ -1,4 +1,5 @@
 recursive-include scripts *.py
 recursive-include aptus *.py
 recursive-include aptus *.ico
+recursive-include aptus *.png
 recursive-include aptus *.ggr
