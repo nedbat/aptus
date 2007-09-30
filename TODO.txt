@@ -3,7 +3,7 @@
 - If client size is queried while minimized, it comes back as zero, and a divide by zero error happens.
 + Proper prompting about overwriting existing files.
 - If you zoom out too far, boundary tracing makes the whole set disappear.
-- Progress can decide there's 0 sec left, and shows an empty string.
++ Progress can decide there's 0 sec left, and shows an empty string.
 
 * Speed
 

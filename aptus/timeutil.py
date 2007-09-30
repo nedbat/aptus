@@ -29,7 +29,10 @@ def duration(s):
             dur.append("%ds" % s)
         else:
             dur.append("%.2fs" % s)
-    return " ".join(dur)
+    if dur:
+        return " ".join(dur)
+    else:
+        return "0s"
 
 def future(s):
     """ Make a nice string representation of a point in time in the future,
