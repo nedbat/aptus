@@ -32,6 +32,7 @@ class AptusView(wx.Frame, AptusApp):
         self.panel.Bind(wx.EVT_RIGHT_UP, self.on_right_up)
         self.panel.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
         self.panel.Bind(wx.EVT_MOTION, self.on_motion)
+        self.panel.Bind(wx.EVT_LEAVE_WINDOW, self.on_leave_window)
         self.panel.Bind(wx.EVT_SIZE, self.on_size)
         self.panel.Bind(wx.EVT_IDLE, self.on_idle)
         self.panel.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
@@ -43,16 +44,12 @@ class AptusView(wx.Frame, AptusApp):
         self.palette = all_palettes[0]
         self.palette_phase = 0
         
-        # Gui values
+        # Gui state values
         self.palette_index = 0
         self.jump_index = 0
         self.zoom = 2.0
 
-        # Rubberbanding
-        self.pt_down = None
-        self.pt_other = None
-        self.rectangle = False
-        
+        self.reset_rubberband()
         self.set_view()
         
     def set_view(self):
@@ -81,56 +78,69 @@ class AptusView(wx.Frame, AptusApp):
         dlg = wx.MessageDialog(self, msg, 'Aptus', wx.OK | wx.ICON_WARNING)
         dlg.ShowModal()
         dlg.Destroy()
+    
+    def reset_rubberband(self):
+        """ Set all the rubberbanding variables to turn rubberbanding off.
+        """
+        self.pt_down = None
+        self.rubberbanding = False
+        self.rubberrect = None
         
+    def xor_rectangle(self, rect):
+        dc = wx.ClientDC(self.panel)
+        dc.SetLogicalFunction(wx.XOR)
+        dc.SetBrush(wx.Brush(wx.WHITE, wx.TRANSPARENT))
+        dc.SetPen(wx.Pen(wx.WHITE, 1, wx.DOT))
+        dc.DrawRectangle(*rect)
+    
     # Event handlers
     
     def on_left_down(self, event):
         self.pt_down = event.GetPosition()
-        self.rectangle = False
-        self.pt_other = None
+        self.rubberbanding = False
         
     def on_motion(self, event):
+        # Set the proper cursor:
+        if self.rubberbanding:
+            self.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
+        else:
+            self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+            
+        # We do nothing with mouse moves that aren't dragging.
         if not self.pt_down:
             return
         
         mx, my = event.GetPosition()
-        if not self.rectangle:
+        if not self.rubberbanding:
+            # Start rubberbanding when we have a 10-pixel rectangle at least.
             if abs(self.pt_down[0] - mx) > 10 or abs(self.pt_down[1] - my) > 10:
-                self.rectangle = True
-                self.SetCursor(wx.StockCursor(wx.CURSOR_CROSS))
-           
-        if self.rectangle:
-            dc = wx.ClientDC(self.panel)
-            dc.SetLogicalFunction(wx.XOR)
-            dc.SetBrush(wx.Brush(wx.WHITE, wx.TRANSPARENT))
-            dc.SetPen(wx.Pen(wx.WHITE, 1, wx.SOLID))
-            
-            if self.pt_other:
+                self.rubberbanding = True
+
+        if self.rubberbanding:
+            if self.rubberrect:
                 # Erase the old rectangle.
-                dc.DrawRectangle(self.pt_down[0], self.pt_down[1], self.pt_other[0]-self.pt_down[0], self.pt_other[1]-self.pt_down[1])
+                self.xor_rectangle(self.rubberrect)
                 
-            dc.DrawRectangle(self.pt_down[0], self.pt_down[1], mx-self.pt_down[0], my-self.pt_down[1])
-            self.pt_other = mx, my
+            self.rubberrect = (self.pt_down[0], self.pt_down[1], mx-self.pt_down[0], my-self.pt_down[1]) 
+            self.xor_rectangle(self.rubberrect)
             
     def on_left_up(self, event):
-        if self.rectangle:
+        if self.rubberbanding:
+            # Set a new view that encloses the rectangle.
             ulx, uly = self.m.coords_from_pixel(*self.pt_down)
-            lrx, lry = self.m.coords_from_pixel(*self.pt_other)
+            lrx, lry = self.m.coords_from_pixel(*event.GetPosition())
             self.center = ((ulx+lrx)/2, (uly+lry)/2)
             self.diam = (abs(ulx-lrx), abs(uly-lry))
             
             self.set_view()
-        else:
+        elif self.pt_down:
             # Single-click: zoom in.
             scale = self.zoom
             if event.ControlDown():
                 scale = (scale - 1.0)/10 + 1.0
             self.dilate_view(event.GetPosition(), 1.0/scale)
-        
-        self.pt_down = None
-        self.rectangle = False
-        self.pt_other = None
-        self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+
+        self.reset_rubberband()        
          
     def on_right_up(self, event):
         scale = self.zoom
@@ -138,6 +148,11 @@ class AptusView(wx.Frame, AptusApp):
             scale = (scale - 1.0)/10 + 1.0
         self.dilate_view(event.GetPosition(), scale)
  
+    def on_leave_window(self, event):
+        if self.rubberrect:
+            self.xor_rectangle(self.rubberrect)
+        self.reset_rubberband()
+        
     def on_size(self, event):
         self.check_size = True
         
