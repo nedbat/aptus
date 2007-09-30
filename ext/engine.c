@@ -378,38 +378,23 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                     num_trace++;
                     
                     // Flood fill the region. The points list has all the boundary
-                    // points, so we only need to fill left and right from each of
-                    // those.
+                    // points, so we only need to fill left from each of those.
                     int pi;
                     for (pi = 0; pi < ptsstored; pi++) {
                         int ptx = points[pi].x;
                         int pty = points[pi].y;
-                        curx = ptx;
                         // Fill left.
                         for (;;) {
-                            curx--;
-                            if (curx < 0) {
+                            ptx--;
+                            if (ptx < 0) {
                                 break;
                             }
-                            if (STATUS(curx, pty) != 0) {
+                            if (STATUS(ptx, pty) != 0) {
                                 break;
                             }
-                            COUNTS(curx, pty) = c;
+                            COUNTS(ptx, pty) = c;
                             num_pixels++;
-                            STATUS(curx, pty) = 2;
-                        }
-                        // Fill right.
-                        for (;;) {
-                            curx++;
-                            if (curx > w-1) {
-                                break;
-                            }
-                            if (STATUS(curx, pty) != 0) {
-                                break;
-                            }
-                            COUNTS(curx, pty) = c;
-                            num_pixels++;
-                            STATUS(curx, pty) = 2;
+                            STATUS(ptx, pty) = 2;
                         }
                     } // end for points to fill
                     
