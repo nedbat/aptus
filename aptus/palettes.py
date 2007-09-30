@@ -1,6 +1,7 @@
 """ Palettes for Aptus.
 """
 
+from aptus import data_file
 import colorsys
 
 class Palette:
@@ -169,11 +170,12 @@ all_palettes = [
     Palette().spectrum(16, l=125, s=175),
     Palette().rgb_colors([(255,192,192), (255,255,255)]).rgb_incolor((192,192,255)),
     Palette().rgb_colors([(255,255,255), (0,0,0), (0,0,0), (0,0,0)]),
+    Palette().rgb_colors([(255,255,255)]),
     Palette().spectrum(2, h=120, l=(50,200), s=125).stretch(128, hsl=True),
-    Palette().gradient('palettes/bluefly.ggr', 20),
-    Palette().gradient('palettes/ib18.ggr', 20),
-    Palette().gradient('palettes/ib18.ggr', 50),
-    Palette().gradient('palettes/DEM_screen.ggr', 20),
+    Palette().gradient(data_file('palettes/bluefly.ggr'), 20),
+    Palette().gradient(data_file('palettes/ib18.ggr'), 20),
+    Palette().gradient(data_file('palettes/ib18.ggr'), 50),
+    Palette().gradient(data_file('palettes/DEM_screen.ggr'), 20),
     ]
 
 # A simple viewer to see the palettes.

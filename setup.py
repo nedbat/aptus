@@ -21,6 +21,17 @@ setup(
     packages = [
         'aptus'
         ],
+
+    package_dir = {
+        'aptus': 'aptus'
+        },
+    
+    package_data = {
+        'aptus': [
+            '*.ico',
+            'palettes/*.ggr',
+            ]
+        },
     
     ext_modules = [
         Extension(
