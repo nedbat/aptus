@@ -92,7 +92,14 @@ class AptusView(wx.Frame, AptusApp):
         dc.SetBrush(wx.Brush(wx.WHITE, wx.TRANSPARENT))
         dc.SetPen(wx.Pen(wx.WHITE, 1, wx.DOT))
         dc.DrawRectangle(*rect)
-    
+
+    def set_cursor(self):
+        # Set the proper cursor:
+        if self.rubberbanding:
+            self.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
+        else:
+            self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+        
     # Event handlers
     
     def on_left_down(self, event):
@@ -100,12 +107,8 @@ class AptusView(wx.Frame, AptusApp):
         self.rubberbanding = False
         
     def on_motion(self, event):
-        # Set the proper cursor:
-        if self.rubberbanding:
-            self.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
-        else:
-            self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
-            
+        self.set_cursor()
+        
         # We do nothing with mouse moves that aren't dragging.
         if not self.pt_down:
             return
@@ -157,6 +160,7 @@ class AptusView(wx.Frame, AptusApp):
         self.check_size = True
         
     def on_idle(self, event):
+        self.set_cursor()
         if self.check_size and self.GetClientSize() != self.size:
             if self.GetClientSize() != (0,0):
                 self.set_view()
