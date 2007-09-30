@@ -28,7 +28,7 @@ x Optimize boundary.py so we can use it for high iterations
 - Multiple windows.
 - Back button
     - with a list of places you've been (with thumbnails).
-- Draggable rectangle in addition to click-to-zoom.
++ Draggable rectangle in addition to click-to-zoom.
 - Open command to load aptus state files.
 
 * Beauty
@@ -42,6 +42,7 @@ x Optimize boundary.py so we can use it for high iterations
 - Rotation (simply store the pixel offsets as dx and dy computed from angle).
 - Continuous coloring (http://linas.org/art-gallery/escape/smooth.html)
 + A palette specification, so the complete specs for a pic can be stored.
+- Try to reduce flicker during palette changing (http://wiki.wxpython.org/index.cgi/DoubleBufferedDrawing)
 
 * Power
 
