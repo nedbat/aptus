@@ -21,7 +21,7 @@ x Optimize boundary.py so we can use it for high iterations
 
 * UI
 
-- Make a window icon.
++ Make a window icon.
 - Status bar for progress and stats presentation.
 - GUI progress indicator.
 - Paint partial progress in the window.
