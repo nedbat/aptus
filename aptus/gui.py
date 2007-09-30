@@ -30,6 +30,8 @@ class AptusView(wx.Frame, AptusApp):
         self.panel.Bind(wx.EVT_PAINT, self.on_paint)
         self.panel.Bind(wx.EVT_LEFT_UP, self.on_left_up)
         self.panel.Bind(wx.EVT_RIGHT_UP, self.on_right_up)
+        self.panel.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
+        self.panel.Bind(wx.EVT_MOTION, self.on_motion)
         self.panel.Bind(wx.EVT_SIZE, self.on_size)
         self.panel.Bind(wx.EVT_IDLE, self.on_idle)
         self.panel.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
@@ -46,6 +48,11 @@ class AptusView(wx.Frame, AptusApp):
         self.jump_index = 0
         self.zoom = 2.0
 
+        # Rubberbanding
+        self.pt_down = None
+        self.pt_other = None
+        self.rectangle = False
+        
         self.set_view()
         
     def set_view(self):
@@ -77,12 +84,54 @@ class AptusView(wx.Frame, AptusApp):
         
     # Event handlers
     
+    def on_left_down(self, event):
+        self.pt_down = event.GetPosition()
+        self.rectangle = False
+        self.pt_other = None
+        
+    def on_motion(self, event):
+        if not self.pt_down:
+            return
+        
+        mx, my = event.GetPosition()
+        if not self.rectangle:
+            if abs(self.pt_down[0] - mx) > 10 or abs(self.pt_down[1] - my) > 10:
+                self.rectangle = True
+                self.SetCursor(wx.StockCursor(wx.CURSOR_CROSS))
+           
+        if self.rectangle:
+            dc = wx.ClientDC(self.panel)
+            dc.SetLogicalFunction(wx.XOR)
+            dc.SetBrush(wx.Brush(wx.WHITE, wx.TRANSPARENT))
+            dc.SetPen(wx.Pen(wx.WHITE, 1, wx.SOLID))
+            
+            if self.pt_other:
+                # Erase the old rectangle.
+                dc.DrawRectangle(self.pt_down[0], self.pt_down[1], self.pt_other[0]-self.pt_down[0], self.pt_other[1]-self.pt_down[1])
+                
+            dc.DrawRectangle(self.pt_down[0], self.pt_down[1], mx-self.pt_down[0], my-self.pt_down[1])
+            self.pt_other = mx, my
+            
     def on_left_up(self, event):
-        scale = self.zoom
-        if event.ControlDown():
-            scale = (scale - 1.0)/10 + 1.0
-        self.dilate_view(event.GetPosition(), 1.0/scale)
- 
+        if self.rectangle:
+            ulx, uly = self.m.coords_from_pixel(*self.pt_down)
+            lrx, lry = self.m.coords_from_pixel(*self.pt_other)
+            self.center = ((ulx+lrx)/2, (uly+lry)/2)
+            self.diam = (abs(ulx-lrx), abs(uly-lry))
+            
+            self.set_view()
+        else:
+            # Single-click: zoom in.
+            scale = self.zoom
+            if event.ControlDown():
+                scale = (scale - 1.0)/10 + 1.0
+            self.dilate_view(event.GetPosition(), 1.0/scale)
+        
+        self.pt_down = None
+        self.rectangle = False
+        self.pt_other = None
+        self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+         
     def on_right_up(self, event):
         scale = self.zoom
         if event.ControlDown():
