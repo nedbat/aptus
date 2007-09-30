@@ -1,3 +1,3 @@
 #!/usr/bin/env python
-import aptus.gui
-aptus.gui.main()
+import aptus.gui, sys
+aptus.gui.main(sys.argv[1:])

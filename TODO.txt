@@ -16,7 +16,7 @@ x Optimize boundary.py so we can use it for high iterations
 + Boundary checking in C
 - Fracint computes the miniter by running the edges (where the min must be), then
     uses it to skip the bailout check until reaching the miniter.
-- Go through the bitblting python code to see if we can skip some of the steps.
++ Go through the bitblting python code to see if we can skip some of the steps.
 
 * UI
 
@@ -47,7 +47,7 @@ x Optimize boundary.py so we can use it for high iterations
 
 - Editable parameters for things like cycle checking epsilon.
 + Refactor engine.c so that it defines a class, rather than having all those globals.
-- Command line invocation (refactor a bunch of stuff)
++ Command line invocation (refactor a bunch of stuff)
 - Multi-precision floats
 - Interruptable rendering: write partial counts (and all other state) to a file and restart.
 
