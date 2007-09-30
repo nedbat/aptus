@@ -1,105 +1,23 @@
 # Started from http://www.howforge.com/mandelbrot-set-viewer-using-wxpython
 
-from aptus.timeutil import duration, future
+from aptus.app import NullProgressReporter, ConsoleProgressReporter, AptusApp
+from aptus.importer import importer
 from aptus.options import AptusOptions, AptusState
 from aptus.palettes import all_palettes
-from aptus.importer import importer
 
 # Import third-party packages.
 wx = importer('wx')
 numpy = importer('numpy')
 Image = importer('Image')
 
-# Import our extension engine.
-AptEngine = importer('AptEngine')
+import os, re, sys, traceback, zlib
 
-import os, re, sys, time, traceback, zlib
-
-__version__ = '1.0'
-
-class NullProgressReporter:
-    def begin(self):
-        pass
-    
-    def progress(self, frac_done):
-        pass
-    
-    def end(self):
-        pass
-    
 jumps = [
     ((-0.5,0.0), (3.0,3.0)),
     ((-1.8605294939875601,1.0475516319329809e-005), (2.288818359375e-005,2.288818359375e-005)),
     ((-1.8605327731370924,1.2700557708795141e-005), (1.7881393432617188e-007,1.7881393432617188e-007)),
     ((0.45687170535326038,-0.34780396997928614), (0.005859375,0.005859375)),
     ]
-
-class AptusApp:
-    """ A mixin class for any Aptus application.
-    """
-    def __init__(self):
-        self.center = -0.5, 0.0
-        self.diam = 3.0, 3.0
-        self.size = 600, 600
-        self.iter_limit = 999
-        self.palette = None
-        self.palette_phase = 0
-        
-    def write_image(self, im, fpath):
-        # PNG info mojo from: http://blog.modp.com/2007/08/python-pil-and-png-metadata-take-2.html
-        from PIL import PngImagePlugin
-        aptst = AptusState()
-        self.write_state(aptst)
-        info = PngImagePlugin.PngInfo()
-        info.add_text("Software", "Aptus %s" % __version__)
-        info.add_text("Aptus State", aptst.write_string())
-        im.save(fpath, 'PNG', pnginfo=info)
-    
-    def write_state(self, aptst):
-        """ Write our state to an AptusState instance.
-        """
-        aptst.center = self.center
-        aptst.diam = self.diam
-        aptst.iter_limit = self.iter_limit
-        aptst.size = self.size
-        aptst.palette = self.palette
-        aptst.palette_phase = self.palette_phase
-        
-class AptusMandelbrot(AptEngine):
-    def __init__(self, center, diam, size, iter_limit):
-        self.size = size
-        
-        pixsize = max(diam[0] / size[0], diam[1] / size[1])
-        diam = pixsize * size[0], pixsize * size[1]
-        
-        self.xy0 = (center[0] - diam[0]/2, center[1] - diam[1]/2)
-        self.xyd = (pixsize, pixsize)
-        #print "Coords: (%r,%r,%r,%r)" % (self.xcenter, self.ycenter, xdiam, ydiam)
- 
-        self.iter_limit = iter_limit
-        self.progress = NullProgressReporter()
-        self.counts = None
-        
-    def coords_from_pixel(self, x, y):
-        return self.xy0[0]+self.xyd[0]*x, self.xy0[1]+self.xyd[1]*y
-
-    def compute_pixels(self):
-        if self.counts is not None:
-            return
-        print "x, y %r step %r, iter_limit %r, size %r" % (self.xy0, self.xyd, self.iter_limit, self.size)
-
-        self.clear_stats()
-        self.progress.begin()
-        self.counts = numpy.zeros((self.size[1], self.size[0]), dtype=numpy.uint32)
-        self.mandelbrot_array(self.counts, self.progress.progress)
-        self.progress.end()
-        print self.get_stats()
-
-    def color_pixels(self, palette, phase):
-        palarray = numpy.array(palette.colors, dtype=numpy.uint8)
-        pix = palarray[(self.counts+phase) % palarray.shape[0]]
-        pix[self.counts == 0] = palette.incolor
-        return pix
 
 class AptusView(wx.Frame, AptusApp):
     def __init__(self, center, diam, size, iter_limit):
@@ -115,22 +33,26 @@ class AptusView(wx.Frame, AptusApp):
         self.panel.Bind(wx.EVT_SIZE, self.on_size)
         self.panel.Bind(wx.EVT_IDLE, self.on_idle)
         self.panel.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
-        
+
+        # AptusApp values        
         self.center = center
         self.diam = diam
         self.iter_limit = iter_limit
-        self.set_view()
-        self.palette_index = 0
         self.palette = all_palettes[0]
         self.palette_phase = 0
+        
+        # Gui values
+        self.palette_index = 0
         self.jump_index = 0
         self.zoom = 2.0
+
+        self.set_view()
         
     def set_view(self):
         self.size = self.GetClientSize()
         self.bitmap = None
 
-        self.m = self.create_mandel(self.size)
+        self.m = self.create_mandel()
         self.check_size = False
         self.Refresh()
 
@@ -143,9 +65,6 @@ class AptusView(wx.Frame, AptusApp):
         self.center = self.m.coords_from_pixel(cx, cy)
         self.diam = (self.diam[0]*scale, self.diam[1]*scale)
         self.set_view()
-        
-    def create_mandel(self, size):
-        return AptusMandelbrot(self.center, self.diam, size, self.iter_limit)
         
     def message(self, msg):
         dlg = wx.MessageDialog(self, msg, 'Aptus', wx.OK | wx.ICON_WARNING)
@@ -229,7 +148,7 @@ class AptusView(wx.Frame, AptusApp):
             Image.fromarray(pix2).save('two.png')
             wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pix, pix2)))
             print wrong_count
-        bmp = wx.BitmapFromBuffer(pix.shape[0], pix.shape[1], pix)
+        bmp = wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix)
         wx.EndBusyCursor()
         return bmp
 
@@ -315,28 +234,9 @@ class AptusView(wx.Frame, AptusApp):
         self.bitmap = None
         self.Refresh()
         
-class ConsoleProgressReporter:
-    def begin(self):
-        self.start = time.time()
-        self.latest = self.start
-
-    def progress(self, frac_done, info=''):
-        now = time.time()
-        if now - self.latest > 10:
-            so_far = int(now - self.start)
-            to_go = int(so_far / frac_done * (1-frac_done))
-            if info:
-                info = '  ' + info
-            print "%.2f%%: %10s done, %10s to go, eta %10s%s" % (
-                frac_done*100, duration(so_far), duration(to_go), future(to_go), info
-                )
-            self.latest = now
-    
-    def end(self):
-        total = time.time() - self.start
-        print "Total: %s (%.2fs)" % (duration(total), total)
-        
-def main(args):        
+def main(args):
+    """ The main for the Aptus GUI.
+    """
     opts = AptusOptions()
     opts.read_args(args)
     

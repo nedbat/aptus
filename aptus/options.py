@@ -15,12 +15,14 @@ class AptusOptions:
         self.iter_limit = 999
         self.palette = None
         self.palette_phase = 0
+        self.supersample = 1
         
     def read_args(self, argv):
         parser = optparse.OptionParser()
         parser.add_option("-i", "--iterlimit", dest="iter_limit", help="set the limit on the iteration count")
         parser.add_option("--phase", dest="palette_phase", help="set the palette phase", metavar="PHASE")
         parser.add_option("-s", "--size", dest="size", help="set the pixel size of the image", metavar="WIDxHGT")
+        parser.add_option("--super", dest="supersample", help="set the supersample rate", metavar="S")
         
         options, args = parser.parse_args(argv)
 
@@ -33,6 +35,8 @@ class AptusOptions:
             self.palette_phase = int(options.palette_phase)
         if options.size:
             self.size = map(int, options.size.split('x'))
+        if options.supersample:
+            self.supersample = int(options.supersample)
 
     def opts_from_file(self, fname):
         if fname.endswith('.aptus'):
@@ -66,7 +70,8 @@ class AptusOptions:
         self.size = aptst.size
         self.palette = aptst.palette
         self.palette_phase = aptst.palette_phase
-
+        self.supersample = aptst.supersample
+        
 class AptusState:
     """ A serialization class for the state of an Aptus rendering.
     """
@@ -84,6 +89,7 @@ class AptusState:
         lines.append(self._write_item('size', list(self.size)))
         lines.append(self._write_item('palette', self.palette.spec))
         lines.append(self._write_item('palette_phase', self.palette_phase))
+        lines.append(self._write_item('supersample', self.supersample))
         return "{" + ",\n".join(lines) + "\n}\n"
     
     def read(self, f):
@@ -100,7 +106,8 @@ class AptusState:
         self.iter_limit = d['iter_limit']
         self.palette = Palette().from_spec(d['palette'])
         self.palette_phase = d['palette_phase']
-
+        self.supersample = d['supersample']
+        
     def _write_item(self, k, v):
         return '"%s": %r' % (k, v)
 

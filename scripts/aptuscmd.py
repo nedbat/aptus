@@ -1,4 +1,3 @@
-import aptus.main, sys
-
-if __name__ == '__main__':
-    aptus.main.main(sys.argv[1:])
+#!/usr/bin/env python
+import aptus.cmd, sys
+aptus.cmd.main(sys.argv[1:])

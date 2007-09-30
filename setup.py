@@ -27,11 +27,11 @@ setup(
             "aptus_engine",
             sources=["ext/engine.c"],
             include_dirs=[numpy.get_include()],
-            #extra_compile_args=['-O3', '-ffast-math'],
             ),
         ],
     
     scripts = [
-        'scripts/aptusmain.py',
+        'scripts/aptuscmd.py',
+        'scripts/aptusgui.py',
         ],    
     )
