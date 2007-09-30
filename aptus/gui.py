@@ -1,5 +1,6 @@
 # Started from http://www.howforge.com/mandelbrot-set-viewer-using-wxpython
 
+from aptus import data_file
 from aptus.app import NullProgressReporter, ConsoleProgressReporter, AptusApp
 from aptus.importer import importer
 from aptus.options import AptusOptions, AptusState
@@ -52,6 +53,11 @@ class AptusView(wx.Frame, AptusApp):
         self.reset_rubberband()
         self.set_view()
         
+        # Set the window icon
+        ib = wx.IconBundle()
+        ib.AddIconFromFile(data_file("aptusicon.ico"), wx.BITMAP_TYPE_ANY)
+        self.SetIcons(ib)
+
     def set_view(self):
         self.size = self.GetClientSize()
         self.bitmap = None

@@ -44,6 +44,7 @@ x Optimize boundary.py so we can use it for high iterations
 - Continuous coloring (http://linas.org/art-gallery/escape/smooth.html)
 + A palette specification, so the complete specs for a pic can be stored.
 - Try to reduce flicker during palette changing (http://wiki.wxpython.org/index.cgi/DoubleBufferedDrawing)
+- Add an extra segment to non-cyclic ggr palettes.
 
 * Power
 

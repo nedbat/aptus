@@ -11,7 +11,7 @@ AptEngine = importer('AptEngine')
 
 numpy = importer('numpy')
 
-import time
+import os.path, time
 
 class NullProgressReporter:
     def begin(self):
