@@ -5,7 +5,9 @@ def importer(name):
         try:
             import wx
         except:
-            raise Exception("Need wxPython, from http://www.wxpython.org/")
+            raise Exception("Need wxPython, from http://wxpython.org/")
+        if not hasattr(wx, 'BitmapFromBuffer'):
+            raise Exception("Need wxPython 2.8 or greater, from http://wxpython.org/")
         return wx
     
     elif name == 'numpy':
@@ -19,9 +21,9 @@ def importer(name):
         try:
             import Image
         except:
-            raise Exception("Need PIL, from http://www.pythonware.com/products/pil/")
+            raise Exception("Need PIL, from http://pythonware.com/products/pil/")
         if not hasattr(Image, 'fromarray'):
-            raise Exception("Need PIL 1.1.6 or greater, from http://www.pythonware.com/products/pil/")
+            raise Exception("Need PIL 1.1.6 or greater, from http://pythonware.com/products/pil/")
         return Image
 
     elif name == 'AptEngine':
