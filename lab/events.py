@@ -9,10 +9,10 @@ class MainFrame(wx.Frame):
         TopSizer = wx.BoxSizer(wx.VERTICAL)
         Panel.SetSizer(TopSizer)
 
-        Text = wx.TextCtrl(Panel, -1, "Type text here")
-        TopSizer.Add(Text, 1, wx.EXPAND)
+        #Text = wx.TextCtrl(Panel, -1, "Type text here")
+        #TopSizer.Add(Text, 1, wx.EXPAND)
 
-        Text.Bind(wx.EVT_KEY_DOWN, self.OnKeyText)
+        #Text.Bind(wx.EVT_KEY_DOWN, self.OnKeyText)
         Panel.Bind(wx.EVT_KEY_DOWN, self.OnKeyPanel)
         self.Bind(wx.EVT_KEY_DOWN, self.OnKeyFrame)
 
