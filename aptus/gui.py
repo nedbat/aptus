@@ -11,7 +11,7 @@ wx = importer('wx')
 numpy = importer('numpy')
 Image = importer('Image')
 
-import os, re, sys, traceback, zlib
+import os, os.path, re, sys, traceback, zlib
 
 jumps = [
     ((-0.5,0.0), (3.0,3.0)),
@@ -112,9 +112,9 @@ class AptusView(wx.Frame, AptusApp):
         if self.rubberbanding:
             self.panel.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
         elif self.panning:
-            self.panel.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
+            self.panel.SetCursor(wx.StockCursor(wx.CURSOR_SIZING))
         else:
-            self.panel.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+            self.panel.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
         
     # Event handlers
     
@@ -275,6 +275,30 @@ class AptusView(wx.Frame, AptusApp):
 
     # Command handlers.
     
+    def show_file_dialog(self, dlg):
+        """ Show a file dialog, and do some post-processing on the result.
+            Returns a pair: type, path.
+            Type is one of the extensions from the wildcard choices.
+        """
+        if dlg.ShowModal() == wx.ID_OK:
+            pth = dlg.Path
+            ext = os.path.splitext(pth)[1].lower()
+            idx = dlg.FilterIndex
+            wildcards = dlg.Wildcard.split('|')
+            wildcard = wildcards[2*idx+1]
+            if wildcard == '*.*':
+                if ext:
+                    typ = ext[1:]
+                else:
+                    typ = ''
+            else:
+                typ = wildcard.split('.')[-1].lower()
+            if ext == '' and typ != '':
+                pth += '.' + typ
+            return typ, pth
+        else:
+            return None, None
+        
     def cmd_save(self):
         wildcard = (
             "PNG image (*.png)|*.png|"     
@@ -287,19 +311,19 @@ class AptusView(wx.Frame, AptusApp):
             defaultFile="", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard=wildcard, 
             )
 
-        if dlg.ShowModal() == wx.ID_OK:
-            ext = dlg.GetFilename().split('.')[-1].lower()
-            if ext == 'png':
+        typ, pth = self.show_file_dialog(dlg)
+        if typ:
+            if typ == 'png':
                 image = wx.ImageFromBitmap(self.bitmap)
                 im = Image.new('RGB', (image.GetWidth(), image.GetHeight()))
                 im.fromstring(image.GetData())
-                self.write_image(im, dlg.GetPath())
-            elif ext == 'aptus':
+                self.write_image(im, pth)
+            elif typ == 'aptus':
                 aptst = AptusState()
                 self.write_state(aptst)
-                aptst.write(dlg.GetPath())
+                aptst.write(pth)
             else:
-                self.message("Don't understand how to write file '%s'" % dlg.GetFilename())
+                self.message("Don't understand how to write file '%s'" % pth)
                 
     def cmd_save_big(self):
         wildcard = (

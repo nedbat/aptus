@@ -2,7 +2,7 @@
 
 - output filename for aptuscmd.
 - Keys working on Linux.
-- Cursors for Mac.
++ Cursors for Mac.
 - Help.
 - Sample .aptus files.
 - Doc pages (rst2px?)
