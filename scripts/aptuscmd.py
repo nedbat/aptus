@@ -1,3 +1,3 @@
 #!/usr/bin/env python
-import aptus.cmd, sys
-aptus.cmd.main(sys.argv[1:])
+import aptus.cmdline, sys
+aptus.cmdline.main(sys.argv[1:])
