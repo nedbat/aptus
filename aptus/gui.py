@@ -110,11 +110,11 @@ class AptusView(wx.Frame, AptusApp):
     def set_cursor(self):
         # Set the proper cursor:
         if self.rubberbanding:
-            self.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
+            self.panel.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
         elif self.panning:
-            self.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
+            self.panel.SetCursor(wx.StockCursor(wx.CURSOR_HAND))
         else:
-            self.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
+            self.panel.SetCursor(wx.StockCursor(wx.CURSOR_ARROW))
         
     # Event handlers
     
