@@ -204,6 +204,24 @@ mandelbrot_point(AptEngine *self, PyObject *args)
     return Py_BuildValue("i", count);
 }
 
+// Helper: call_progress
+
+static int
+call_progress(AptEngine * self, PyObject * progress, double frac_complete, char * msg, void * msg_data)
+{
+    int ok = 1;
+    char info[100];
+    sprintf(info, msg, msg_data);
+    PyObject * arglist = Py_BuildValue("(ds)", frac_complete, info);
+    PyObject * result = PyEval_CallObject(progress, arglist);
+    if (result == NULL) {
+        ok = 0;
+    }
+    Py_DECREF(arglist);
+    Py_XDECREF(result);
+    return ok;
+}
+
 // mandelbrot_array
 
 static char mandelbrot_array_doc[] = "Compute Mandelbrot counts for an array";
@@ -211,20 +229,24 @@ static char mandelbrot_array_doc[] = "Compute Mandelbrot counts for an array";
 static PyObject *
 mandelbrot_array(AptEngine *self, PyObject *args)
 {
+    // Arguments to the function.
     PyArrayObject *arr;
     PyObject * progress;
     
+    // Malloc'ed buffers.
+    typedef struct { int x, y; } pt;
+    char * status = NULL;
+    pt * points = NULL;
+    
+    int ok = 0;
+    
     if (!PyArg_ParseTuple(args, "O!O", &PyArray_Type, &arr, &progress)) {
-        return NULL;
+        goto done;
     }
     
-    if (arr == NULL) {
-        return NULL;
-    }
-
     if (!PyCallable_Check(progress)) {
         PyErr_SetString(PyExc_TypeError, "progress must be callable");
-        return NULL;
+        goto done;
     }
 
     // Allocate structures
@@ -232,23 +254,21 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     int h = PyArray_DIM(arr, 0);
     int num_pixels = 0;
     int num_trace = 0;
-    char info[100];
     
     // status is an array of the status of the pixels.
     //  0: hasn't been computed yet.
     //  1: computed, but not filled.
     //  2: computed and filled.
-    char * status = malloc(w*h);
+    status = malloc(w*h);
     if (status == NULL) {
         PyErr_SetString(PyExc_MemoryError, "couldn't allocate status");
-        return NULL;
+        goto done;
     }
     memset(status, 0, w*h);
 
     // points is an array of points on a boundary.
-    typedef struct { int x, y; } pt;
     int ptsalloced = 10000;
-    pt * points = malloc(sizeof(pt)*ptsalloced);
+    points = malloc(sizeof(pt)*ptsalloced);
     int ptsstored = 0;
     
 #define STATUS(x,y) status[(y)*w+(x)]
@@ -350,7 +370,8 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                         if (ptsstored == ptsalloced) {
                             pt * newpoints = malloc(sizeof(pt)*ptsalloced*2);
                             if (newpoints == NULL) {
-                                goto done;  // Should treat error differently.
+                                PyErr_SetString(PyExc_MemoryError, "couldn't allocate points");
+                                goto done;
                             }
                             memcpy(newpoints, points, sizeof(pt)*ptsalloced);
                             ptsalloced *= 2;
@@ -399,30 +420,30 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                     } // end for points to fill
                     
 
-                    double frac_complete = ((double)num_pixels)/(w*h);
-                    sprintf(info, "trace %d", c);
-                    PyObject * arglist = Py_BuildValue("(ds)", frac_complete, info);
-                    PyObject * result = PyEval_CallObject(progress, arglist);
-                    Py_DECREF(arglist);
-                    Py_DECREF(result);
+                    if (!call_progress(self, progress, ((double)num_pixels)/(w*h), "trace %d", (void*)c)) {
+                        goto done;
+                    }
                 } // end if points
             } // end if needs trace
         } // end for xi
 
-        double frac_complete = ((double)num_pixels)/(w*h);
-        sprintf(info, "scan %d", yi+1);
-        PyObject * arglist = Py_BuildValue("(ds)", frac_complete, info);
-        PyObject * result = PyEval_CallObject(progress, arglist);
-        Py_DECREF(arglist);
-        Py_DECREF(result);
+        if (!call_progress(self, progress, ((double)num_pixels)/(w*h), "scan %d", (void*)(yi+1))) {
+            goto done;
+        }
     } // end for yi
     
     // Clean up.
-done:
-    free(status);
-    free(points);
+    ok = 1;
     
-    return Py_BuildValue("");
+done:
+    if (status != NULL) {
+        free(status);
+    }
+    if (points != NULL) {
+        free(points);
+    }
+    
+    return ok ? Py_BuildValue("") : NULL;
 }
 
 // apply_palette
@@ -432,33 +453,45 @@ static char apply_palette_doc[] = "Color an array based on counts and palette";
 static PyObject *
 apply_palette(AptEngine *self, PyObject *args)
 {
+    // Arguments to the function.
     PyArrayObject *counts;
     PyArrayObject *pix;
     PyObject *palette;
     int phase;
     
+    // Objects we get during the function.
+    PyObject * colbytes_obj = NULL;
+    PyObject * incolor_obj  = NULL;
+    PyObject * pint = NULL;
+    int ok = 0;
+    
     if (!PyArg_ParseTuple(args, "O!OiO!", &PyArray_Type, &counts, &palette, &phase, &PyArray_Type, &pix)) {
-        return NULL;
+        goto done;
     }
     
     // Unpack the palette a bit.
-    PyObject * colbytes_obj = PyObject_GetAttrString(palette, "colbytes");
+    colbytes_obj = PyObject_GetAttrString(palette, "colbytes");
+    if (colbytes_obj == NULL) {
+        goto done;
+    }
     char * colbytes;
     int ncolbytes;
     if (PyString_AsStringAndSize(colbytes_obj, &colbytes, &ncolbytes) < 0) {
-        return NULL;    // leaks
+        goto done;
     }
     int ncolors = ncolbytes / 3;
 
     char incolbytes[3];
-    PyObject * incolor_obj = PyObject_GetAttrString(palette, "incolor");
+    incolor_obj = PyObject_GetAttrString(palette, "incolor");
+    if (incolor_obj == NULL) {
+        goto done;
+    }
     int i;
     for (i = 0; i < 3; i++) {
-        PyObject * pint = PySequence_GetItem(incolor_obj, i);
+        pint = PySequence_GetItem(incolor_obj, i);
         incolbytes[i] = (char)PyInt_AsLong(pint);
-        Py_XDECREF(pint);
+        Py_CLEAR(pint);
     }
-    Py_XDECREF(incolor_obj);
     
     // Walk the arrays
     int w = PyArray_DIM(counts, 0);
@@ -479,10 +512,15 @@ apply_palette(AptEngine *self, PyObject *args)
             memcpy(ppix, pcol, 3);
         }
     }
+
+    ok = 1;
     
+done:
     Py_XDECREF(colbytes_obj);
+    Py_XDECREF(incolor_obj);
+    Py_XDECREF(pint);
     
-    return Py_BuildValue("");    
+    return ok ? Py_BuildValue("") : NULL;
 }
 
 // clear_stats
