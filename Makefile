@@ -17,3 +17,4 @@ clean:
 
 kit: build
 	python setup.py sdist --formats=gztar
+	python setup.py bdist_wininst
