@@ -17,4 +17,4 @@ clean:
 
 kit: build
 	python setup.py sdist --formats=gztar
-	python setup.py bdist_wininst
+	python setup.py bdist_wininst --bitmap kit/wininst.bmp
