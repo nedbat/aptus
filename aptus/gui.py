@@ -386,30 +386,7 @@ class AptusView(wx.Frame, AptusApp):
         self.bitmap = None
         self.Refresh()
         
-class AptusWxApp(wx.App):
-    def OnInit(self):
-        opts = AptusOptions()
-        #opts.read_args(args)
-        
-        f = AptusView(
-            opts.center,
-            opts.diam,
-            opts.size,
-            opts.iter_limit
-            )
-        if opts.palette:
-            f.palette = opts.palette
-        f.palette_phase = opts.palette_phase
-
-        f.Show(True)
-        self.SetTopWindow(f)
-        return True
-
 def main(args):
-    app = AptusWxApp(0)
-    app.MainLoop()
-
-def xmain(args):
     """ The main for the Aptus GUI.
     """
     opts = AptusOptions()
