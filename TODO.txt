@@ -2,9 +2,9 @@
 
 - output filename for aptuscmd.
 - Keys working on Linux.
-- Cursors working on Linux.
++ Cursors working on Linux.
 + Cursors for Mac.
-- Mac: use apple-key rather than control.
++ Mac: use apple-key rather than control.
 - Help.
 - Sample .aptus files.
 - Doc pages (rst2px?)
@@ -45,9 +45,10 @@ x Optimize boundary.py so we can use it for high iterations
     - with a list of places you've been (with thumbnails).
 + Draggable rectangle in addition to click-to-zoom.
 - Open command to load aptus state files.
-- Mac: app icon
+- Mac: app icon  (if 'wxMac' in wx.PlatformInfo:)
 - Custom bookmarks (like the J key).
 - Help
+- Ubuntu: resizing the window tries to recalc as you drag (bad idle handling?)
 
 * Beauty
 

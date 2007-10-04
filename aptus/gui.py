@@ -124,7 +124,7 @@ class AptusView(wx.Frame, AptusApp):
             self.panel.SetCursor(wx.StockCursor(wx.CURSOR_SIZING))
         else:
             self.panel.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
-        
+
     # Event handlers
     
     def on_left_down(self, event):
@@ -186,7 +186,7 @@ class AptusView(wx.Frame, AptusApp):
         elif self.pt_down:
             # Single-click: zoom in.
             scale = self.zoom
-            if event.ControlDown():
+            if event.CmdDown():
                 scale = (scale - 1.0)/10 + 1.0
             self.dilate_view((mx, my), 1.0/scale)
 
@@ -196,7 +196,7 @@ class AptusView(wx.Frame, AptusApp):
         
     def on_right_up(self, event):
         scale = self.zoom
-        if event.ControlDown():
+        if event.CmdDown():
             scale = (scale - 1.0)/10 + 1.0
         self.dilate_view(event.GetPosition(), scale)
  
