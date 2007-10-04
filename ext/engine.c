@@ -425,6 +425,68 @@ done:
     return Py_BuildValue("");
 }
 
+// apply_palette
+
+static char apply_palette_doc[] = "Color an array based on counts and palette";
+
+static PyObject *
+apply_palette(AptEngine *self, PyObject *args)
+{
+    PyArrayObject *counts;
+    PyArrayObject *pix;
+    PyObject *palette;
+    int phase;
+    
+    if (!PyArg_ParseTuple(args, "O!OiO!", &PyArray_Type, &counts, &palette, &phase, &PyArray_Type, &pix)) {
+        return NULL;
+    }
+    
+    // Unpack the palette a bit.
+    PyObject * colbytes_obj = PyObject_GetAttrString(palette, "colbytes");
+    char * colbytes;
+    int ncolbytes;
+    if (PyString_AsStringAndSize(colbytes_obj, &colbytes, &ncolbytes) < 0) {
+        return NULL;    // leaks
+    }
+    int ncolors = ncolbytes / 3;
+
+    char incolbytes[3];
+    PyObject * incolor_obj = PyObject_GetAttrString(palette, "incolor");
+    int i;
+    for (i = 0; i < 3; i++) {
+        PyObject * pint = PySequence_GetItem(incolor_obj, i);
+        incolbytes[i] = (char)PyInt_AsLong(pint);
+        Py_XDECREF(pint);
+    }
+    Py_XDECREF(incolor_obj);
+    
+    // Walk the arrays
+    int w = PyArray_DIM(counts, 0);
+    int h = PyArray_DIM(counts, 1);
+    int x, y;
+    for (y = 0; y < h; y++) {
+        for (x = 0; x < w; x++) {
+            npy_uint32 c = *(npy_uint32 *)PyArray_GETPTR2(counts, x, y);
+            npy_uint8 *ppix = (npy_uint8 *)PyArray_GETPTR3(pix, x, y, 0);
+            char * pcol;
+            if (c > 0) {
+                int cindex = (c + phase) % ncolors;
+                pcol = colbytes + cindex*3;
+            }
+            else {
+                pcol = incolbytes;
+            }
+            *ppix++ = *pcol++;
+            *ppix++ = *pcol++;
+            *ppix++ = *pcol++;
+        }
+    }
+    
+    Py_XDECREF(colbytes_obj);
+    
+    return Py_BuildValue("");    
+}
+
 // clear_stats
 
 static char clear_stats_doc[] = "Clear the statistic counters";
@@ -484,6 +546,7 @@ static PyMethodDef
 AptEngine_methods[] = {
     { "mandelbrot_point",   (PyCFunction) mandelbrot_point,   METH_VARARGS, mandelbrot_point_doc },
     { "mandelbrot_array",   (PyCFunction) mandelbrot_array,   METH_VARARGS, mandelbrot_array_doc },
+    { "apply_palette",      (PyCFunction) apply_palette,      METH_VARARGS, apply_palette_doc },
     { "clear_stats",        (PyCFunction) clear_stats,        METH_NOARGS,  clear_stats_doc },
     { "get_stats",          (PyCFunction) get_stats,          METH_VARARGS, get_stats_doc },
     { NULL, NULL }
@@ -552,7 +615,7 @@ initaptus_engine(void)
         return;
     }
 
-    m = Py_InitModule3("aptus_engine", aptus_engine_methods, "Fast Aptusia Mandelbrot engine.");
+    m = Py_InitModule3("aptus_engine", aptus_engine_methods, "Fast Aptus Mandelbrot engine.");
 
     if (m == NULL) {
         return;

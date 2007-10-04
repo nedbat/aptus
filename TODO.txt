@@ -2,10 +2,14 @@
 
 - output filename for aptuscmd.
 - Keys working on Linux.
+- Cursors working on Linux.
 + Cursors for Mac.
+- Mac: use apple-key rather than control.
 - Help.
 - Sample .aptus files.
 - Doc pages (rst2px?)
+- Engine extension should be nested in aptus package.
+- More varied palettes.
 
 * Bugs
 
@@ -26,7 +30,7 @@ x Optimize boundary.py so we can use it for high iterations
 - Fracint computes the miniter by running the edges (where the min must be), then
     uses it to skip the bailout check until reaching the miniter.
 + Go through the bitblting python code to see if we can skip some of the steps.
-- A custom coloring endpoint in the engine to replace the multiple numpy operations.
++ A custom coloring endpoint in the engine to replace the multiple numpy operations.
 - When dragging the image, only re-calc the parts that have been exposed.
 
 * UI
@@ -42,7 +46,6 @@ x Optimize boundary.py so we can use it for high iterations
 + Draggable rectangle in addition to click-to-zoom.
 - Open command to load aptus state files.
 - Mac: app icon
-- Mac: use apple-key rather than control.
 - Custom bookmarks (like the J key).
 - Help
 
@@ -59,6 +62,7 @@ x Optimize boundary.py so we can use it for high iterations
 + A palette specification, so the complete specs for a pic can be stored.
 - Try to reduce flicker during palette changing (http://wiki.wxpython.org/index.cgi/DoubleBufferedDrawing)
 - Add an extra segment to non-cyclic ggr palettes.
+- Mirroring non-cyclic palettes.
 
 * Power
 
