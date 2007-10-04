@@ -20,6 +20,15 @@ jumps = [
     ((0.45687170535326038,-0.34780396997928614), (0.005859375,0.005859375)),
     ]
 
+class GuiProgressReporter(ConsoleProgressReporter):
+    def begin(self):
+        wx.BeginBusyCursor()
+        ConsoleProgressReporter.begin(self)
+        
+    def end(self):
+        ConsoleProgressReporter.end(self)
+        wx.EndBusyCursor()
+        
 class AptusView(wx.Frame, AptusApp):
     def __init__(self, center, diam, size, iter_limit):
         wx.Frame.__init__(self, None, -1, 'Aptus')
@@ -254,8 +263,7 @@ class AptusView(wx.Frame, AptusApp):
         dc.DrawBitmap(self.bitmap, 0, 0, False)
  
     def draw(self):
-        wx.BeginBusyCursor()
-        self.m.progress = ConsoleProgressReporter()
+        self.m.progress = GuiProgressReporter()
         self.m.compute_pixels()
         pix = self.m.color_pixels(self.palette, self.palette_phase)
         pix2 = None
@@ -270,7 +278,6 @@ class AptusView(wx.Frame, AptusApp):
             wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pix, pix2)))
             print wrong_count
         bmp = wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix)
-        wx.EndBusyCursor()
         return bmp
 
     # Command handlers.
