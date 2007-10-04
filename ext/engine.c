@@ -476,9 +476,7 @@ apply_palette(AptEngine *self, PyObject *args)
             else {
                 pcol = incolbytes;
             }
-            *ppix++ = *pcol++;
-            *ppix++ = *pcol++;
-            *ppix++ = *pcol++;
+            memcpy(ppix, pcol, 3);
         }
     }
     
