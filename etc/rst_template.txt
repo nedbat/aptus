@@ -1,0 +1,15 @@
+%(head_prefix)s
+<!-- head -->
+%(head)s
+<!-- stylesheet -->
+%(stylesheet)s
+<!-- body_prefix -->
+%(body_prefix)s
+<!-- body_pre_docinfo -->
+%(body_pre_docinfo)s
+<!-- docinfo -->
+%(docinfo)s
+<!-- body -->
+%(body)s
+<!-- body_suffix -->
+%(body_suffix)s
