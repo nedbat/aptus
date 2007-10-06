@@ -10,7 +10,7 @@
 - Doc pages (rst2px?)
 - Engine extension should be nested in aptus package.
 - More varied palettes.
-- Windows kits pre-built.
++ Windows kits pre-built.
 
 * Bugs
 
@@ -85,6 +85,10 @@ x Optimize boundary.py so we can use it for high iterations
 * Safety
 
 - A warning when zooming in so far that the precision fails.
+
+* Convenience
+
+- Use ez_setup, or eggs, or something to manage the Python dependencies.
 
 * Done
 
