@@ -21,3 +21,9 @@ kit: build
 
 doc:
 	python /Python25/Scripts/rst2html.py --template=rst_template.txt --link-stylesheet README.txt README.html
+
+icon:
+	python scripts/aptuscmd.py etc/icon.aptus -s 47x47
+	python scripts/aptuscmd.py etc/icon.aptus -s 31x31
+	python scripts/aptuscmd.py etc/icon.aptus -s 15x15
+	
