@@ -11,8 +11,8 @@ typedef struct {
     aptfloat i, r;
 } aptcomplex;
 
-typedef npy_uint32 uint;
-typedef npy_uint64 uuint;
+typedef npy_uint32 u4int;
+typedef npy_uint64 u8int;
 
 // The Engine type.
 
@@ -27,11 +27,11 @@ typedef struct {
     
     struct {
         int     maxiter;        // Max iteration that isn't in the set.
-        uuint   totaliter;      // Total number of iterations.
-        uint    totalcycles;    // Number of cycles detected.
-        uint    maxitercycle;   // Max iteration that was finally a cycle.
+        u8int   totaliter;      // Total number of iterations.
+        u4int   totalcycles;    // Number of cycles detected.
+        u4int   maxitercycle;   // Max iteration that was finally a cycle.
         int     miniter;        // Minimum iteration count.
-        uint    maxedpoints;    // Number of points that exceeded the maxiter.
+        u4int    maxedpoints;    // Number of points that exceeded the maxiter.
     } stats;
 
 } AptEngine;
@@ -226,11 +226,11 @@ call_progress(AptEngine * self, PyObject * progress, double frac_complete, char 
 // Helper: display a really big number in a portable way
 
 static char *
-human_uuint(uuint big, char * buf)
+human_u8int(u8int big, char * buf)
 {
     float little = big;
     if (big < 10000000) {   // 10 million
-        sprintf(buf, "%lu", (uint)big);
+        sprintf(buf, "%lu", (u4int)big);
     }
     else if (big < 1000000000) {    // 1 billion
         little /= 1e6;
@@ -444,7 +444,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                         }
                     } // end for points to fill
                     
-                    sprintf(info, "trace %d, totaliter %s", c, human_uuint(self->stats.totaliter, uinfo));
+                    sprintf(info, "trace %d, totaliter %s", c, human_u8int(self->stats.totaliter, uinfo));
                     if (!call_progress(self, progress, ((double)num_pixels)/(w*h), info)) {
                         goto done;
                     }
@@ -452,7 +452,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
             } // end if needs trace
         } // end for xi
 
-        sprintf(info, "scan %d, totaliter %s", yi+1, human_uuint(self->stats.totaliter, uinfo));
+        sprintf(info, "scan %d, totaliter %s", yi+1, human_u8int(self->stats.totaliter, uinfo));
         if (!call_progress(self, progress, ((double)num_pixels)/(w*h), info)) {
             goto done;
         }
@@ -592,15 +592,15 @@ type_check(PyObject *self, PyObject *args)
 {
     char info[200];
     char uinfo[200];
-    uuint big = 1;
+    u8int big = 1;
     big <<= 40;
-    sprintf(info, "Big 1<<40 = %s", human_uuint(big, uinfo));
+    sprintf(info, "Big 1<<40 = %s", human_u8int(big, uinfo));
     
     return Py_BuildValue("{sisisisiss}",
         "double", sizeof(double),
         "aptfloat", sizeof(aptfloat),
-        "uint", sizeof(uint),
-        "uuint", sizeof(uuint),
+        "u4int", sizeof(u4int),
+        "u8int", sizeof(u8int),
         "sprintf", info
         );
 }
