@@ -20,7 +20,7 @@ kit: build
 	python setup.py bdist_wininst --bitmap etc/wininst.bmp
 
 doc:
-	python /Python25/Scripts/rst2html.py --template=rst_template.txt --link-stylesheet README.txt README.html
+	python /Python25/Scripts/rst2html.py --template=etc/rst_template.txt --link-stylesheet README.txt README.html
 
 icon:
 	python scripts/aptuscmd.py etc/icon.aptus -s 47x47
