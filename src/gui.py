@@ -70,9 +70,9 @@ class AptusView(wx.Frame, AptusApp):
         
         # Set the window icon
         ib = wx.IconBundle()
-        #ib.AddIconFromFile(data_file("aptusicon.ico"), wx.BITMAP_TYPE_ANY)
-        ib.AddIconFromFile(data_file("aptusicon32.png"), wx.BITMAP_TYPE_ANY)
-        ib.AddIconFromFile(data_file("aptusicon16red.png"), wx.BITMAP_TYPE_ANY)
+        ib.AddIconFromFile(data_file("icon48.png"), wx.BITMAP_TYPE_ANY)
+        ib.AddIconFromFile(data_file("icon32.png"), wx.BITMAP_TYPE_ANY)
+        ib.AddIconFromFile(data_file("icon16.png"), wx.BITMAP_TYPE_ANY)
         self.SetIcons(ib)
 
     def set_view(self):
