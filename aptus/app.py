@@ -67,8 +67,8 @@ class AptusMandelbrot(AptEngine):
         pixsize = max(diam[0] / size[0], diam[1] / size[1])
         diam = pixsize * size[0], pixsize * size[1]
         
-        // The upper-left corner is computed from the center, minus the radiuses,
-        // plus half a pixel, so that we're sampling the center of the pixel.
+        # The upper-left corner is computed from the center, minus the radiuses,
+        # plus half a pixel, so that we're sampling the center of the pixel.
         self.xy0 = (center[0] - diam[0]/2 + pixsize/2, center[1] - diam[1]/2 + pixsize/2)
         self.xyd = (pixsize, pixsize)
         #print "Coords: (%r,%r,%r,%r)" % (self.xcenter, self.ycenter, xdiam, ydiam)
