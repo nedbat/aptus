@@ -683,7 +683,7 @@ aptus_engine_methods[] = {
 };
 
 void
-initaptus_engine(void)
+initengine(void)
 {
     import_array();
     
@@ -693,7 +693,7 @@ initaptus_engine(void)
         return;
     }
 
-    m = Py_InitModule3("aptus_engine", aptus_engine_methods, "Fast Aptus Mandelbrot engine.");
+    m = Py_InitModule3("aptus.engine", aptus_engine_methods, "Fast Aptus Mandelbrot engine.");
 
     if (m == NULL) {
         return;

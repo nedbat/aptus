@@ -28,7 +28,8 @@ def importer(name):
 
     elif name == 'AptEngine':
         try:
-            from aptus_engine import AptEngine
+            from aptus.engine import AptEngine
         except:
+            print "*** Warning: using slow engine ***"
             from slow_engine import AptEngine
         return AptEngine
