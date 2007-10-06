@@ -23,7 +23,7 @@ setup(
         ],
 
     package_dir = {
-        'aptus': 'aptus'
+        'aptus': 'src'
         },
     
     package_data = {
