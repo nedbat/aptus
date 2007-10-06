@@ -36,7 +36,7 @@ setup(
     
     ext_modules = [
         Extension(
-            "aptus_engine",
+            "aptus.engine",
             sources=["ext/engine.c"],
             include_dirs=[numpy.get_include()],
             ),

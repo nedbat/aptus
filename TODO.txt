@@ -8,7 +8,7 @@
 - Help.
 - Sample .aptus files.
 - Doc pages (rst2px?)
-- Engine extension should be nested in aptus package.
++ Engine extension should be nested in aptus package.
 - More varied palettes.
 + Windows kits pre-built.
 
