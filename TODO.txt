@@ -77,7 +77,7 @@ x Optimize boundary.py so we can use it for high iterations
 * Knowledge
 
 - Stats: what's the census of iteration counts in the image?
-- Stats: some counters (totaliter) need to be more than 32-bit ints.
++ Stats: some counters (totaliter) need to be more than 32-bit ints.
 + Better progress reporting for trace_boundary: has to count pixels rather than scanlines.
 - Switchable coloring: standard, cycle count, etc.
 + Some way of embedding the mandelbrot parameters into the final .PNG, so it can be recreated.

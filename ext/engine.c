@@ -11,6 +11,9 @@ typedef struct {
     aptfloat i, r;
 } aptcomplex;
 
+typedef npy_uint32 uint;
+typedef npy_uint64 uuint;
+
 // The Engine type.
 
 typedef struct {
@@ -24,11 +27,11 @@ typedef struct {
     
     struct {
         int     maxiter;        // Max iteration that isn't in the set.
-        int     totaliter;      // Total number of iterations.
-        int     totalcycles;    // Number of cycles detected.
-        int     maxitercycle;   // Max iteration that was finally a cycle.
+        uuint   totaliter;      // Total number of iterations.
+        uint    totalcycles;    // Number of cycles detected.
+        uint    maxitercycle;   // Max iteration that was finally a cycle.
         int     miniter;        // Minimum iteration count.
-        int     maxedpoints;    // Number of points that exceeded the maxiter.
+        uint    maxedpoints;    // Number of points that exceeded the maxiter.
     } stats;
 
 } AptEngine;
@@ -207,11 +210,9 @@ mandelbrot_point(AptEngine *self, PyObject *args)
 // Helper: call_progress
 
 static int
-call_progress(AptEngine * self, PyObject * progress, double frac_complete, char * msg, void * msg_data)
+call_progress(AptEngine * self, PyObject * progress, double frac_complete, char * info)
 {
     int ok = 1;
-    char info[100];
-    sprintf(info, msg, msg_data);
     PyObject * arglist = Py_BuildValue("(ds)", frac_complete, info);
     PyObject * result = PyEval_CallObject(progress, arglist);
     if (result == NULL) {
@@ -220,6 +221,27 @@ call_progress(AptEngine * self, PyObject * progress, double frac_complete, char 
     Py_DECREF(arglist);
     Py_XDECREF(result);
     return ok;
+}
+
+// Helper: display a really big number in a portable way
+
+static char *
+human_uuint(uuint big, char * buf)
+{
+    float little = big;
+    if (big < 10000000) {   // 10 million
+        sprintf(buf, "%lu", (uint)big);
+    }
+    else if (big < 1000000000) {    // 1 billion
+        little /= 1e6;
+        sprintf(buf, "%.1fM", little);
+    }
+    else {
+        little /= 1e9;
+        sprintf(buf, "%.1fB", little);
+    }
+    
+    return buf;
 }
 
 // mandelbrot_array
@@ -270,6 +292,9 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     int ptsalloced = 10000;
     points = malloc(sizeof(pt)*ptsalloced);
     int ptsstored = 0;
+    
+    char info[100];
+    char uinfo[100];
     
 #define STATUS(x,y) status[(y)*w+(x)]
 #define COUNTS(x,y) *(npy_uint32 *)PyArray_GETPTR2(arr, (y), (x))
@@ -419,15 +444,16 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                         }
                     } // end for points to fill
                     
-
-                    if (!call_progress(self, progress, ((double)num_pixels)/(w*h), "trace %d", (void*)c)) {
+                    sprintf(info, "trace %d, totaliter %s", c, human_uuint(self->stats.totaliter, uinfo));
+                    if (!call_progress(self, progress, ((double)num_pixels)/(w*h), info)) {
                         goto done;
                     }
                 } // end if points
             } // end if needs trace
         } // end for xi
 
-        if (!call_progress(self, progress, ((double)num_pixels)/(w*h), "scan %d", (void*)(yi+1))) {
+        sprintf(info, "scan %d, totaliter %s", yi+1, human_uuint(self->stats.totaliter, uinfo));
+        if (!call_progress(self, progress, ((double)num_pixels)/(w*h), info)) {
             goto done;
         }
     } // end for yi
@@ -547,7 +573,7 @@ static char get_stats_doc[] = "Get the statistics as a dictionary";
 static PyObject *
 get_stats(AptEngine *self, PyObject *args)
 {
-    return Py_BuildValue("{sisisisisisi}",
+    return Py_BuildValue("{sisKsIsIsisI}",
         "maxiter", self->stats.maxiter,
         "totaliter", self->stats.totaliter,
         "totalcycles", self->stats.totalcycles,
@@ -557,10 +583,26 @@ get_stats(AptEngine *self, PyObject *args)
         );        
 }
 
+// type_check
+
+static char type_check_doc[] = "Try out types in the C extension";
+
 static PyObject *
-float_sizes(PyObject *self, PyObject *args)
+type_check(PyObject *self, PyObject *args)
 {
-    return Py_BuildValue("ii", sizeof(double), sizeof(aptfloat));
+    char info[200];
+    char uinfo[200];
+    uuint big = 1;
+    big <<= 40;
+    sprintf(info, "Big 1<<40 = %s", human_uuint(big, uinfo));
+    
+    return Py_BuildValue("{sisisisiss}",
+        "double", sizeof(double),
+        "aptfloat", sizeof(aptfloat),
+        "uint", sizeof(uint),
+        "uuint", sizeof(uuint),
+        "sprintf", info
+        );
 }
 
 // Type definition
@@ -636,7 +678,7 @@ AptEngineType = {
 
 static PyMethodDef
 aptus_engine_methods[] = {
-    { "float_sizes",        float_sizes,        METH_VARARGS, "Get sizes of float types"},
+    { "type_check", type_check, METH_VARARGS, type_check_doc },
     { NULL, NULL }
 };
 
