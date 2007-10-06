@@ -17,7 +17,7 @@ clean:
 
 kit: build
 	python setup.py sdist --formats=gztar
-	python setup.py bdist_wininst --bitmap kit/wininst.bmp
+	python setup.py bdist_wininst --bitmap etc/wininst.bmp
 
 doc:
 	python /Python25/Scripts/rst2html.py --template=rst_template.txt --link-stylesheet README.txt README.html
