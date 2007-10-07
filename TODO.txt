@@ -5,7 +5,7 @@
 - Sample .aptus files.
 - Doc pages (rst2px?)
 - More varied palettes.
-- safeeval or json.
++ safeeval or json. (safe_eval)
 + Keys working on Linux.
 + Cursors working on Linux.
 + Cursors for Mac.
