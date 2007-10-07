@@ -11,7 +11,7 @@ wx = importer('wx')
 numpy = importer('numpy')
 Image = importer('Image')
 
-import os, os.path, re, sys, traceback, zlib
+import os, os.path, re, sys, traceback, webbrowser, zlib
 import wx.lib.layoutf  as layoutf
 import wx.html 
 
@@ -408,13 +408,14 @@ class HtmlDialog(wx.Dialog):
         if x == -1 and y == -1:
             self.CenterOnScreen(wx.BOTH)
 
-        html = wx.html.HtmlWindow(self, -1)
+        self.html = wx.html.HtmlWindow(self, -1)
+        self.html.Bind(wx.html.EVT_HTML_LINK_CLICKED, self.on_link_clicked)
         ok = wx.Button(self, wx.ID_OK, "OK")
         ok.SetDefault()
         
         lc = layoutf.Layoutf('t=t#1;b=t5#2;l=l#1;r=r#1', (self,ok))
-        html.SetConstraints(lc)
-        html.SetPage(html_text)
+        self.html.SetConstraints(lc)
+        self.html.SetPage(html_text)
         
         lc = layoutf.Layoutf('b=b5#1;r=r5#1;w!80;h*', (self,))
         ok.SetConstraints(lc)
@@ -422,23 +423,48 @@ class HtmlDialog(wx.Dialog):
         self.SetAutoLayout(1)
         self.Layout()
 
+    def on_link_clicked(self, event):
+        url = event.GetLinkInfo().GetHref()
+        print "Clicked: %r" % url
+        webbrowser.open(url)
+        
+# The help text
+
+terms = {
+    'ctrl': 'Ctrl',
+    'iconsrc': data_file('icon48.png'),
+    }
+if 'wxMac' in wx.PlatformInfo:
+    terms['ctrl'] = 'Cmd'
+    
 help_html = """\
-<p><b>Aptus</b> is a Mandelbrot set explorer.</p>
+<table width='100%%'>
+<tr>
+    <td width='50' valign='top'><img src='%(iconsrc)s'/></td>
+    <td valign='top'>
+        <b>Aptus</b> is a Mandelbrot set explorer.<br>
+        Copyright 2007, Ned Batchelder.<br>
+        <a href='http://nedbatchelder.com/code/aptus'>http://nedbatchelder.com/code/aptus</a>
+    </td>
+</tr>
+</table>
 
-<p><b>Keys:</b></p>
+<p><b>Controls:</b></p>
 
-<p><b>i</b>: set the limit on iterations.</p>
-<p><b>j</b>: jump among a few pre-determined locations.</p>
-<p><b>r</b>: redraw the current image.</p>
-<p><b>s</b>: save the current image or settings.</p>
-<p><b>h</b> or <b>?</b>: show this help.</p>
-<p><b>comma</b> or <b>period</b>: cycle the current palette one color.</p>
-<p><b>&lt;</b> or <b>&gt;</b>: switch to the next palette.</p>
-<p><b>space</b>: drag mode: click to drag the image to a new position.</p>
-<p><b>left-click</b>: zoom in (with Ctrl: by just a little).</p>
-<p><b>right-click</b>: zoom out (with Ctrl: by just a little).</p>
-<p><b>left-drag</b>: select a new rectangle to zoom to.</p>
-"""
+<blockquote>
+<b>i</b>: set the limit on iterations.<br>
+<b>j</b>: jump among a few pre-determined locations.<br>
+<b>r</b>: redraw the current image.<br>
+<b>s</b>: save the current image or settings.<br>
+<b>h</b> or <b>?</b>: show this help.<br>
+<b>comma</b> or <b>period</b>: cycle the current palette one color.<br>
+<b>&lt;</b> or <b>&gt;</b>: switch to the next palette.<br>
+<b>space</b>: drag mode: click to drag the image to a new position.<br>
+<b>left-click</b>: zoom in (with %(ctrl)s: by just a little).<br>
+<b>right-click</b>: zoom out (with %(ctrl)s: by just a little).<br>
+<b>left-drag</b>: select a new rectangle to display.
+</blockquote>
+""" % terms
 
 def main(args):
     """ The main for the Aptus GUI.

@@ -21,7 +21,8 @@
 + Progress can decide there's 0 sec left, and shows an empty string.
 - When dragging the set, chaotic pixels still onscreen shimmer, prob something
     wrong with the half-pixel offset.
-    
+- When cycling colors, display flashes.
+
 * Speed
 
 - Multi-threaded to use more than one core.
