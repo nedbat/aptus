@@ -17,6 +17,9 @@ setup(
     name = "Aptus",
     description = "Fast Mandelbrot calculation",
     version = version,
+    author = "Ned Batchelder",
+    author_email = "ned@nedbatchelder.com",
+    url = "http://nedbatchelder.com/code/aptus",
     
     packages = [
         'aptus'
