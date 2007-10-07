@@ -42,24 +42,12 @@ class AptusApp:
     def write_image(self, im, fpath):
         # PNG info mojo from: http://blog.modp.com/2007/08/python-pil-and-png-metadata-take-2.html
         from PIL import PngImagePlugin
-        aptst = AptusState()
-        self.write_state(aptst)
+        aptst = AptusState(self)
         info = PngImagePlugin.PngInfo()
         info.add_text("Software", "Aptus %s" % __version__)
         info.add_text("Aptus State", aptst.write_string())
         im.save(fpath, 'PNG', pnginfo=info)
     
-    def write_state(self, aptst):
-        """ Write our state to an AptusState instance.
-        """
-        aptst.center = self.center
-        aptst.diam = self.diam
-        aptst.iter_limit = self.iter_limit
-        aptst.size = self.size
-        aptst.palette = self.palette
-        aptst.palette_phase = self.palette_phase
-        aptst.supersample = self.supersample
-        
 class AptusMandelbrot(AptEngine):
     def __init__(self, center, diam, size, iter_limit):
         self.size = size

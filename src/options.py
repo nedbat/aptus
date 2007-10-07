@@ -8,14 +8,8 @@ from aptus.importer import importer
 Image = importer('Image')
 
 class AptusOptions:
-    def __init__(self):
-        self.center = -0.5, 0.0
-        self.diam = 3.0, 3.0
-        self.size = 600, 600
-        self.iter_limit = 999
-        self.palette = None
-        self.palette_phase = 0
-        self.supersample = 1
+    def __init__(self, target):
+        self.target = target
         
     def read_args(self, argv):
         parser = optparse.OptionParser()
@@ -30,51 +24,43 @@ class AptusOptions:
             self.opts_from_file(args[0])
 
         if options.iter_limit:
-            self.iter_limit = int(options.iter_limit)
+            self.target.iter_limit = int(options.iter_limit)
         if options.palette_phase:
-            self.palette_phase = int(options.palette_phase)
+            self.target.palette_phase = int(options.palette_phase)
         if options.size:
-            self.size = map(int, options.size.split('x'))
+            self.target.size = map(int, options.size.split('x'))
         if options.supersample:
-            self.supersample = int(options.supersample)
+            self.target.supersample = int(options.supersample)
 
     def opts_from_file(self, fname):
         if fname.endswith('.aptus'):
-            aptst = AptusState()
+            aptst = AptusState(self.target)
             aptst.read(fname)
-            self.opts_from_aptst(aptst)
             
         elif fname.endswith('.xpf'):
             xaos = XaosState()
             xaos.read(fname)
-            self.center = xaos.center
-            self.diam = xaos.diam
-            self.iter_limit = xaos.maxiter
-            self.palette_phase = xaos.palette_phase
+            self.target.center = xaos.center
+            self.target.diam = xaos.diam
+            self.target.iter_limit = xaos.maxiter
+            self.target.palette_phase = xaos.palette_phase
         
         elif fname.endswith('.png'):
             im = Image.open(fname)
             if "Aptus State" in im.info:
-                aptst = AptusState()
+                aptst = AptusState(self.target)
                 aptst.read_string(im.info["Aptus State"])
-                self.opts_from_aptst(aptst)
             else:
                 raise Exception("PNG file has no Aptus state information: %s" % fname)
         else:
             raise Exception("Don't know how to read options from %s" % fname)
     
-    def opts_from_aptst(self, aptst):
-        self.center = aptst.center
-        self.diam = aptst.diam
-        self.iter_limit = aptst.iter_limit
-        self.size = aptst.size
-        self.palette = aptst.palette
-        self.palette_phase = aptst.palette_phase
-        self.supersample = aptst.supersample
-        
 class AptusState:
     """ A serialization class for the state of an Aptus rendering.
     """
+    def __init__(self, target):
+        self.target = target
+        
     def write(self, f):
         if isinstance(f, basestring):
             f = open(f, 'wb')
@@ -83,13 +69,13 @@ class AptusState:
     def write_string(self):
         lines = []
         lines.append(self._write_item('Aptus state', 1))
-        lines.append(self._write_item('center', list(self.center)))
-        lines.append(self._write_item('diam', list(self.diam)))
-        lines.append(self._write_item('iter_limit', self.iter_limit))
-        lines.append(self._write_item('size', list(self.size)))
-        lines.append(self._write_item('palette', self.palette.spec))
-        lines.append(self._write_item('palette_phase', self.palette_phase))
-        lines.append(self._write_item('supersample', self.supersample))
+        lines.append(self._write_item('center', list(self.target.center)))
+        lines.append(self._write_item('diam', list(self.target.diam)))
+        lines.append(self._write_item('iter_limit', self.target.iter_limit))
+        lines.append(self._write_item('size', list(self.target.size)))
+        lines.append(self._write_item('palette', self.target.palette.spec))
+        lines.append(self._write_item('palette_phase', self.target.palette_phase))
+        lines.append(self._write_item('supersample', self.target.supersample))
         return "{" + ",\n".join(lines) + "\n}\n"
     
     def read(self, f):
@@ -100,13 +86,13 @@ class AptusState:
     def read_string(self, s):
         # This is dangerous!
         d = eval(s)
-        self.size = d['size']
-        self.center = d['center']
-        self.diam = d['diam']
-        self.iter_limit = d['iter_limit']
-        self.palette = Palette().from_spec(d['palette'])
-        self.palette_phase = d['palette_phase']
-        self.supersample = d['supersample']
+        self.target.size = d['size']
+        self.target.center = d['center']
+        self.target.diam = d['diam']
+        self.target.iter_limit = d['iter_limit']
+        self.target.palette = Palette().from_spec(d['palette'])
+        self.target.palette_phase = d['palette_phase']
+        self.target.supersample = d['supersample']
         
     def _write_item(self, k, v):
         return '"%s": %r' % (k, v)

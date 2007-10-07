@@ -30,12 +30,11 @@ class GuiProgressReporter(ConsoleProgressReporter):
         wx.EndBusyCursor()
         
 class AptusView(wx.Frame, AptusApp):
-    def __init__(self, center, diam, size, iter_limit):
+    def __init__(self):
         wx.Frame.__init__(self, None, -1, 'Aptus')
         AptusApp.__init__(self)
- 
-        chromew, chromeh = 8, 28
-        self.SetSize((size[0]+chromew, size[1]+chromeh))
+
+        # Make the panel and bind events to it. 
         self.panel = wx.Panel(self)
         self.panel.Bind(wx.EVT_PAINT, self.on_paint)
         self.panel.Bind(wx.EVT_LEFT_UP, self.on_left_up)
@@ -48,26 +47,6 @@ class AptusView(wx.Frame, AptusApp):
         self.panel.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.panel.Bind(wx.EVT_KEY_UP, self.on_key_up)
 
-        # AptusApp values        
-        self.center = center
-        self.diam = diam
-        self.iter_limit = iter_limit
-        self.palette = all_palettes[0]
-        self.palette_phase = 0
-        
-        # Gui state values
-        self.palette_index = 0
-        self.jump_index = 0
-        self.zoom = 2.0
-
-        self.reset_rubberband()
-        self.set_view()
-        
-        # Panning information.
-        self.panning = False
-        self.pt_pan= None
-        self.pan_locked = False
-        
         # Set the window icon
         ib = wx.IconBundle()
         ib.AddIconFromFile(data_file("icon48.png"), wx.BITMAP_TYPE_ANY)
@@ -75,6 +54,29 @@ class AptusView(wx.Frame, AptusApp):
         ib.AddIconFromFile(data_file("icon16.png"), wx.BITMAP_TYPE_ANY)
         self.SetIcons(ib)
 
+        # AptusApp default values        
+        self.palette = all_palettes[0]
+        
+        # Gui state values
+        self.palette_index = 0
+        self.jump_index = 0
+        self.zoom = 2.0
+
+        self.reset_rubberband()
+        
+        # Panning information.
+        self.panning = False
+        self.pt_pan= None
+        self.pan_locked = False
+
+    def Show(self):
+        """ Call this once the values are set, and before Show()ing.
+        """
+        chromew, chromeh = 8, 28
+        self.SetSize((self.size[0]+chromew, self.size[1]+chromeh))
+        self.set_view()
+        wx.Frame.Show(self)
+        
     def set_view(self):
         self.size = self.GetClientSize()
         self.bitmap = None
@@ -326,8 +328,7 @@ class AptusView(wx.Frame, AptusApp):
                 im.fromstring(image.GetData())
                 self.write_image(im, pth)
             elif typ == 'aptus':
-                aptst = AptusState()
-                self.write_state(aptst)
+                aptst = AptusState(self)
                 aptst.write(pth)
             else:
                 self.message("Don't understand how to write file '%s'" % pth)
@@ -389,19 +390,12 @@ class AptusView(wx.Frame, AptusApp):
 def main(args):
     """ The main for the Aptus GUI.
     """
-    opts = AptusOptions()
+    app = wx.PySimpleApp()
+    f = AptusView()
+
+    opts = AptusOptions(f)
     opts.read_args(args)
     
-    app = wx.PySimpleApp()
-    f = AptusView(
-        opts.center,
-        opts.diam,
-        opts.size,
-        opts.iter_limit
-        )
-    if opts.palette:
-        f.palette = opts.palette
-    f.palette_phase = opts.palette_phase
     f.Show()
     app.MainLoop()
 
