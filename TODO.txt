@@ -1,7 +1,7 @@
 * V1
 
 - output filename for aptuscmd.
-- Keys working on Linux.
++ Keys working on Linux.
 + Cursors working on Linux.
 + Cursors for Mac.
 + Mac: use apple-key rather than control.
