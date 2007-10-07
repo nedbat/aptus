@@ -47,6 +47,8 @@ class AptusView(wx.Frame, AptusApp):
         self.panel.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.panel.Bind(wx.EVT_KEY_UP, self.on_key_up)
 
+        self.Bind(wx.EVT_SET_FOCUS, self.on_set_focus)
+        
         # Set the window icon
         ib = wx.IconBundle()
         ib.AddIconFromFile(data_file("icon48.png"), wx.BITMAP_TYPE_ANY)
@@ -129,6 +131,9 @@ class AptusView(wx.Frame, AptusApp):
 
     # Event handlers
     
+    def on_set_focus(self, event):
+        self.panel.SetFocus()
+        
     def on_left_down(self, event):
         self.pt_down = event.GetPosition()
         self.rubberbanding = False

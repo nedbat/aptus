@@ -18,7 +18,9 @@
 + Proper prompting about overwriting existing files.
 + If you zoom out too far, boundary tracing makes the whole set disappear.
 + Progress can decide there's 0 sec left, and shows an empty string.
-
+- When dragging the set, chaotic pixels still onscreen shimmer, prob something
+    wrong with the half-pixel offset.
+    
 * Speed
 
 - Multi-threaded to use more than one core.
