@@ -1,7 +1,7 @@
 # Started from http://www.howforge.com/mandelbrot-set-viewer-using-wxpython
 
 from aptus import data_file
-from aptus.app import NullProgressReporter, ConsoleProgressReporter, AptusApp
+from aptus.app import ConsoleProgressReporter, AptusApp
 from aptus.importer import importer
 from aptus.options import AptusOptions, AptusState
 from aptus.palettes import all_palettes
@@ -12,6 +12,8 @@ numpy = importer('numpy')
 Image = importer('Image')
 
 import os, os.path, re, sys, traceback, zlib
+import wx.lib.layoutf  as layoutf
+import wx.html 
 
 jumps = [
     ((-0.5,0.0), (3.0,3.0)),
@@ -70,9 +72,8 @@ class AptusView(wx.Frame, AptusApp):
         self.pan_locked = False
 
     def Show(self):
-        """ Call this once the values are set, and before Show()ing.
-        """
-        chromew, chromeh = 8, 28
+        # Override Show so we can set the view properly.
+        chromew, chromeh = 8, 28    # Windows- and theme-specific
         self.SetSize((self.size[0]+chromew, self.size[1]+chromeh))
         self.set_view()
         wx.Frame.Show(self)
@@ -219,6 +220,7 @@ class AptusView(wx.Frame, AptusApp):
 
     def on_key_down(self, event):
         shift = event.ShiftDown()
+        cmd = event.CmdDown()
         keycode = event.KeyCode
         if keycode == ord('S'):
             if shift:
@@ -246,12 +248,16 @@ class AptusView(wx.Frame, AptusApp):
                 self.cmd_cycle_palette(1)
         elif keycode == ord(' '):
             self.panning = True
+        elif keycode == ord('H'):
+            self.cmd_help()
+        elif keycode == ord('/') and shift:
+            self.cmd_help()
         elif 1:
             revmap = dict([(getattr(wx,n), n) for n in dir(wx) if n.startswith('WXK')])
             sym = revmap.get(keycode, "")
             if not sym:
                 sym = "ord(%r)" % chr(keycode)
-            print "Unmapped key: %r, %s, shift=%r" % (keycode, sym, shift)
+            print "Unmapped key: %r, %s, shift=%r, cmd=%r" % (keycode, sym, shift, cmd)
 
     def on_key_up(self, event):
         keycode = event.KeyCode
@@ -387,7 +393,53 @@ class AptusView(wx.Frame, AptusApp):
         self.palette_phase = 0
         self.bitmap = None
         self.Refresh()
+    
+    def cmd_help(self):
+        dlg = HtmlDialog(self, help_html, "Aptus")
+        dlg.ShowModal()
+
+
+class HtmlDialog(wx.Dialog):
+    def __init__(self, parent, html_text, caption,
+                 pos=wx.DefaultPosition, size=(500,300),
+                 style=wx.DEFAULT_DIALOG_STYLE):
+        wx.Dialog.__init__(self, parent, -1, caption, pos, size, style)
+        x, y = pos
+        if x == -1 and y == -1:
+            self.CenterOnScreen(wx.BOTH)
+
+        html = wx.html.HtmlWindow(self, -1)
+        ok = wx.Button(self, wx.ID_OK, "OK")
+        ok.SetDefault()
         
+        lc = layoutf.Layoutf('t=t#1;b=t5#2;l=l#1;r=r#1', (self,ok))
+        html.SetConstraints(lc)
+        html.SetPage(html_text)
+        
+        lc = layoutf.Layoutf('b=b5#1;r=r5#1;w!80;h*', (self,))
+        ok.SetConstraints(lc)
+        
+        self.SetAutoLayout(1)
+        self.Layout()
+
+help_html = """\
+<p><b>Aptus</b> is a Mandelbrot set explorer.</p>
+
+<p><b>Keys:</b></p>
+
+<p><b>i</b>: set the limit on iterations.</p>
+<p><b>j</b>: jump among a few pre-determined locations.</p>
+<p><b>r</b>: redraw the current image.</p>
+<p><b>s</b>: save the current image or settings.</p>
+<p><b>h</b> or <b>?</b>: show this help.</p>
+<p><b>comma</b> or <b>period</b>: cycle the current palette one color.</p>
+<p><b>&lt;</b> or <b>&gt;</b>: switch to the next palette.</p>
+<p><b>space</b>: drag mode: click to drag the image to a new position.</p>
+<p><b>left-click</b>: zoom in (with Ctrl: by just a little).</p>
+<p><b>right-click</b>: zoom out (with Ctrl: by just a little).</p>
+<p><b>left-drag</b>: select a new rectangle to zoom to.</p>
+"""
+
 def main(args):
     """ The main for the Aptus GUI.
     """
