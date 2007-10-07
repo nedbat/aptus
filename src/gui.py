@@ -78,6 +78,7 @@ class AptusView(wx.Frame, AptusApp):
         self.SetSize((self.size[0]+chromew, self.size[1]+chromeh))
         self.set_view()
         wx.Frame.Show(self)
+        self.panel.SetFocus()
         
     def set_view(self):
         self.size = self.GetClientSize()
