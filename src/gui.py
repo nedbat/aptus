@@ -35,7 +35,7 @@ class AptusView(wx.Frame, AptusApp):
         AptusApp.__init__(self)
 
         # Make the panel and bind events to it. 
-        self.panel = self#wx.Panel(self)
+        self.panel = wx.Panel(self, style=wx.NO_BORDER+wx.WANTS_CHARS)
         self.panel.Bind(wx.EVT_PAINT, self.on_paint)
         self.panel.Bind(wx.EVT_LEFT_UP, self.on_left_up)
         self.panel.Bind(wx.EVT_RIGHT_UP, self.on_right_up)
@@ -250,7 +250,7 @@ class AptusView(wx.Frame, AptusApp):
                 self.cmd_cycle_palette(1)
         elif keycode == ord(' '):
             self.panning = True
-        elif 0:
+        elif 1:
             revmap = dict([(getattr(wx,n), n) for n in dir(wx) if n.startswith('WXK')])
             sym = revmap.get(keycode, "")
             if not sym:
@@ -370,11 +370,11 @@ class AptusView(wx.Frame, AptusApp):
         if dlg.ShowModal() == wx.ID_OK:
             try:
                 self.iter_limit = int(dlg.GetValue())
+                self.cmd_redraw()
             except Exception, e:
                 self.message("Couldn't set iter_limit: %s" % e)
 
         dlg.Destroy()
-        self.cmd_redraw()
         
     def cmd_redraw(self):
         self.set_view()
