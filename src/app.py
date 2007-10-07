@@ -102,7 +102,7 @@ class ConsoleProgressReporter:
             to_go = int(so_far / frac_done * (1-frac_done))
             if info:
                 info = '  ' + info
-            print "%.2f%%: %10s done, %10s to go, eta %10s%s" % (
+            print "%5.2f%%: %10s done, %10s to go, eta %10s%s" % (
                 frac_done*100, duration(so_far), duration(to_go), future(to_go), info
                 )
             self.latest = now
