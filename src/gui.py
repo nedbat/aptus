@@ -1,6 +1,6 @@
 # Started from http://www.howforge.com/mandelbrot-set-viewer-using-wxpython
 
-from aptus import data_file
+from aptus import data_file, __version__
 from aptus.app import ConsoleProgressReporter, AptusApp
 from aptus.importer import importer
 from aptus.options import AptusOptions, AptusState
@@ -121,6 +121,9 @@ class AptusView(wx.Frame, AptusApp):
         dc.DrawRectangle(*rect)
 
     def set_cursor(self):
+        # If we aren't taking input, then we shouldn't change the cursor.
+        if not self.IsEnabled():
+            return 
         # Set the proper cursor:
         if self.rubberbanding:
             self.panel.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
@@ -433,6 +436,7 @@ class HtmlDialog(wx.Dialog):
 terms = {
     'ctrl': 'Ctrl',
     'iconsrc': data_file('icon48.png'),
+    'version': __version__,
     }
 if 'wxMac' in wx.PlatformInfo:
     terms['ctrl'] = 'Cmd'
@@ -442,7 +446,7 @@ help_html = """\
 <tr>
     <td width='50' valign='top'><img src='%(iconsrc)s'/></td>
     <td valign='top'>
-        <b>Aptus</b> is a Mandelbrot set explorer.<br>
+        <b>Aptus %(version)s</b>, Mandelbrot set explorer.<br>
         Copyright 2007, Ned Batchelder.<br>
         <a href='http://nedbatchelder.com/code/aptus'>http://nedbatchelder.com/code/aptus</a>
     </td>
