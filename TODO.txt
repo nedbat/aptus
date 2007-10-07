@@ -2,15 +2,16 @@
 
 - License.
 - output filename for aptuscmd.
+- Sample .aptus files.
+- Doc pages (rst2px?)
+- More varied palettes.
+- safeeval or json.
 + Keys working on Linux.
 + Cursors working on Linux.
 + Cursors for Mac.
 + Mac: use apple-key rather than control.
 + Help.
-- Sample .aptus files.
-- Doc pages (rst2px?)
 + Engine extension should be nested in aptus package.
-- More varied palettes.
 + Windows kits pre-built.
 
 * Bugs
@@ -21,7 +22,7 @@
 + Progress can decide there's 0 sec left, and shows an empty string.
 - When dragging the set, chaotic pixels still onscreen shimmer, prob something
     wrong with the half-pixel offset.
-- When cycling colors, display flashes.
+- When cycling colors, display flashes. (wxWindow::IsDoubleBuffered)
 
 * Speed
 
@@ -37,6 +38,7 @@ x Optimize boundary.py so we can use it for high iterations
 + Go through the bitblting python code to see if we can skip some of the steps.
 + A custom coloring endpoint in the engine to replace the multiple numpy operations.
 - When dragging the image, only re-calc the parts that have been exposed.
+- When dragging the image, keep parts scrolled off-screen, in case they come back.
 
 * UI
 
@@ -52,8 +54,9 @@ x Optimize boundary.py so we can use it for high iterations
 - Open command to load aptus state files.
 - Mac: app icon  (if 'wxMac' in wx.PlatformInfo:)
 - Custom bookmarks (like the J key).
-- Help
++ Help
 - Ubuntu: resizing the window tries to recalc as you drag (bad idle handling?)
+- Arrow keys for nudging the viewport.
 
 * Beauty
 
@@ -69,6 +72,7 @@ x Optimize boundary.py so we can use it for high iterations
 - Try to reduce flicker during palette changing (http://wiki.wxpython.org/index.cgi/DoubleBufferedDrawing)
 - Add an extra segment to non-cyclic ggr palettes.
 - Mirroring non-cyclic palettes.
+- Hue tweaking: [ and ] adjust the hue throughout the current palette.
 
 * Power
 
@@ -89,6 +93,7 @@ x Optimize boundary.py so we can use it for high iterations
 * Safety
 
 - A warning when zooming in so far that the precision fails.
+- A warning about too many maxedpoints.
 
 * Convenience
 
