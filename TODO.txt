@@ -1,11 +1,12 @@
 * V1
 
+- License.
 - output filename for aptuscmd.
 + Keys working on Linux.
 + Cursors working on Linux.
 + Cursors for Mac.
 + Mac: use apple-key rather than control.
-- Help.
++ Help.
 - Sample .aptus files.
 - Doc pages (rst2px?)
 + Engine extension should be nested in aptus package.
