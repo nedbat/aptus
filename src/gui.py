@@ -35,7 +35,7 @@ class AptusView(wx.Frame, AptusApp):
         AptusApp.__init__(self)
 
         # Make the panel and bind events to it. 
-        self.panel = wx.Panel(self)
+        self.panel = self#wx.Panel(self)
         self.panel.Bind(wx.EVT_PAINT, self.on_paint)
         self.panel.Bind(wx.EVT_LEFT_UP, self.on_left_up)
         self.panel.Bind(wx.EVT_RIGHT_UP, self.on_right_up)
@@ -47,7 +47,7 @@ class AptusView(wx.Frame, AptusApp):
         self.panel.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.panel.Bind(wx.EVT_KEY_UP, self.on_key_up)
 
-        self.Bind(wx.EVT_SET_FOCUS, self.on_set_focus)
+        #self.Bind(wx.EVT_SET_FOCUS, self.on_set_focus)
         
         # Set the window icon
         ib = wx.IconBundle()
