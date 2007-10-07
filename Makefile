@@ -10,7 +10,6 @@ clean:
 	-rm -rf build
 	-rm -rf dist
 	-rm -f MANIFEST
-	-rm -f mandext.pyd
 	-rm -f *.pyc */*.pyc */*/*.pyc */*/*/*.pyc
 	-rm -f *.pyo */*.pyo */*/*.pyo */*/*/*.pyo
 	-rm -f *.bak */*.bak */*/*.bak */*/*/*.bak
