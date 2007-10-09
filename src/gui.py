@@ -310,6 +310,10 @@ class AptusView(wx.Frame, AptusApp):
                     typ = ext[1:]
                 else:
                     typ = ''
+            elif '*'+ext in wildcards:
+                # The extension of the file is a recognized extension:
+                # Use it regardless of the file type chosen in the picker.
+                typ = ext[1:]
             else:
                 typ = wildcard.split('.')[-1].lower()
             if ext == '' and typ != '':
