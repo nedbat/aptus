@@ -23,7 +23,9 @@
 - When dragging the set, chaotic pixels still onscreen shimmer, prob something
     wrong with the half-pixel offset.
 - When cycling colors, display flashes. (wxWindow::IsDoubleBuffered)
-
++ If the file-save picker says "PNG", and the filename is "foo.aptus", it should
+    save as a .aptus file.
+    
 * Speed
 
 - Multi-threaded to use more than one core.
@@ -39,6 +41,7 @@ x Optimize boundary.py so we can use it for high iterations
 + A custom coloring endpoint in the engine to replace the multiple numpy operations.
 - When dragging the image, only re-calc the parts that have been exposed.
 - When dragging the image, keep parts scrolled off-screen, in case they come back.
+- When resizing the window, do similar pixel-retention as when dragging.
 
 * UI
 
