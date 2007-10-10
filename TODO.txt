@@ -22,7 +22,6 @@
 + Progress can decide there's 0 sec left, and shows an empty string.
 - When dragging the set, chaotic pixels still onscreen shimmer, prob something
     wrong with the half-pixel offset.
-- When cycling colors, display flashes. (wxWindow::IsDoubleBuffered)
 + If the file-save picker says "PNG", and the filename is "foo.aptus", it should
     save as a .aptus file.
     
@@ -73,6 +72,7 @@ x Optimize boundary.py so we can use it for high iterations
 - Continuous coloring (http://linas.org/art-gallery/escape/smooth.html)
 + A palette specification, so the complete specs for a pic can be stored.
 - Try to reduce flicker during palette changing (http://wiki.wxpython.org/index.cgi/DoubleBufferedDrawing)
+    When cycling colors, display flashes. (wxWindow::IsDoubleBuffered)
 - Add an extra segment to non-cyclic ggr palettes.
 - Mirroring non-cyclic palettes.
 - Hue tweaking: [ and ] adjust the hue throughout the current palette.

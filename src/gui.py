@@ -255,7 +255,7 @@ class AptusView(wx.Frame, AptusApp):
             self.cmd_help()
         elif keycode == ord('/') and shift:
             self.cmd_help()
-        elif 1:
+        elif 0:
             revmap = dict([(getattr(wx,n), n) for n in dir(wx) if n.startswith('WXK')])
             sym = revmap.get(keycode, "")
             if not sym:
