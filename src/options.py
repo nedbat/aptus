@@ -15,9 +15,10 @@ class AptusOptions:
     def read_args(self, argv):
         parser = optparse.OptionParser()
         parser.add_option("-i", "--iterlimit", dest="iter_limit", help="set the limit on the iteration count")
+        parser.add_option("-o", "--output", dest="outfile", help="set the output filename (cmdline only)")
         parser.add_option("--phase", dest="palette_phase", help="set the palette phase", metavar="PHASE")
         parser.add_option("-s", "--size", dest="size", help="set the pixel size of the image", metavar="WIDxHGT")
-        parser.add_option("--super", dest="supersample", help="set the supersample rate", metavar="S")
+        parser.add_option("--super", dest="supersample", help="set the supersample rate (cmdline only)", metavar="S")
         
         options, args = parser.parse_args(argv)
 
@@ -26,6 +27,8 @@ class AptusOptions:
 
         if options.iter_limit:
             self.target.iter_limit = int(options.iter_limit)
+        if options.outfile:
+            self.target.outfile = options.outfile
         if options.palette_phase:
             self.target.palette_phase = int(options.palette_phase)
         if options.size:

@@ -25,7 +25,7 @@ class AptusCmdApp(AptusApp):
         if self.supersample > 1:
             print "Resampling image..."
             im = im.resize(self.size, Image.ANTIALIAS)
-        self.write_image(im, "foo.png")
+        self.write_image(im, self.outfile)
 
 def main(args):
     app = AptusCmdApp()
