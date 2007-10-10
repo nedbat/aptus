@@ -34,6 +34,7 @@ class AptusApp:
         self.palette = None
         self.palette_phase = 0
         self.supersample = 1
+        self.outfile = 'Aptus.png'
 
     def create_mandel(self):
         size = self.size[0]*self.supersample, self.size[1]*self.supersample

@@ -1,7 +1,7 @@
 * V1
 
 - License.
-- output filename for aptuscmd.
++ output filename for aptuscmd.
 - Sample .aptus files.
 - Doc pages (rst2px?)
 - More varied palettes.
