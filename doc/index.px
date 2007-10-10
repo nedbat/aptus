@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?> 
+<page title='Aptus'>
+<section title='Aptus' order='70'/>
+<history>
+<what when='20071010T061700'>Created.</what>
+</history>
+
+<p>Aptus is a Mandelbrot set viewer and renderer.  It is written in Python
+with a core engine in C for speed.
+</p>
+
+<!--<h1links/>-->
+
+<figurep>
+    <img src='code/aptus/sample.png' alt='A portion of the Mandelbrot set'/>
+</figurep>
+
+<h1>Download and installation</h1>
+
+<p>Aptus installs like any other Python package.
+Before installing Aptus, you'll need these prerequisite Python packages:</p>
+
+<ul>
+    <li><a href='http://wxpython.org/'>wxPython</a>, 2.8 or greater.</li>
+    <li><a href='http://numpy.scipy.org/'>Numpy</a>.</li>
+    <li><a href='http://pythonware.com/products/pil/'>Python Imaging Library</a>, 1.1.6 or greater.</li>
+</ul>
+
+<p>Download the kit that's right for you.  Linux and Mac use the tar.gz, Windows
+users will probably be happier with the .exe:</p>
+
+<download path='code/aptus/Aptus-1.0.tar.gz' />
+<download path='code/aptus/Aptus-1.0.win32-py2.5.exe' />
+
+<p>Install the kit with the usual command:</p>
+
+<code>python setup.py install</code>
+
+<h1>GUI usage</h1>
+
+<p>Start Aptus with aptusgui.py, and start poking around. Left click or drag
+zooms you in, right click zooms you out.  Type 'h' for help on other controls.</p>
+
+
+<h1>Command line usage</h1>
+
+
+
+<h1>See also</h1>
+
+<ul>
+<li><a href='blog/index.html'>My blog</a>, where recreational math and Python
+topics intersect from time to time.</li>
+</ul>
+
+<googleads/>
+<pagecomments/>
+
+</page>
