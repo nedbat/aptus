@@ -14,3 +14,20 @@ Installation
 ------------
 
 Just install it!
+
+
+
+
+
+    - Installation
+    - Prerequisites
+    - Using it
+        - GUI
+            - Switches
+            - Controls
+        - Cmdline
+    - Comparison to Xaos
+        - Better
+        - Worse
+    - Who cares?
+    
