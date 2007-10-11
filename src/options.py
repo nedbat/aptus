@@ -8,17 +8,26 @@ from aptus.safe_eval import safe_eval
 
 Image = importer('Image')
 
+description = """\
+Aptus renders Mandelbrot set images. Two flavors are available:
+aptusgui.py for interactive exploration, and aptuscmd.py for
+high-quality rendering.
+""".replace('\n', ' ')
+
 class AptusOptions:
     def __init__(self, target):
         self.target = target
         
     def read_args(self, argv):
-        parser = optparse.OptionParser()
+        parser = optparse.OptionParser(
+            usage="%prog [options] [parameterfile]",
+            description=description
+        )
         parser.add_option("-i", "--iterlimit", dest="iter_limit", help="set the limit on the iteration count")
-        parser.add_option("-o", "--output", dest="outfile", help="set the output filename (cmdline only)")
+        parser.add_option("-o", "--output", dest="outfile", help="set the output filename (aptuscmd.py only)")
         parser.add_option("--phase", dest="palette_phase", help="set the palette phase", metavar="PHASE")
         parser.add_option("-s", "--size", dest="size", help="set the pixel size of the image", metavar="WIDxHGT")
-        parser.add_option("--super", dest="supersample", help="set the supersample rate (cmdline only)", metavar="S")
+        parser.add_option("--super", dest="supersample", help="set the supersample rate (aptuscmd.py only)", metavar="S")
         
         options, args = parser.parse_args(argv)
 
