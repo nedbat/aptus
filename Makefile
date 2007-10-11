@@ -10,7 +10,7 @@ clean:
 	-rm -rf build
 	-rm -rf dist
 	-rm -f MANIFEST
-	-rm -f doc/sample.png
+	-rm -f doc/*.png
 	-rm -f *.pyc */*.pyc */*/*.pyc */*/*/*.pyc
 	-rm -f *.pyo */*.pyo */*/*.pyo */*/*/*.pyo
 	-rm -f *.bak */*.bak */*/*.bak */*/*/*.bak
@@ -29,7 +29,15 @@ icon:
 
 WEBHOME = c:/ned/web/stellated/pages/code/aptus
 
-publish: kit
-	python scripts/aptuscmd.py doc/sample.aptus --super=3 -o doc/sample.png
+%.png: %.aptus
+	python scripts/aptuscmd.py $< --super=3 -o $*.png -s 1000x740
+	python scripts/aptuscmd.py $< --super=3 -o $*_med.png -s 500x370
+	python scripts/aptuscmd.py $< --super=5 -o $*_thumb.png -s 200x148
+
+SAMPLE_PNGS := $(patsubst %.aptus,%.png,$(wildcard doc/*.aptus))
+
+samples: $(SAMPLE_PNGS)
+
+publish: kit $(SAMPLE_PNGS)
 	cp -v doc/*.* $(WEBHOME)
 	cp -v dist/*.* $(WEBHOME)
