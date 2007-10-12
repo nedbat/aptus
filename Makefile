@@ -32,7 +32,7 @@ WEBHOME = c:/ned/web/stellated/pages/code/aptus
 %.png: %.aptus
 	python scripts/aptuscmd.py $< --super=3 -o $*.png -s 1000x740
 	python scripts/aptuscmd.py $< --super=3 -o $*_med.png -s 500x370
-	python scripts/aptuscmd.py $< --super=5 -o $*_thumb.png -s 200x148
+	python scripts/aptuscmd.py $< --super=5 -o $*_thumb.png -s 250x185
 
 SAMPLE_PNGS := $(patsubst %.aptus,%.png,$(wildcard doc/*.aptus))
 

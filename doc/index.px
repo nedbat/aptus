@@ -6,10 +6,8 @@
 </history>
 
 <p>Aptus is a Mandelbrot set viewer and renderer.  It is written in Python
-with a core engine in C for speed.
+with a computation engine in C for speed.
 </p>
-
-<!--<h1links/>-->
 
 <figurep href='code/aptus/JamesGiantPeach.png'>
     <img src='code/aptus/JamesGiantPeach_med.png' alt='A portion of the Mandelbrot set'/>
@@ -18,7 +16,7 @@ with a core engine in C for speed.
 
 <h1>Getting Aptus</h1>
 
-<h2>Prerequisites</h2>
+<h2>Pre-requisites</h2>
 <p>Aptus installs like any other Python package.
 Before installing Aptus, you'll need to install these prerequisite Python packages:</p>
 
@@ -93,24 +91,16 @@ Options:
   --super=S             set the supersample rate (aptuscmd.py only)
 </code>
 
+
 <h1>More samples</h1>
 
-    <a href='code/aptus/DragonTails.png'>
-        <img src='code/aptus/DragonTails_thumb.png' alt='A portion of the Mandelbrot set'/>
-    </a>
-    &#160;&#160;
-    <a href='code/aptus/FringedBabies.png'>
-        <img src='code/aptus/FringedBabies_thumb.png' alt='A portion of the Mandelbrot set'/>
-    </a>
-    &#160;&#160;
-    <a href='code/aptus/MotherAndChild.png'>
-        <img src='code/aptus/MotherAndChild_thumb.png' alt='A portion of the Mandelbrot set'/>
-    </a>
-    &#160;&#160;
-    <a href='code/aptus/PaisleySpiral.png'>
-        <img src='code/aptus/PaisleySpiral_thumb.png' alt='A portion of the Mandelbrot set'/>
-    </a>
-
+<figurep>
+    <thumbnail href='code/aptus/DragonTails.png' alt='A portion of the Mandelbrot set' style='margin:1em'/>
+    <thumbnail href='code/aptus/FringedBabies.png' alt='A portion of the Mandelbrot set' style='margin:1em'/>
+    <br/>
+    <thumbnail href='code/aptus/GreenSeahorses.png' alt='A portion of the Mandelbrot set' style='margin:1em'/>
+    <thumbnail href='code/aptus/PaisleySpiral.png' alt='A portion of the Mandelbrot set' style='margin:1em'/>
+</figurep>
 
 <h1>See also</h1>
 
