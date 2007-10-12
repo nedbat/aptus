@@ -1,4 +1,7 @@
-# Started from http://www.howforge.com/mandelbrot-set-viewer-using-wxpython
+""" Aptus GUI
+    http://nedbatchelder.com/code/aptus
+    Copyright 2007, Ned Batchelder
+"""
 
 from aptus import data_file, __version__
 from aptus.app import ConsoleProgressReporter, AptusApp

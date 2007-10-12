@@ -32,6 +32,7 @@
     - http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
 - Take some more optimizations from Xaos: http://www.delorie.com/gnu/docs/xaos/xaos_29.html
     - Do iterations in batches of 8 to avoid the bailout comparison.
+- Take advantage of symmetry across the x-axis.
 x Optimize boundary.py so we can use it for high iterations
 + Boundary checking in C
 - Fracint computes the miniter by running the edges (where the min must be), then
@@ -76,7 +77,11 @@ x Optimize boundary.py so we can use it for high iterations
 - Add an extra segment to non-cyclic ggr palettes.
 - Mirroring non-cyclic palettes.
 - Hue tweaking: [ and ] adjust the hue throughout the current palette.
-
+- Read other palette files:
+    - .map (see Gnofract 4D)
+    - .cs (see Gnofract 4D)
+    - .ugr (see Gnofract 4D)
+    
 * Power
 
 - Editable parameters for things like cycle checking epsilon.
