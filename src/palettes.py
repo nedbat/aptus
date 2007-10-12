@@ -174,7 +174,7 @@ all_palettes = [
     Palette().spectrum(2, h=120, l=(50,200), s=125).stretch(128, hsl=True),
     Palette().gradient(data_file('palettes/bluefly.ggr'), 20),
     Palette().gradient(data_file('palettes/ib18.ggr'), 20),
-    Palette().gradient(data_file('palettes/ib18.ggr'), 50),
+    Palette().gradient(data_file('palettes/redblue.ggr'), 20),
     Palette().gradient(data_file('palettes/DEM_screen.ggr'), 20),
     ]
 
