@@ -161,21 +161,21 @@ class Palette:
         return self
     
 all_palettes = [
-    Palette().xaos(),
     Palette().spectrum(12).stretch(10, hsl=True),
     Palette().spectrum(12, l=(50,150), s=150).stretch(25, hsl=True),
     Palette().spectrum(48, l=(100,150), s=175).stretch(5),
     Palette().spectrum(2, h=250, l=(100,150), s=175).stretch(10, hsl=True),
     Palette().spectrum(2, h=290, l=(75,175), s=(230,25)).stretch(10, hsl=True),
     Palette().spectrum(16, l=125, s=175),
+    Palette().xaos(),
     Palette().rgb_colors([(255,192,192), (255,255,255)]).rgb_incolor((192,192,255)),
     Palette().rgb_colors([(255,255,255), (0,0,0), (0,0,0), (0,0,0)]),
     Palette().rgb_colors([(255,255,255)]),
     Palette().spectrum(2, h=120, l=(50,200), s=125).stretch(128, hsl=True),
-    Palette().gradient(data_file('palettes/bluefly.ggr'), 20),
-    Palette().gradient(data_file('palettes/ib18.ggr'), 20),
-    Palette().gradient(data_file('palettes/redblue.ggr'), 20),
-    Palette().gradient(data_file('palettes/DEM_screen.ggr'), 20),
+    #Palette().gradient(data_file('palettes/bluefly.ggr'), 20),
+    #Palette().gradient(data_file('palettes/ib18.ggr'), 20),
+    #Palette().gradient(data_file('palettes/redblue.ggr'), 20),
+    #Palette().gradient(data_file('palettes/DEM_screen.ggr'), 20),
     ]
 
 # A simple viewer to see the palettes.
