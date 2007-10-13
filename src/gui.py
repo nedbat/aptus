@@ -485,7 +485,7 @@ def main(args):
 
     opts = AptusOptions(f)
     opts.read_args(args)
-    
+    f.supersample = 1    
     f.Show()
     app.MainLoop()
 
