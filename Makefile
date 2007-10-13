@@ -39,5 +39,6 @@ SAMPLE_PNGS := $(patsubst %.aptus,%.png,$(wildcard doc/*.aptus))
 samples: $(SAMPLE_PNGS)
 
 publish: kit $(SAMPLE_PNGS)
-	cp -v doc/*.* $(WEBHOME)
+	cp -v doc/*.px $(WEBHOME)
+	cp -v doc/*.png $(WEBHOME)
 	cp -v dist/*.* $(WEBHOME)
