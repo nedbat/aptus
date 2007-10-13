@@ -1,10 +1,9 @@
 * V1
 
-- License.
++ License.
 + output filename for aptuscmd.
 - Sample .aptus files.
 - Doc pages (rst2px?)
-- More varied palettes.
 + safeeval or json. (safe_eval)
 + Keys working on Linux.
 + Cursors working on Linux.
@@ -81,6 +80,7 @@ x Optimize boundary.py so we can use it for high iterations
     - .map (see Gnofract 4D)
     - .cs (see Gnofract 4D)
     - .ugr (see Gnofract 4D)
+- More varied palettes.
     
 * Power
 
