@@ -35,7 +35,7 @@ class AptusApp:
         self.palette_phase = 0
         self.supersample = 1
         self.outfile = 'Aptus.png'
-
+        
     def create_mandel(self):
         size = self.size[0]*self.supersample, self.size[1]*self.supersample
         return AptusMandelbrot(self.center, self.diam, size, self.iter_limit)
@@ -65,6 +65,8 @@ class AptusMandelbrot(AptEngine):
         self.iter_limit = iter_limit
         self.progress = NullProgressReporter()
         self.counts = None
+        self.cont_levels = 10
+        self.trace_boundary = 1
         
     def coords_from_pixel(self, x, y):
         return self.xy0[0]+self.xyd[0]*x, self.xy0[1]+self.xyd[1]*y
