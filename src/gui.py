@@ -235,6 +235,8 @@ class AptusView(wx.Frame, AptusApp):
                 self.cmd_save()
         elif keycode == ord('I'):
             self.cmd_set_iter_limit()
+        elif keycode == ord('B'):
+            self.cmd_set_bailout()
         elif keycode == ord('J'):
             self.jump_index += 1
             self.jump_index %= len(jumps)
@@ -388,6 +390,21 @@ class AptusView(wx.Frame, AptusApp):
 
         dlg.Destroy()
         
+    def cmd_set_bailout(self):
+        dlg = wx.TextEntryDialog(
+                self, 'Bailout:',
+                'Set the radius of the escape circle', str(self.bailout)
+                )
+
+        if dlg.ShowModal() == wx.ID_OK:
+            try:
+                self.bailout = float(dlg.GetValue())
+                self.cmd_redraw()
+            except Exception, e:
+                self.message("Couldn't set bailout: %s" % e)
+
+        dlg.Destroy()
+        
     def cmd_redraw(self):
         self.set_view()
         
@@ -463,6 +480,7 @@ help_html = """\
 <p><b>Controls:</b></p>
 
 <blockquote>
+<b>b</b>: set the radius of the bailout circle.<br>
 <b>i</b>: set the limit on iterations.<br>
 <b>j</b>: jump among a few pre-determined locations.<br>
 <b>r</b>: redraw the current image.<br>

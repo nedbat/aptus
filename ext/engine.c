@@ -22,6 +22,7 @@ typedef struct {
     aptcomplex xyd;         // delta per pixel (a pair of floats)
     
     int iter_limit;         // limit on iteration count.
+    aptfloat bailout;       // escape radius.
     int check_for_cycles;   // should we check for cycles?
     aptfloat epsilon;       // the epsilon to use when checking for cycles.
     aptfloat cont_levels;   // the number of continuous levels to compute.
@@ -56,6 +57,7 @@ AptEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         self->xyd.i = 0.001;
         self->xyd.r = 0.001;
         self->iter_limit = 999;
+        self->bailout = 2.1;
         self->check_for_cycles = 1;
         self->trace_boundary = 1;
         self->cont_levels = 1.0;
@@ -141,10 +143,12 @@ compute_count(AptEngine * self, int xi, int yi)
     int cycle_tries = CYCLE_TRIES;
     int cycle_countdown = cycle_period;
 
+    aptfloat bail2 = self->bailout * self->bailout;
+    
     while (count <= self->iter_limit) {
         z2.r = z.r * z.r;
         z2.i = z.i * z.i;
-        if (z2.r + z2.i > 4.0) {
+        if (z2.r + z2.i > bail2) {
             if (count > self->stats.maxiter) {
                 self->stats.maxiter = count;
             }
@@ -209,7 +213,7 @@ compute_count(AptEngine * self, int xi, int yi)
         z2.r = z.r * z.r;
         z2.i = z.i * z.i;
 
-        double delta = log(log(sqrt(z2.r + z2.i)))/log(2.0);
+        double delta = log(log(sqrt(z2.r + z2.i)))/log(self->bailout);
         double fcount = count;
         fcount += 3 - delta;
         count = fcount;// * self->cont_levels;
@@ -640,6 +644,7 @@ type_check(PyObject *self, PyObject *args)
 static PyMemberDef
 AptEngine_members[] = {
     { "iter_limit", T_INT, offsetof(AptEngine, iter_limit), 0, "Limit on iterations" },
+    { "bailout", T_DOUBLE, offsetof(AptEngine, bailout), 0, "Radius of the escape circle" },
     { "cont_levels", T_DOUBLE, offsetof(AptEngine, cont_levels), 0, "Number of fractional levels to compute" },
     { "trace_boundary", T_INT, offsetof(AptEngine, trace_boundary), 0, "Control whether boundaries are traced" },
     { NULL }
