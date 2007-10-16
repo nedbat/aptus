@@ -31,6 +31,7 @@ class AptusApp:
         self.diam = 3.0, 3.0
         self.size = 600, 600
         self.iter_limit = 999
+        self.bailout = 2.0
         self.palette = None
         self.palette_phase = 0
         self.supersample = 1
@@ -38,7 +39,9 @@ class AptusApp:
         
     def create_mandel(self):
         size = self.size[0]*self.supersample, self.size[1]*self.supersample
-        return AptusMandelbrot(self.center, self.diam, size, self.iter_limit)
+        m = AptusMandelbrot(self.center, self.diam, size, self.iter_limit)
+        m.bailout = self.bailout
+        return m
                 
     def write_image(self, im, fpath):
         # PNG info mojo from: http://blog.modp.com/2007/08/python-pil-and-png-metadata-take-2.html
@@ -65,7 +68,7 @@ class AptusMandelbrot(AptEngine):
         self.iter_limit = iter_limit
         self.progress = NullProgressReporter()
         self.counts = None
-        self.cont_levels = 10
+        self.cont_levels = 1
         self.trace_boundary = 1
         
     def coords_from_pixel(self, x, y):
