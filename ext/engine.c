@@ -22,8 +22,10 @@ typedef struct {
     aptcomplex xyd;         // delta per pixel (a pair of floats)
     
     int iter_limit;         // limit on iteration count.
-    int check_for_cycles;
-    aptfloat epsilon;
+    int check_for_cycles;   // should we check for cycles?
+    aptfloat epsilon;       // the epsilon to use when checking for cycles.
+    aptfloat cont_levels;   // the number of continuous levels to compute.
+    int trace_boundary;     // should we use boundary tracing?
     
     struct {
         int     maxiter;        // Max iteration that isn't in the set.
@@ -31,7 +33,7 @@ typedef struct {
         u4int   totalcycles;    // Number of cycles detected.
         u4int   maxitercycle;   // Max iteration that was finally a cycle.
         int     miniter;        // Minimum iteration count.
-        u4int    maxedpoints;    // Number of points that exceeded the maxiter.
+        u4int   maxedpoints;    // Number of points that exceeded the maxiter.
     } stats;
 
 } AptEngine;
@@ -55,6 +57,8 @@ AptEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         self->xyd.r = 0.001;
         self->iter_limit = 999;
         self->check_for_cycles = 1;
+        self->trace_boundary = 1;
+        self->cont_levels = 1.0;
     }
 
     return (PyObject *)self;
@@ -185,7 +189,33 @@ compute_count(AptEngine * self, int xi, int yi)
         self->stats.maxedpoints++;
         count = 0;
     }
+    
+    if (count > 0 && self->cont_levels != 1) {
+        znew.r = z2.r - z2.i + c.r;
+        znew.i = 2 * z.i * z.r + c.i;
+        z = znew;
+        z2.r = z.r * z.r;
+        z2.i = z.i * z.i;
 
+        znew.r = z2.r - z2.i + c.r;
+        znew.i = 2 * z.i * z.r + c.i;
+        z = znew;
+        z2.r = z.r * z.r;
+        z2.i = z.i * z.i;
+
+        znew.r = z2.r - z2.i + c.r;
+        znew.i = 2 * z.i * z.r + c.i;
+        z = znew;
+        z2.r = z.r * z.r;
+        z2.i = z.i * z.i;
+
+        double delta = log(log(sqrt(z2.r + z2.i)))/log(2.0);
+        double fcount = count;
+        fcount += 3 - delta;
+        count = fcount;// * self->cont_levels;
+        //printf("Delta = %f\n", delta);
+    }
+    
     return count;
 }
 
@@ -323,7 +353,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
             }
             
             // A pixel that's been calculated but not traced needs to be traced.
-            if (s == 1) {
+            if (s == 1 && self->trace_boundary) {
                 char curdir = DIR_DOWN;
                 int curx = xi, cury = yi;
                 int origx = xi, origy = yi;
@@ -609,7 +639,9 @@ type_check(PyObject *self, PyObject *args)
 
 static PyMemberDef
 AptEngine_members[] = {
-    {"iter_limit", T_INT, offsetof(AptEngine, iter_limit), 0, "limit on iterations"},
+    { "iter_limit", T_INT, offsetof(AptEngine, iter_limit), 0, "Limit on iterations" },
+    { "cont_levels", T_DOUBLE, offsetof(AptEngine, cont_levels), 0, "Number of fractional levels to compute" },
+    { "trace_boundary", T_INT, offsetof(AptEngine, trace_boundary), 0, "Control whether boundaries are traced" },
     { NULL }
 };
 
