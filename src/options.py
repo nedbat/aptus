@@ -23,6 +23,7 @@ class AptusOptions:
             usage="%prog [options] [parameterfile]",
             description=description
         )
+        parser.add_option("-b", "--bailout", dest="bailout", help="set the radius of the escape circle")
         parser.add_option("-i", "--iterlimit", dest="iter_limit", help="set the limit on the iteration count")
         parser.add_option("-o", "--output", dest="outfile", help="set the output filename (aptuscmd.py only)")
         parser.add_option("--phase", dest="palette_phase", help="set the palette phase", metavar="PHASE")
@@ -34,6 +35,8 @@ class AptusOptions:
         if len(args) > 0:
             self.opts_from_file(args[0])
 
+        if options.bailout:
+            self.target.bailout = float(options.bailout)
         if options.iter_limit:
             self.target.iter_limit = int(options.iter_limit)
         if options.outfile:
