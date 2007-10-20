@@ -539,7 +539,7 @@ apply_palette(AptEngine *self, PyObject *args)
     }
     u1int * colbytes;
     int ncolbytes;
-    if (PyString_AsStringAndSize(colbytes_obj, &colbytes, &ncolbytes) < 0) {
+    if (PyString_AsStringAndSize(colbytes_obj, (char**)&colbytes, &ncolbytes) < 0) {
         goto done;
     }
     int ncolors = ncolbytes / 3;
