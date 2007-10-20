@@ -237,6 +237,8 @@ class AptusView(wx.Frame, AptusApp):
             self.cmd_set_iter_limit()
         elif keycode == ord('B'):
             self.cmd_set_bailout()
+        elif keycode == ord('C'):
+            self.cmd_set_continuous()
         elif keycode == ord('J'):
             self.jump_index += 1
             self.jump_index %= len(jumps)
@@ -402,6 +404,22 @@ class AptusView(wx.Frame, AptusApp):
                 self.cmd_redraw()
             except Exception, e:
                 self.message("Couldn't set bailout: %s" % e)
+
+        dlg.Destroy()
+        
+    def cmd_set_continuous(self):
+        dlg = wx.TextEntryDialog(
+                self, 'Continuous:',
+                'Set the number of blend levels', str(self.cont_levels)
+                )
+
+        if dlg.ShowModal() == wx.ID_OK:
+            try:
+                self.cont_levels = int(dlg.GetValue())
+                self.blend_colors = self.cont_levels
+                self.cmd_redraw()
+            except Exception, e:
+                self.message("Couldn't set cont_levels: %s" % e)
 
         dlg.Destroy()
         
