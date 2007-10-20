@@ -36,11 +36,15 @@ class AptusApp:
         self.palette_phase = 0
         self.supersample = 1
         self.outfile = 'Aptus.png'
+        self.cont_levels = 1
+        self.blend_colors = 1
         
     def create_mandel(self):
         size = self.size[0]*self.supersample, self.size[1]*self.supersample
         m = AptusMandelbrot(self.center, self.diam, size, self.iter_limit)
         m.bailout = self.bailout
+        m.cont_levels = self.cont_levels
+        m.blend_colors = self.blend_colors
         return m
                 
     def write_image(self, im, fpath):
@@ -59,7 +63,7 @@ class AptusMandelbrot(AptEngine):
         pixsize = max(diam[0] / size[0], diam[1] / size[1])
         diam = pixsize * size[0], pixsize * size[1]
         
-        # The upper-left corner is computed from the center, minus the radiuses,
+        # The upper-left corner is computed from the center, minus the radii,
         # plus half a pixel, so that we're sampling the center of the pixel.
         self.xy0 = (center[0] - diam[0]/2 + pixsize/2, center[1] - diam[1]/2 + pixsize/2)
         self.xyd = (pixsize, pixsize)
@@ -68,7 +72,6 @@ class AptusMandelbrot(AptEngine):
         self.iter_limit = iter_limit
         self.progress = NullProgressReporter()
         self.counts = None
-        self.cont_levels = 1
         self.trace_boundary = 1
         
     def coords_from_pixel(self, x, y):

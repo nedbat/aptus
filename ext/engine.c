@@ -11,6 +11,7 @@ typedef struct {
     aptfloat i, r;
 } aptcomplex;
 
+typedef npy_uint8 u1int;
 typedef npy_uint32 u4int;
 typedef npy_uint64 u8int;
 
@@ -26,6 +27,7 @@ typedef struct {
     int check_for_cycles;   // should we check for cycles?
     aptfloat epsilon;       // the epsilon to use when checking for cycles.
     aptfloat cont_levels;   // the number of continuous levels to compute.
+    int blend_colors;       // how many levels of color should we blend?
     int trace_boundary;     // should we use boundary tracing?
     
     struct {
@@ -61,6 +63,7 @@ AptEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         self->check_for_cycles = 1;
         self->trace_boundary = 1;
         self->cont_levels = 1.0;
+        self->blend_colors = 1;
     }
 
     return (PyObject *)self;
@@ -216,7 +219,7 @@ compute_count(AptEngine * self, int xi, int yi)
         double delta = log(log(sqrt(z2.r + z2.i)))/log(self->bailout);
         double fcount = count;
         fcount += 3 - delta;
-        count = fcount;// * self->cont_levels;
+        count = fcount * self->cont_levels;
         //printf("Delta = %f\n", delta);
     }
     
@@ -291,7 +294,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     
     // Malloc'ed buffers.
     typedef struct { int x, y; } pt;
-    char * status = NULL;
+    u1int * status = NULL;
     pt * points = NULL;
     
     int ok = 0;
@@ -315,7 +318,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     //  0: hasn't been computed yet.
     //  1: computed, but not filled.
     //  2: computed and filled.
-    status = malloc(w*h);
+    status = (u1int *) malloc(w*h);
     if (status == NULL) {
         PyErr_SetString(PyExc_MemoryError, "couldn't allocate status");
         goto done;
@@ -341,7 +344,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     int xi, yi;
     for (yi = 0; yi < h; yi++) {
         for (xi = 0; xi < w; xi++) {
-            char s;
+            u1int s;
             int c;
             
             // Examine the current pixel.
@@ -534,14 +537,14 @@ apply_palette(AptEngine *self, PyObject *args)
     if (colbytes_obj == NULL) {
         goto done;
     }
-    char * colbytes;
+    u1int * colbytes;
     int ncolbytes;
     if (PyString_AsStringAndSize(colbytes_obj, &colbytes, &ncolbytes) < 0) {
         goto done;
     }
     int ncolors = ncolbytes / 3;
 
-    char incolbytes[3];
+    u1int incolbytes[3];
     incolor_obj = PyObject_GetAttrString(palette, "incolor");
     if (incolor_obj == NULL) {
         goto done;
@@ -549,9 +552,11 @@ apply_palette(AptEngine *self, PyObject *args)
     int i;
     for (i = 0; i < 3; i++) {
         pint = PySequence_GetItem(incolor_obj, i);
-        incolbytes[i] = (char)PyInt_AsLong(pint);
+        incolbytes[i] = (u1int)PyInt_AsLong(pint);
         Py_CLEAR(pint);
     }
+    
+    u1int blend[3];
     
     // Walk the arrays
     int w = PyArray_DIM(counts, 0);
@@ -561,10 +566,25 @@ apply_palette(AptEngine *self, PyObject *args)
         for (x = 0; x < w; x++) {
             npy_uint32 c = *(npy_uint32 *)PyArray_GETPTR2(counts, x, y);
             npy_uint8 *ppix = (npy_uint8 *)PyArray_GETPTR3(pix, x, y, 0);
-            char * pcol;
+            u1int * pcol;
             if (c > 0) {
-                int cindex = (c + phase) % ncolors;
-                pcol = colbytes + cindex*3;
+                if (self->blend_colors == 1) {
+                    int cindex = (c + phase) % ncolors;
+                    pcol = colbytes + cindex*3;
+                }
+                else {
+                    int cbase = c / self->blend_colors;
+                    float cfrac = c % self->blend_colors;
+                    cfrac /= self->blend_colors;
+                    int c1index = (cbase + phase) % ncolors;
+                    int c2index = (cbase + 1 + phase) % ncolors;
+                    for (i = 0; i < 3; i++) {
+                        float col1 = colbytes[c1index*3+i];
+                        float col2 = colbytes[c2index*3+i];
+                        blend[i] = (int)(col1 + (col2-col1)*cfrac);
+                    }
+                    pcol = blend;
+                }
             }
             else {
                 pcol = incolbytes;
@@ -646,6 +666,7 @@ AptEngine_members[] = {
     { "iter_limit", T_INT, offsetof(AptEngine, iter_limit), 0, "Limit on iterations" },
     { "bailout", T_DOUBLE, offsetof(AptEngine, bailout), 0, "Radius of the escape circle" },
     { "cont_levels", T_DOUBLE, offsetof(AptEngine, cont_levels), 0, "Number of fractional levels to compute" },
+    { "blend_colors", T_INT, offsetof(AptEngine, blend_colors), 0, "How many levels of color to blend" },
     { "trace_boundary", T_INT, offsetof(AptEngine, trace_boundary), 0, "Control whether boundaries are traced" },
     { NULL }
 };
