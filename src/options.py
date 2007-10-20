@@ -24,6 +24,7 @@ class AptusOptions:
             description=description
         )
         parser.add_option("-b", "--bailout", dest="bailout", help="set the radius of the escape circle")
+        parser.add_option("-c", "--continuous", dest="continuous", help="use continuous coloring", action="store_true")
         parser.add_option("-i", "--iterlimit", dest="iter_limit", help="set the limit on the iteration count")
         parser.add_option("-o", "--output", dest="outfile", help="set the output filename (aptuscmd.py only)")
         parser.add_option("--phase", dest="palette_phase", help="set the palette phase", metavar="PHASE")
@@ -37,6 +38,8 @@ class AptusOptions:
 
         if options.bailout:
             self.target.bailout = float(options.bailout)
+        if options.continuous:
+            self.target.continuous = options.continuous
         if options.iter_limit:
             self.target.iter_limit = int(options.iter_limit)
         if options.outfile:
@@ -83,7 +86,7 @@ class AptusState:
             f = open(f, 'wb')
         f.write(self.write_string())
     
-    simple_attrs = "center diam iter_limit palette_phase supersample".split()
+    simple_attrs = "center diam iter_limit palette_phase supersample continuous".split()
     
     def write_string(self):
         lines = []
@@ -102,7 +105,8 @@ class AptusState:
     def read_string(self, s):
         d = safe_eval(s)
         for sa in self.simple_attrs:
-            setattr(self.target, sa, d[sa])
+            if sa in d:
+                setattr(self.target, sa, d[sa])
         self.target.palette = Palette().from_spec(d['palette'])
         self.target.size = d['size']
         

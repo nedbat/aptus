@@ -36,15 +36,14 @@ class AptusApp:
         self.palette_phase = 0
         self.supersample = 1
         self.outfile = 'Aptus.png'
-        self.cont_levels = 1
-        self.blend_colors = 1
+        self.continuous = False
         
     def create_mandel(self):
         size = self.size[0]*self.supersample, self.size[1]*self.supersample
         m = AptusMandelbrot(self.center, self.diam, size, self.iter_limit)
         m.bailout = self.bailout
-        m.cont_levels = self.cont_levels
-        m.blend_colors = self.blend_colors
+        if self.continuous:
+            m.cont_levels = m.blend_colors = 256
         return m
                 
     def write_image(self, im, fpath):
