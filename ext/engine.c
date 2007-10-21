@@ -37,6 +37,7 @@ typedef struct {
         u4int   maxitercycle;   // Max iteration that was finally a cycle.
         int     miniter;        // Minimum iteration count.
         u4int   maxedpoints;    // Number of points that exceeded the maxiter.
+        u4int   computedpoints; // Number of points that were actually computed.
     } stats;
 
 } AptEngine;
@@ -214,6 +215,8 @@ compute_count(AptEngine * self, int xi, int yi)
         count = fcount * self->cont_levels;
         //printf("Delta = %f\n", delta);
     }
+    
+    self->stats.computedpoints++;
     
     return count;
 }
@@ -608,7 +611,8 @@ clear_stats(AptEngine *self)
     self->stats.maxitercycle = 0;
     self->stats.miniter = 0;
     self->stats.maxedpoints = 0;
-    
+    self->stats.computedpoints = 0;
+
     return Py_BuildValue("");
 }
 
@@ -619,13 +623,14 @@ static char get_stats_doc[] = "Get the statistics as a dictionary";
 static PyObject *
 get_stats(AptEngine *self, PyObject *args)
 {
-    return Py_BuildValue("{sisKsIsIsisI}",
+    return Py_BuildValue("{sisKsIsIsisIsI}",
         "maxiter", self->stats.maxiter,
         "totaliter", self->stats.totaliter,
         "totalcycles", self->stats.totalcycles,
         "maxitercycle", self->stats.maxitercycle,
         "miniter", self->stats.miniter,
-        "maxedpoints", self->stats.maxedpoints
+        "maxedpoints", self->stats.maxedpoints,
+        "computedpoints", self->stats.computedpoints
         );        
 }
 
