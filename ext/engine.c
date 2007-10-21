@@ -148,9 +148,18 @@ compute_count(AptEngine * self, int xi, int yi)
 
     aptfloat bail2 = self->bailout * self->bailout;
     
+#define ITER1                               \
+    z2.r = z.r * z.r;                       \
+    z2.i = z.i * z.i;
+
+#define ITER2                               \
+    znew.r = z2.r - z2.i + c.r;             \
+    znew.i = 2 * z.i * z.r + c.i;           \
+    z = znew;                               \
+    self->stats.totaliter++;
+
     while (count <= self->iter_limit) {
-        z2.r = z.r * z.r;
-        z2.i = z.i * z.i;
+        ITER1;
         if (z2.r + z2.i > bail2) {
             if (count > self->stats.maxiter) {
                 self->stats.maxiter = count;
@@ -160,12 +169,8 @@ compute_count(AptEngine * self, int xi, int yi)
             }
             break;
         }
-        znew.r = z2.r - z2.i + c.r;
-        znew.i = 2 * z.i * z.r + c.i;
-        z = znew;
+        ITER2;
         count++;
-
-        self->stats.totaliter++;
 
         if (self->check_for_cycles) {
             // Check for cycles
@@ -198,23 +203,10 @@ compute_count(AptEngine * self, int xi, int yi)
     }
     
     if (count > 0 && self->cont_levels != 1) {
-        znew.r = z2.r - z2.i + c.r;
-        znew.i = 2 * z.i * z.r + c.i;
-        z = znew;
-        z2.r = z.r * z.r;
-        z2.i = z.i * z.i;
-
-        znew.r = z2.r - z2.i + c.r;
-        znew.i = 2 * z.i * z.r + c.i;
-        z = znew;
-        z2.r = z.r * z.r;
-        z2.i = z.i * z.i;
-
-        znew.r = z2.r - z2.i + c.r;
-        znew.i = 2 * z.i * z.r + c.i;
-        z = znew;
-        z2.r = z.r * z.r;
-        z2.i = z.i * z.i;
+        // three more iterations to reduce the error.
+        ITER1; ITER2;
+        ITER1; ITER2;
+        ITER1; ITER2;
 
         double delta = log(log(sqrt(z2.r + z2.i)))/log(self->bailout);
         double fcount = count;
