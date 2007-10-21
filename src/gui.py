@@ -278,8 +278,11 @@ class AptusView(wx.Frame, AptusApp):
     def on_paint(self, event):
         if not self.bitmap:
             self.bitmap = self.draw()
-        dc = wx.PaintDC(self.panel)
-        dc.DrawBitmap(self.bitmap, 0, 0, False)
+        if 1:
+            dc = wx.BufferedPaintDC(self.panel, self.bitmap)
+        else:
+            dc = wx.PaintDC(self.panel)
+            dc.DrawBitmap(self.bitmap, 0, 0, False)
  
     def draw(self):
         self.m.progress = GuiProgressReporter()
