@@ -62,6 +62,7 @@ class AptusOptions:
             self.target.center = xaos.center
             self.target.diam = xaos.diam
             self.target.iter_limit = xaos.maxiter
+            self.target.palette = xaos.palette
             self.target.palette_phase = xaos.palette_phase
         
         elif fname.endswith('.png'):
@@ -133,6 +134,7 @@ class XaosState:
         self.center = -0.75, 0.0
         self.diam = 2.55, 2.55
         self.palette_phase = 0
+        self.palette = Palette().xaos()
         
     def read(self, f):
         if isinstance(f, basestring):
