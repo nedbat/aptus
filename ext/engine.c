@@ -484,9 +484,12 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                     if (num_filled > 0) {
                         self->stats.boundariesfilled++;
 
-                        sprintf(info, "trace %d * %d, totaliter %s", c, ptsstored, human_u8int(self->stats.totaliter, uinfo));
-                        if (!call_progress(self, progress, ((double)num_pixels)/(w*h), info)) {
-                            goto done;
+                        // If this was a large boundary, call the progress function.
+                        if (ptsstored > w) {
+                            sprintf(info, "trace %d * %d, totaliter %s", c, ptsstored, human_u8int(self->stats.totaliter, uinfo));
+                            if (!call_progress(self, progress, ((double)num_pixels)/(w*h), info)) {
+                                goto done;
+                            }
                         }
                     }
                 } // end if points
