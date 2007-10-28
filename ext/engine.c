@@ -38,6 +38,8 @@ typedef struct {
         int     miniter;        // Minimum iteration count.
         u4int   maxedpoints;    // Number of points that exceeded the maxiter.
         u4int   computedpoints; // Number of points that were actually computed.
+        u4int   boundaries;     // Number of boundaries traced.
+        u4int   boundariesfilled; // Number of boundaries filled.
     } stats;
 
 } AptEngine;
@@ -307,7 +309,6 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     int w = PyArray_DIM(arr, 1);
     int h = PyArray_DIM(arr, 0);
     int num_pixels = 0;
-    int num_trace = 0;
     
     // status is an array of the status of the pixels.
     //  0: hasn't been computed yet.
@@ -337,11 +338,11 @@ mandelbrot_array(AptEngine *self, PyObject *args)
 
     // Loop the pixels.
     int xi, yi;
+    u1int s;
+    int c = 0;
+
     for (yi = 0; yi < h; yi++) {
         for (xi = 0; xi < w; xi++) {
-            u1int s;
-            int c;
-            
             // Examine the current pixel.
             s = STATUS(xi, yi);
             if (s == 0) {
@@ -350,7 +351,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                 num_pixels++;
                 STATUS(xi, yi) = s = 1;
             }
-            else {
+            else if (s == 1 && self->trace_boundary) {
                 c = COUNTS(xi, yi);
             }
             
@@ -451,12 +452,15 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                     start = 0;
                 } // end for boundary points
                 
-                // If we saved any boundary points, then we flood fill.
-                if (ptsstored > 0) {
-                    num_trace++;
-                    
+                self->stats.boundaries++;
+                
+                // If we saved enough boundary points, then we flood fill. The
+                // points are orthogonally connected, so we need at least eight
+                // to enclose a fillable point.
+                if (ptsstored >= 8) {
                     // Flood fill the region. The points list has all the boundary
                     // points, so we only need to fill left from each of those.
+                    int num_filled = 0;
                     int pi;
                     for (pi = 0; pi < ptsstored; pi++) {
                         int ptx = points[pi].x;
@@ -472,13 +476,18 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                             }
                             COUNTS(ptx, pty) = c;
                             num_pixels++;
+                            num_filled++;
                             STATUS(ptx, pty) = 2;
                         }
                     } // end for points to fill
                     
-                    sprintf(info, "trace %d, totaliter %s", c, human_u8int(self->stats.totaliter, uinfo));
-                    if (!call_progress(self, progress, ((double)num_pixels)/(w*h), info)) {
-                        goto done;
+                    if (num_filled > 0) {
+                        self->stats.boundariesfilled++;
+
+                        sprintf(info, "trace %d * %d, totaliter %s", c, ptsstored, human_u8int(self->stats.totaliter, uinfo));
+                        if (!call_progress(self, progress, ((double)num_pixels)/(w*h), info)) {
+                            goto done;
+                        }
                     }
                 } // end if points
             } // end if needs trace
@@ -623,14 +632,16 @@ static char get_stats_doc[] = "Get the statistics as a dictionary";
 static PyObject *
 get_stats(AptEngine *self, PyObject *args)
 {
-    return Py_BuildValue("{sisKsIsIsisIsI}",
+    return Py_BuildValue("{sisKsIsIsisIsIsIsI}",
         "maxiter", self->stats.maxiter,
         "totaliter", self->stats.totaliter,
         "totalcycles", self->stats.totalcycles,
         "maxitercycle", self->stats.maxitercycle,
         "miniter", self->stats.miniter,
         "maxedpoints", self->stats.maxedpoints,
-        "computedpoints", self->stats.computedpoints
+        "computedpoints", self->stats.computedpoints,
+        "boundaries", self->stats.boundaries,
+        "boundariesfilled", self->stats.boundariesfilled
         );        
 }
 
