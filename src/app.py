@@ -77,9 +77,9 @@ class AptusMandelbrot(AptEngine):
         """ Get the coords of a pixel in the grid. Note that x and y can be
             fractional.
         """
-        # The .5 adjustment is because
-        # the grid is aligned to the center of the pixels, but we need to return
-        # the upper-left of the pixel.
+        # The .5 adjustment is because the grid is aligned to the center of the
+        # pixels, but we need to return the upper-left of the pixel so that other
+        # math comes out right.
         return self.xy0[0]+self.xyd[0]*(float(x)-.5), self.xy0[1]+self.xyd[1]*(float(y)-.5)
 
     def compute_pixels(self):
