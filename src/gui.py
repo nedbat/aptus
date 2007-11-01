@@ -42,10 +42,12 @@ class AptusView(wx.Frame, AptusApp):
         # Make the panel and bind events to it. 
         self.panel = wx.Panel(self, style=wx.NO_BORDER+wx.WANTS_CHARS)
         self.panel.Bind(wx.EVT_PAINT, self.on_paint)
-        self.panel.Bind(wx.EVT_LEFT_UP, self.on_left_up)
-        self.panel.Bind(wx.EVT_RIGHT_UP, self.on_right_up)
         self.panel.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
+        self.panel.Bind(wx.EVT_MIDDLE_DOWN, self.on_middle_down)
         self.panel.Bind(wx.EVT_MOTION, self.on_motion)
+        self.panel.Bind(wx.EVT_LEFT_UP, self.on_left_up)
+        self.panel.Bind(wx.EVT_MIDDLE_UP, self.on_middle_up)
+        self.panel.Bind(wx.EVT_RIGHT_UP, self.on_right_up)
         self.panel.Bind(wx.EVT_LEAVE_WINDOW, self.on_leave_window)
         self.panel.Bind(wx.EVT_SIZE, self.on_size)
         self.panel.Bind(wx.EVT_IDLE, self.on_idle)
@@ -67,13 +69,8 @@ class AptusView(wx.Frame, AptusApp):
         self.jump_index = 0
         self.zoom = 2.0
 
-        self.reset_rubberband()
+        self.reset_mousing()
         
-        # Panning information.
-        self.panning = False
-        self.pt_pan= None
-        self.pan_locked = False
-
     def Show(self):
         # Override Show so we can set the view properly.
         chromew, chromeh = 8, 28    # Windows- and theme-specific
@@ -109,12 +106,23 @@ class AptusView(wx.Frame, AptusApp):
         dlg.ShowModal()
         dlg.Destroy()
     
-    def reset_rubberband(self):
-        """ Set all the rubberbanding variables to turn rubberbanding off.
+    def reset_mousing(self):
+        """ Set all the mousing variables to turn rubberbanding and panning off.
         """
         self.pt_down = None
         self.rubberbanding = False
         self.rubberrect = None
+        # Panning information.
+        self.panning = False
+        self.pt_pan = None
+        self.pan_locked = False
+
+    def finish_panning(self, mx, my):
+        cx, cy = self.size[0]/2, self.size[1]/2
+        cx -= mx - self.pt_down[0]
+        cy -= my - self.pt_down[1]
+        self.center = self.m.coords_from_pixel(cx, cy)
+        self.set_view()
         
     def xor_rectangle(self, rect):
         dc = wx.ClientDC(self.panel)
@@ -144,6 +152,13 @@ class AptusView(wx.Frame, AptusApp):
             self.pt_pan = self.pt_down
             self.pan_locked = False
             
+    def on_middle_down(self, event):
+        self.pt_down = event.GetPosition()
+        self.rubberbanding = False
+        self.panning = True
+        self.pt_pan = self.pt_down
+        self.pan_locked = False
+        
     def on_motion(self, event):
         self.set_cursor()
         
@@ -188,11 +203,7 @@ class AptusView(wx.Frame, AptusApp):
             self.diam = (abs(ulx-lrx), abs(uly-lry))
             self.set_view()
         elif self.panning:
-            cx, cy = self.size[0]/2, self.size[1]/2
-            cx -= mx - self.pt_down[0]
-            cy -= my - self.pt_down[1]
-            self.center = self.m.coords_from_pixel(cx, cy)
-            self.set_view()
+            self.finish_panning(mx, my)
         elif self.pt_down:
             # Single-click: zoom in.
             scale = self.zoom
@@ -200,10 +211,12 @@ class AptusView(wx.Frame, AptusApp):
                 scale = (scale - 1.0)/10 + 1.0
             self.dilate_view((mx, my), 1.0/scale)
 
-        self.reset_rubberband()        
-        self.panning = False
-        self.pan_locked = False
-        
+        self.reset_mousing()        
+
+    def on_middle_up(self, event):
+        self.finish_panning(*event.GetPosition())
+        self.reset_mousing()        
+
     def on_right_up(self, event):
         scale = self.zoom
         if event.CmdDown():
@@ -213,7 +226,7 @@ class AptusView(wx.Frame, AptusApp):
     def on_leave_window(self, event):
         if self.rubberrect:
             self.xor_rectangle(self.rubberrect)
-        self.reset_rubberband()
+        self.reset_mousing()
         
     def on_size(self, event):
         self.check_size = True
@@ -500,7 +513,8 @@ help_html = """\
 <b>space</b>: drag mode: click to drag the image to a new position.<br>
 <b>left-click</b>: zoom in (with %(ctrl)s: by just a little).<br>
 <b>right-click</b>: zoom out (with %(ctrl)s: by just a little).<br>
-<b>left-drag</b>: select a new rectangle to display.
+<b>left-drag</b>: select a new rectangle to display.<br>
+<b>middle-drag</b>: drag the image to a new position.
 </blockquote>
 """ % terms
 
