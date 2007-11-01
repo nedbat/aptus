@@ -118,7 +118,7 @@ class AptusView(wx.Frame, AptusApp):
         self.pan_locked = False
 
     def finish_panning(self, mx, my):
-        cx, cy = self.size[0]/2, self.size[1]/2
+        cx, cy = self.size[0]/2.0, self.size[1]/2.0
         cx -= mx - self.pt_down[0]
         cy -= my - self.pt_down[1]
         self.center = self.m.coords_from_pixel(cx, cy)
@@ -222,7 +222,8 @@ class AptusView(wx.Frame, AptusApp):
         if event.CmdDown():
             scale = (scale - 1.0)/10 + 1.0
         self.dilate_view(event.GetPosition(), scale)
- 
+        self.reset_mousing()
+        
     def on_leave_window(self, event):
         if self.rubberrect:
             self.xor_rectangle(self.rubberrect)

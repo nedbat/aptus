@@ -19,7 +19,7 @@
 + Proper prompting about overwriting existing files.
 + If you zoom out too far, boundary tracing makes the whole set disappear.
 + Progress can decide there's 0 sec left, and shows an empty string.
-- When dragging the set, chaotic pixels still onscreen shimmer, prob something
++ When dragging the set, chaotic pixels still onscreen shimmer, prob something
     wrong with the half-pixel offset.
 + If the file-save picker says "PNG", and the filename is "foo.aptus", it should
     save as a .aptus file.
