@@ -212,10 +212,8 @@ compute_count(AptEngine * self, int xi, int yi)
         ITER1; ITER2;
 
         double delta = log(log(sqrt(z2.r + z2.i)))/log(self->bailout);
-        double fcount = count;
-        fcount += 3 - delta;
+        double fcount = count + 3 - delta;
         count = fcount * self->cont_levels;
-        //printf("Delta = %f\n", delta);
     }
     
     self->stats.computedpoints++;

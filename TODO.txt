@@ -29,6 +29,7 @@
 - Multi-threaded to use more than one core.
 - Faster epsilon comparison for cycle checking (use tricky int operations...)
     - http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
+    - http://lomont.org/Math/Papers/2005/CompareFloat.pdf
 - Take some more optimizations from Xaos: http://www.delorie.com/gnu/docs/xaos/xaos_29.html
     - Do iterations in batches of 8 to avoid the bailout comparison.
 - Take advantage of symmetry across the x-axis.
@@ -108,6 +109,23 @@ x Optimize boundary.py so we can use it for high iterations
 * Convenience
 
 - Use ez_setup, or eggs, or something to manage the Python dependencies.
+
+* MVC Model
+- main mandelbrot
+    - center, rotation
+    - diameter
+    - size
+    - iterlimit, bailout
+    - continuous
+    - warnings: iter-too-low, precision underflow
+- palette
+    - colors
+    - offset
+    - density
+- undo stack:
+    - parameters
+    - thumbnail
+- you-are-here
 
 * Done
 
