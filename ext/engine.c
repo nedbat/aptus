@@ -523,25 +523,20 @@ apply_palette(AptEngine *self, PyObject *args)
 {
     // Arguments to the function.
     PyArrayObject *counts;
+    PyObject * colbytes_obj;
+    PyObject * incolor_obj;
     PyArrayObject *pix;
-    PyObject *palette;
     int phase;
     
     // Objects we get during the function.
-    PyObject * colbytes_obj = NULL;
-    PyObject * incolor_obj  = NULL;
     PyObject * pint = NULL;
     int ok = 0;
     
-    if (!PyArg_ParseTuple(args, "O!OiO!", &PyArray_Type, &counts, &palette, &phase, &PyArray_Type, &pix)) {
+    if (!PyArg_ParseTuple(args, "O!OiOO!", &PyArray_Type, &counts, &colbytes_obj, &phase, &incolor_obj, &PyArray_Type, &pix)) {
         goto done;
     }
     
     // Unpack the palette a bit.
-    colbytes_obj = PyObject_GetAttrString(palette, "colbytes");
-    if (colbytes_obj == NULL) {
-        goto done;
-    }
     u1int * colbytes;
     int ncolbytes;
     if (PyString_AsStringAndSize(colbytes_obj, (char**)&colbytes, &ncolbytes) < 0) {
@@ -550,10 +545,6 @@ apply_palette(AptEngine *self, PyObject *args)
     int ncolors = ncolbytes / 3;
 
     u1int incolbytes[3];
-    incolor_obj = PyObject_GetAttrString(palette, "incolor");
-    if (incolor_obj == NULL) {
-        goto done;
-    }
     int i;
     for (i = 0; i < 3; i++) {
         pint = PySequence_GetItem(incolor_obj, i);
@@ -601,8 +592,6 @@ apply_palette(AptEngine *self, PyObject *args)
     ok = 1;
     
 done:
-    Py_XDECREF(colbytes_obj);
-    Py_XDECREF(incolor_obj);
     Py_XDECREF(pint);
     
     return ok ? Py_BuildValue("") : NULL;

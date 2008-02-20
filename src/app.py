@@ -95,13 +95,8 @@ class AptusMandelbrot(AptEngine):
         print self.get_stats()
 
     def color_pixels(self, palette, phase):
-        if not hasattr(palette, 'colbytes'):
-            colbytes = ""
-            for r,g,b in palette.colors:
-                colbytes += chr(r) + chr(g) + chr(b)
-            palette.colbytes = colbytes
         pix = numpy.zeros((self.counts.shape[0], self.counts.shape[1], 3), dtype=numpy.uint8)
-        self.apply_palette(self.counts, palette, phase, pix)
+        self.apply_palette(self.counts, palette.color_bytes(), phase, palette.incolor, pix)
         return pix
 
 class ConsoleProgressReporter:
