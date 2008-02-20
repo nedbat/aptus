@@ -6,34 +6,60 @@
 from aptus import data_file
 import colorsys
 
+# Pure data-munging functions
+def _255(*vals):
+    """ Convert all arguments from 0-1.0 to 0-255.
+    """
+    return map(lambda x:int(round(x*255)), vals)
+
+def _1(*vals):
+    """ Convert all arguments from 0-255 to 0-1.0.
+    """
+    return map(lambda x:x/255.0, vals)
+
+def _clip(val, lo, hi):
+    """ Clip a val to staying between lo and hi.
+    """
+    if val < lo:
+        val = lo
+    if val > hi:
+        val = hi
+    return val
+
 class Palette:
     """ A palette is a list of colors for coloring the successive bands of the
         Mandelbrot set.
         
-        self.colors is a list of RGB triples, 0-255, for display.
-        self.fcolors is a list of RGB triples, 0.0-1.0, for computation.
-        self.incolor is the RGB255 color for the interior of the set.
-        self._spec is a value that can be passed to from_spec to reconstitute the
+        colors is a list of RGB triples, 0-255, for display.
+        fcolors is a list of RGB triples, 0.0-1.0, for computation.
+        incolor is the RGB255 color for the interior of the set.
+        _spec is a value that can be passed to from_spec to reconstitute the
             palette. It's returned by the spec property.
     """
     def __init__(self):
         self.incolor = (0,0,0)
-        self.fcolors = [(0.0,0.0,0.0), (1.0, 1.0, 1.0)]
-        self._colors_from_fcolors()
+        self.fcolors = [(0.0,0.0,0.0), (1.0,1.0,1.0)]
         self._spec = []
-        self._colorbytes = None
+        self.adjusts = {'hue': 0, 'saturation': 0}
+
+        self._colors_from_fcolors()
         
     def _colors_from_fcolors(self):
-        """ Set self.colors from self.fcolors.
+        """ Set self.colors from self.fcolors, adjusting them for hue, etc,
+            in the process.
         """
-        self.colors = [ self._255(*rgb1) for rgb1 in self.fcolors ]
-        self._colorbytes = None
+        self.colors = []
         
-    def _255(self, *vals):
-        return map(lambda x:int(round(x*255)), vals)
-    
-    def _1(self, *vals):
-        return map(lambda x:x/255.0, vals)
+        hue_adj = self.adjusts['hue']/360.0
+        sat_adj = self.adjusts['saturation']/255.0
+        
+        for r, g, b in self.fcolors:
+            h, l, s = colorsys.rgb_to_hls(r, g, b)
+            h = (h + hue_adj) % 1.0
+            s = _clip(s + sat_adj, 0.0, 1.0)
+            r, g, b = colorsys.hls_to_rgb(h, l, s)
+            self.colors.append(_255(r, g, b))
+        self._colorbytes = None
     
     def color_bytes(self):
         """ Compute a string of RGB bytes for use in the engine.
@@ -43,11 +69,19 @@ class Palette:
             self._colorbytes = colbytes
         return self._colorbytes
 
+    def spec(self):
+        """ Create a textual description of the palette, for later reconstitution
+            with from_spec().
+        """
+        s = self._spec
+        s.append(['adjust', self.adjusts])
+        return s
+    
     def rgb_colors(self, colors):
         """ Use an explicit list of RGB colors as the palette.
         """
         self.colors = colors[:]
-        self.fcolors = [ self._1(*rgb255) for rgb255 in self.colors ]
+        self.fcolors = [ _1(*rgb255) for rgb255 in self.colors ]
         self._colorbytes = None
         self._spec.append(['rgb_colors', {'colors':colors}])
         return self
@@ -123,16 +157,14 @@ class Palette:
         self._spec.append(['stretch', {'steps':steps, 'hsl':hsl}])
         return self
     
-    def adjust_hue(self, hue_delta):
-        """ Adjust the hue of the whole palette. hue_delta is 0-360.
+    def adjust(self, hue=0, saturation=0):
+        """ Make adjustments to various aspects of the display of the palette.
+            0 <= hue <= 360
+            0 <= saturation <= 255
         """
-        hue_delta /= 360.0
-        fcolors = []
-        for r, g, b in self.fcolors:
-            h, l, s = colorsys.rgb_to_hls(r, g, b)
-            h = (h + hue_delta) % 1.0
-            fcolors.append(colorsys.hls_to_rgb(h, l, s))
-        self.fcolors = fcolors
+        adj = self.adjusts
+        adj['hue'] = (adj['hue'] + hue) % 360
+        adj['saturation'] += _clip(adj['saturation'] + saturation, -255, 255)
         self._colors_from_fcolors()
         return self
             

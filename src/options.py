@@ -95,7 +95,7 @@ class AptusState:
         for sa in self.simple_attrs:
             lines.append(self._write_item(sa, getattr(self.target, sa)))
         lines.append(self._write_item('size', list(self.target.size)))
-        lines.append(self._write_item('palette', self.target.palette.spec))
+        lines.append(self._write_item('palette', self.target.palette.spec()))
         return "{" + ",\n".join(lines) + "\n}\n"
     
     def read(self, f):

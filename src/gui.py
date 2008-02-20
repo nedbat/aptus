@@ -271,23 +271,23 @@ class AptusView(wx.Frame, AptusApp):
                 self.cmd_change_palette(1)
             else:
                 self.cmd_cycle_palette(1)
-        elif keycode == ord('['):
-            delta = -10
-            if cmd:
-                delta = -1
-            self.cmd_tint_palette(delta)
-        elif keycode == ord(']'):
+        elif keycode in [ord('['), ord(']')]:
+            kw = 'hue'
             delta = 10
             if cmd:
                 delta = 1
-            self.cmd_tint_palette(delta)
+            if keycode == ord('['):
+                delta = -delta
+            if shift:
+                kw = 'saturation'
+            self.cmd_adjust_palette(**{kw:delta})
         elif keycode == ord(' '):
             self.panning = True
         elif keycode == ord('H'):
             self.cmd_help()
         elif keycode == ord('/') and shift:
             self.cmd_help()
-        elif 1:
+        elif 0:
             revmap = dict([(getattr(wx,n), n) for n in dir(wx) if n.startswith('WXK')])
             sym = revmap.get(keycode, "")
             if not sym:
@@ -455,8 +455,8 @@ class AptusView(wx.Frame, AptusApp):
         self.bitmap = None
         self.Refresh()
     
-    def cmd_tint_palette(self, delta):
-        self.palette.adjust_hue(delta)
+    def cmd_adjust_palette(self, **kwargs):
+        self.palette.adjust(**kwargs)
         self.bitmap = None
         self.Refresh()
         
@@ -510,7 +510,7 @@ help_html = """\
     <td width='50' valign='top'><img src='%(iconsrc)s'/></td>
     <td valign='top'>
         <b>Aptus %(version)s</b>, Mandelbrot set explorer.<br>
-        Copyright 2007, Ned Batchelder.<br>
+        Copyright 2007-2008, Ned Batchelder.<br>
         <a href='http://nedbatchelder.com/code/aptus'>http://nedbatchelder.com/code/aptus</a>
     </td>
 </tr>
@@ -528,6 +528,7 @@ help_html = """\
 <b>comma</b> or <b>period</b>: cycle the current palette one color.<br>
 <b>&lt;</b> or <b>&gt;</b>: switch to the next palette.<br>
 <b>[</b> or <b>]</b>: adjust the hue of the palette (+%(ctrl)s: just a little).<br>
+<b>{</b> or <b>}</b>: adjust the saturation of the palette (+%(ctrl)s: just a little).<br>
 <b>space</b>: drag mode: click to drag the image to a new position.<br>
 <b>left-click</b>: zoom in (+%(ctrl)s: just a little).<br>
 <b>right-click</b>: zoom out (+%(ctrl)s: just a little).<br>
