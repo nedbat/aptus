@@ -1,14 +1,33 @@
 """ Palettes for Aptus.
+    http://nedbatchelder.com/code/aptus
+    Copyright 2007-2008, Ned Batchelder
 """
 
 from aptus import data_file
 import colorsys
 
 class Palette:
+    """ A palette is a list of colors for coloring the successive bands of the
+        Mandelbrot set.
+        
+        self.colors is a list of RGB triples, 0-255, for display.
+        self.fcolors is a list of RGB triples, 0.0-1.0, for computation.
+        self.incolor is the RGB255 color for the interior of the set.
+        self._spec is a value that can be passed to from_spec to reconstitute the
+            palette. It's returned by the spec property.
+    """
     def __init__(self):
         self.incolor = (0,0,0)
-        self.colors = [(0,0,0),(255,255,255)]
-        self.spec = []
+        self.fcolors = [(0.0,0.0,0.0), (1.0, 1.0, 1.0)]
+        self._colors_from_fcolors()
+        self._spec = []
+        self._colorbytes = None
+        
+    def _colors_from_fcolors(self):
+        """ Set self.colors from self.fcolors.
+        """
+        self.colors = [ self._255(*rgb1) for rgb1 in self.fcolors ]
+        self._colorbytes = None
         
     def _255(self, *vals):
         return map(lambda x:int(round(x*255)), vals)
@@ -16,11 +35,21 @@ class Palette:
     def _1(self, *vals):
         return map(lambda x:x/255.0, vals)
     
+    def color_bytes(self):
+        """ Compute a string of RGB bytes for use in the engine.
+        """
+        if not self._colorbytes:
+            colbytes = "".join([ chr(r)+chr(g)+chr(b) for r,g,b in self.colors ])
+            self._colorbytes = colbytes
+        return self._colorbytes
+
     def rgb_colors(self, colors):
         """ Use an explicit list of RGB colors as the palette.
         """
         self.colors = colors[:]
-        self.spec.append(['rgb_colors', {'colors':colors}])
+        self.fcolors = [ self._1(*rgb255) for rgb255 in self.colors ]
+        self._colorbytes = None
+        self._spec.append(['rgb_colors', {'colors':colors}])
         return self
 
     def spectrum(self, ncolors, h=(0,360), l=(50,200), s=150):
@@ -35,16 +64,17 @@ class Palette:
         llo, lhi = l
         slo, shi = s
         
-        colors = []
+        fcolors = []
         for pt in range(ncolors//2):
             hfrac = (pt*1.0/(ncolors/2))
             hue = hlo + (hhi-hlo)*hfrac
-            colors.append(self._255(*colorsys.hls_to_rgb(hue/360.0, llo/255.0, slo/255.0)))
+            fcolors.append(colorsys.hls_to_rgb(hue/360.0, llo/255.0, slo/255.0))
 
             hfrac = (pt*1.0+0.5)/(ncolors/2)
             hue = hlo + (hhi-hlo)*hfrac
-            colors.append(self._255(*colorsys.hls_to_rgb(hue/360.0, lhi/255.0, shi/255.0)))
-        self.colors = colors
+            fcolors.append(colorsys.hls_to_rgb(hue/360.0, lhi/255.0, shi/255.0))
+        self.fcolors = fcolors
+        self._colors_from_fcolors()
         
         args = {'ncolors':ncolors}
         if h != (0,360):
@@ -62,21 +92,21 @@ class Palette:
                 args['s'] = slo
             else:
                 args['s'] = s
-        self.spec.append(['spectrum', args])
+        self._spec.append(['spectrum', args])
         return self
     
     def stretch(self, steps, hsl=False):
         """ Interpolate between colors in the palette, stretching it out.
             Works in either RGB or HSL space.
         """
-        colors = [None]*(len(self.colors)*steps)
-        for i in range(len(colors)):
+        fcolors = [None]*(len(self.fcolors)*steps)
+        for i in range(len(fcolors)):
             color_index = i//steps
-            a0, b0, c0 = self.colors[color_index]
-            a1, b1, c1 = self.colors[(color_index + 1) % len(self.colors)]
+            a0, b0, c0 = self.fcolors[color_index]
+            a1, b1, c1 = self.fcolors[(color_index + 1) % len(self.fcolors)]
             if hsl:
-                a0, b0, c0 = colorsys.rgb_to_hls(*self._1(a0, b0, c0))
-                a1, b1, c1 = colorsys.rgb_to_hls(*self._1(a1, b1, c1))
+                a0, b0, c0 = colorsys.rgb_to_hls(a0, b0, c0)
+                a1, b1, c1 = colorsys.rgb_to_hls(a1, b1, c1)
                 if a1 < a0 and a0-a1 > 0.01:
                     a1 += 1
             step = float(i % steps)/steps
@@ -86,17 +116,31 @@ class Palette:
                 c0 + (c1 - c0) * step,
                 )
             if hsl:
-                ax, bx, cx = self._255(*colorsys.hls_to_rgb(ax, bx, cx))
-            colors[i] = map(lambda x:int(round(x)), (ax, bx,cx))
-        self.colors = colors
-        self.spec.append(['stretch', {'steps':steps, 'hsl':hsl}])
+                ax, bx, cx = colorsys.hls_to_rgb(ax, bx, cx)
+            fcolors[i] = (ax, bx, cx)
+        self.fcolors = fcolors
+        self._colors_from_fcolors()
+        self._spec.append(['stretch', {'steps':steps, 'hsl':hsl}])
         return self
     
+    def adjust_hue(self, hue_delta):
+        """ Adjust the hue of the whole palette. hue_delta is 0-360.
+        """
+        hue_delta /= 360.0
+        fcolors = []
+        for r, g, b in self.fcolors:
+            h, l, s = colorsys.rgb_to_hls(r, g, b)
+            h = (h + hue_delta) % 1.0
+            fcolors.append(colorsys.hls_to_rgb(h, l, s))
+        self.fcolors = fcolors
+        self._colors_from_fcolors()
+        return self
+            
     def rgb_incolor(self, color):
         """ Set the color for the interior of the Mandelbrot set.
         """
         self.incolor = color
-        self.spec.append(['rgb_incolor', {'color':color}])
+        self._spec.append(['rgb_incolor', {'color':color}])
         return self
 
     def gradient(self, ggr_file, ncolors):
@@ -106,10 +150,11 @@ class Palette:
         ggr = GimpGradient()
         try:
             ggr.read(ggr_file)
-            self.colors = [ self._255(*ggr.color(float(c)/ncolors)) for c in range(ncolors) ]
+            self.fcolors = [ ggr.color(float(c)/ncolors) for c in range(ncolors) ]
         except:
-            self.colors = [ (0,0,0), (255,0,0), (255,255,255) ]
-        self.spec.append(['gradient', {'ggr_file':ggr_file, 'ncolors':ncolors}])
+            self.fcolors = [ (0.0,0.0,0.0), (1.0,0.0,0.0), (1.0,1.0,1.0) ]
+        self._colors_from_fcolors()
+        self._spec.append(['gradient', {'ggr_file':ggr_file, 'ncolors':ncolors}])
         return self
     
     def xaos(self):
@@ -149,10 +194,10 @@ class Palette:
         ]
 
         self.rgb_colors(xaos_colors)
-        del self.spec[-1]
+        del self._spec[-1]
         self.stretch(8)
-        del self.spec[-1]
-        self.spec.append(['xaos', {}])
+        del self._spec[-1]
+        self._spec.append(['xaos', {}])
         return self
     
     def from_spec(self, spec):
@@ -172,10 +217,10 @@ all_palettes = [
     Palette().rgb_colors([(255,255,255), (0,0,0), (0,0,0), (0,0,0)]),
     Palette().rgb_colors([(255,255,255)]),
     Palette().spectrum(2, h=120, l=(50,200), s=125).stretch(128, hsl=True),
-    #Palette().gradient(data_file('palettes/bluefly.ggr'), 20),
-    #Palette().gradient(data_file('palettes/ib18.ggr'), 20),
-    #Palette().gradient(data_file('palettes/redblue.ggr'), 20),
-    #Palette().gradient(data_file('palettes/DEM_screen.ggr'), 20),
+    #Palette().gradient(data_file('palettes/bluefly.ggr'), 50),
+    #Palette().gradient(data_file('palettes/ib18.ggr'), 50),
+    #Palette().gradient(data_file('palettes/redblue.ggr'), 50),
+    #Palette().gradient(data_file('palettes/DEM_screen.ggr'), 50),
     ]
 
 # A simple viewer to see the palettes.

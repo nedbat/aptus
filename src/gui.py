@@ -1,6 +1,6 @@
 """ Aptus GUI
     http://nedbatchelder.com/code/aptus
-    Copyright 2007, Ned Batchelder
+    Copyright 2007-2008, Ned Batchelder
 """
 
 from aptus import data_file, __version__
@@ -18,6 +18,7 @@ import os, os.path, re, sys, traceback, webbrowser, zlib
 import wx.lib.layoutf  as layoutf
 import wx.html 
 
+# A pre-set list of places to visit, with the j command.
 jumps = [
     ((-0.5,0.0), (3.0,3.0)),
     ((-1.8605294939875601,1.0475516319329809e-005), (2.288818359375e-005,2.288818359375e-005)),
@@ -270,13 +271,23 @@ class AptusView(wx.Frame, AptusApp):
                 self.cmd_change_palette(1)
             else:
                 self.cmd_cycle_palette(1)
+        elif keycode == ord('['):
+            delta = -10
+            if cmd:
+                delta = -1
+            self.cmd_tint_palette(delta)
+        elif keycode == ord(']'):
+            delta = 10
+            if cmd:
+                delta = 1
+            self.cmd_tint_palette(delta)
         elif keycode == ord(' '):
             self.panning = True
         elif keycode == ord('H'):
             self.cmd_help()
         elif keycode == ord('/') and shift:
             self.cmd_help()
-        elif 0:
+        elif 1:
             revmap = dict([(getattr(wx,n), n) for n in dir(wx) if n.startswith('WXK')])
             sym = revmap.get(keycode, "")
             if not sym:
@@ -444,6 +455,11 @@ class AptusView(wx.Frame, AptusApp):
         self.bitmap = None
         self.Refresh()
     
+    def cmd_tint_palette(self, delta):
+        self.palette.adjust_hue(delta)
+        self.bitmap = None
+        self.Refresh()
+        
     def cmd_help(self):
         dlg = HtmlDialog(self, help_html, "Aptus")
         dlg.ShowModal()
@@ -511,9 +527,10 @@ help_html = """\
 <b>h</b> or <b>?</b>: show this help.<br>
 <b>comma</b> or <b>period</b>: cycle the current palette one color.<br>
 <b>&lt;</b> or <b>&gt;</b>: switch to the next palette.<br>
+<b>[</b> or <b>]</b>: adjust the hue of the palette (+%(ctrl)s: just a little).<br>
 <b>space</b>: drag mode: click to drag the image to a new position.<br>
-<b>left-click</b>: zoom in (with %(ctrl)s: by just a little).<br>
-<b>right-click</b>: zoom out (with %(ctrl)s: by just a little).<br>
+<b>left-click</b>: zoom in (+%(ctrl)s: just a little).<br>
+<b>right-click</b>: zoom out (+%(ctrl)s: just a little).<br>
 <b>left-drag</b>: select a new rectangle to display.<br>
 <b>middle-drag</b>: drag the image to a new position.
 </blockquote>
