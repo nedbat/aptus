@@ -164,7 +164,7 @@ class Palette:
         """
         adj = self.adjusts
         adj['hue'] = (adj['hue'] + hue) % 360
-        adj['saturation'] += _clip(adj['saturation'] + saturation, -255, 255)
+        adj['saturation'] = _clip(adj['saturation'] + saturation, -255, 255)
         self._colors_from_fcolors()
         return self
             
