@@ -76,7 +76,7 @@ x Optimize boundary.py so we can use it for high iterations
     When cycling colors, display flashes. (wxWindow::IsDoubleBuffered)
 - Add an extra segment to non-cyclic ggr palettes.
 - Mirroring non-cyclic palettes.
-- Hue tweaking: [ and ] adjust the hue throughout the current palette.
++ Hue tweaking: [ and ] adjust the hue throughout the current palette.
 - Read other palette files:
     - .map (see Gnofract 4D)
     - .cs (see Gnofract 4D)
