@@ -207,11 +207,13 @@ compute_count(AptEngine * self, int xi, int yi)
     
     if (count > 0 && self->cont_levels != 1) {
         // three more iterations to reduce the error.
+        ITER2;      // we didn't finish the last one.
         ITER1; ITER2;
         ITER1; ITER2;
         ITER1; ITER2;
 
-        double delta = log(log(sqrt(z2.r + z2.i)))/log(self->bailout);
+        // The 2 here is the power of the iteration, not the bailout.
+        double delta = log(log(sqrt(z2.r + z2.i)))/log(2);
         double fcount = count + 3 - delta;
         count = fcount * self->cont_levels;
     }
@@ -552,21 +554,23 @@ apply_palette(AptEngine *self, PyObject *args)
         Py_CLEAR(pint);
     }
     
-    u1int blend[3];
-    
     // Walk the arrays
     int w = PyArray_DIM(counts, 0);
     int h = PyArray_DIM(counts, 1);
     int x, y;
     for (y = 0; y < h; y++) {
         for (x = 0; x < w; x++) {
+            // The count for this pixel.
             npy_uint32 c = *(npy_uint32 *)PyArray_GETPTR2(counts, x, y);
+            // The pointer to the pixels RGB bytes.
             npy_uint8 *ppix = (npy_uint8 *)PyArray_GETPTR3(pix, x, y, 0);
-            u1int * pcol;
             if (c > 0) {
+                // The pixel is outside the set, color it with the palette.
                 if (self->blend_colors == 1) {
+                    // Not blending colors, each count is a literal palette
+                    // index.
                     int cindex = (c + phase) % ncolors;
-                    pcol = colbytes + cindex*3;
+                    memcpy(ppix, (colbytes + cindex*3), 3);
                 }
                 else {
                     int cbase = c / self->blend_colors;
@@ -577,15 +581,14 @@ apply_palette(AptEngine *self, PyObject *args)
                     for (i = 0; i < 3; i++) {
                         float col1 = colbytes[c1index*3+i];
                         float col2 = colbytes[c2index*3+i];
-                        blend[i] = (int)(col1 + (col2-col1)*cfrac);
+                        ppix[i] = (int)(col1 + (col2-col1)*cfrac);
                     }
-                    pcol = blend;
                 }
             }
             else {
-                pcol = incolbytes;
+                // The pixel is in the set, color it with the incolor.
+                memcpy(ppix, incolbytes, 3);
             }
-            memcpy(ppix, pcol, 3);
         }
     }
 
