@@ -31,7 +31,7 @@ class AptusApp:
         self.diam = 3.0, 3.0
         self.size = 600, 600
         self.iter_limit = 999
-        self.bailout = 2.0
+        self.bailout = 0
         self.palette = None
         self.palette_phase = 0
         self.supersample = 1
@@ -41,7 +41,14 @@ class AptusApp:
     def create_mandel(self):
         size = self.size[0]*self.supersample, self.size[1]*self.supersample
         m = AptusMandelbrot(self.center, self.diam, size, self.iter_limit)
-        m.bailout = self.bailout
+        # If bailout was never specified, then default differently based on
+        # continuous or discrete coloring.
+        if self.bailout:
+            m.bailout = self.bailout
+        elif self.continuous:
+            m.bailout = 100.0
+        else:
+            m.bailout = 2.0
         if self.continuous:
             m.cont_levels = m.blend_colors = 256
         return m

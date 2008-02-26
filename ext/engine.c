@@ -62,7 +62,7 @@ AptEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         self->xyd.i = 0.001;
         self->xyd.r = 0.001;
         self->iter_limit = 999;
-        self->bailout = 2.1;
+        self->bailout = 2.0;
         self->check_for_cycles = 1;
         self->trace_boundary = 1;
         self->cont_levels = 1.0;
@@ -206,6 +206,8 @@ compute_count(AptEngine * self, int xi, int yi)
     }
     
     if (count > 0 && self->cont_levels != 1) {
+        // http://linas.org/art-gallery/escape/smooth.html
+
         // three more iterations to reduce the error.
         ITER2;      // we didn't finish the last one.
         ITER1; ITER2;
