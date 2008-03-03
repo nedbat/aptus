@@ -5,6 +5,7 @@ from aptus import __version__
 from aptus.importer import importer
 from aptus.options import AptusState
 from aptus.timeutil import duration, future
+from aptus.tinyjson import dumps
 
 # Import our extension engine.
 AptEngine = importer('AptEngine')
@@ -65,7 +66,7 @@ class AptusApp:
         info.add_text("Software", "Aptus %s" % __version__)
         info.add_text("Aptus State", aptst.write_string())
         if mandel:
-            info.add_text("Aptus Stats", repr(mandel.get_stats()))
+            info.add_text("Aptus Stats", dumps(mandel.get_stats()))
         im.save(fpath, 'PNG', pnginfo=info)
     
 class AptusMandelbrot(AptEngine):

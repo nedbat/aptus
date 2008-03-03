@@ -4,7 +4,7 @@
 import optparse, sys
 from aptus.palettes import Palette
 from aptus.importer import importer
-from aptus.safe_eval import safe_eval
+from aptus.tinyjson import JsonReader, JsonWriter
 
 Image = importer('Image')
 
@@ -90,13 +90,13 @@ class AptusState:
     simple_attrs = "center diam iter_limit palette_phase supersample continuous".split()
     
     def write_string(self):
-        lines = []
-        lines.append(self._write_item('Aptus state', 1))
+        d = {'Aptus State':1}
+
         for sa in self.simple_attrs:
-            lines.append(self._write_item(sa, getattr(self.target, sa)))
-        lines.append(self._write_item('size', list(self.target.size)))
-        lines.append(self._write_item('palette', self.target.palette.spec()))
-        return "{" + ",\n".join(lines) + "\n}\n"
+            d[sa] = getattr(self.target, sa)
+        d['size'] = list(self.target.size)
+        d['palette'] = self.target.palette.spec()
+        return JsonWriter().dumps_dict(d, comma=',\n', colon=': ', first_keys=['Aptus State'])
     
     def read(self, f):
         if isinstance(f, basestring):
@@ -104,28 +104,14 @@ class AptusState:
         return self.read_string(f.read())
     
     def read_string(self, s):
-        d = safe_eval(s)
+        d = JsonReader().loads(s)
         for sa in self.simple_attrs:
             if sa in d:
                 setattr(self.target, sa, d[sa])
         self.target.palette = Palette().from_spec(d['palette'])
         self.target.size = d['size']
         
-    def _write_item(self, k, v):
-        return '%s: %s' % (self._value(k), self._value(v))
 
-    def _value(self, v):
-        if isinstance(v, (bool, int, float)):
-            return repr(v).lower()
-        elif isinstance(v, (list, tuple)):
-            return "[" + ",".join([ self._value(e) for e in v ]) + "]"
-        elif isinstance(v, str):
-            return '"' + v.replace('"', '\\"') + '"'
-        elif isinstance(v, dict):
-            return "{" + ",".join([ self._value(k) + ':' + self._value(e) for k, e in v.items() ]) + "}"
-        else:
-            raise Exception("Don't know how to serialize: %r" % v)
-        
 class XaosState:
     """ The state of a Xaos rendering.
     """
