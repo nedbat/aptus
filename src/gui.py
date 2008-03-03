@@ -375,7 +375,7 @@ class AptusView(wx.Frame, AptusApp):
                 image = wx.ImageFromBitmap(self.bitmap)
                 im = Image.new('RGB', (image.GetWidth(), image.GetHeight()))
                 im.fromstring(image.GetData())
-                self.write_image(im, pth)
+                self.write_image(im, pth, mandel=self.m)
             elif typ == 'aptus':
                 aptst = AptusState(self)
                 aptst.write(pth)
@@ -403,7 +403,7 @@ class AptusView(wx.Frame, AptusApp):
                 pix = m.color_pixels(self.palette, self.palette_phase)
                 im = Image.fromarray(pix)
                 im = im.resize((w,h), Image.ANTIALIAS)
-                self.write_image(im, dlg.GetPath())
+                self.write_image(im, dlg.GetPath(), mandel=m)
 
     def cmd_set_iter_limit(self):
         dlg = wx.TextEntryDialog(

@@ -53,13 +53,19 @@ class AptusApp:
             m.cont_levels = m.blend_colors = 256
         return m
                 
-    def write_image(self, im, fpath):
+    def write_image(self, im, fpath, mandel=None):
+        """ Write the image `im` to the path `fpath`.  If `mandel` is not None,
+            it is the AptusMandelbrot from `create_mandel` that computed the
+            image.
+        """
         # PNG info mojo from: http://blog.modp.com/2007/08/python-pil-and-png-metadata-take-2.html
         from PIL import PngImagePlugin
         aptst = AptusState(self)
         info = PngImagePlugin.PngInfo()
         info.add_text("Software", "Aptus %s" % __version__)
         info.add_text("Aptus State", aptst.write_string())
+        if mandel:
+            info.add_text("Aptus Stats", repr(mandel.get_stats()))
         im.save(fpath, 'PNG', pnginfo=info)
     
 class AptusMandelbrot(AptEngine):
