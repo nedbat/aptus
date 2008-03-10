@@ -240,6 +240,7 @@ class Palette:
 all_palettes = [
     Palette().spectrum(12).stretch(10, hsl=True),
     Palette().spectrum(12, l=(50,150), s=150).stretch(25, hsl=True),
+    Palette().spectrum(64, l=125, s=175),
     Palette().spectrum(48, l=(100,150), s=175).stretch(5),
     Palette().spectrum(2, h=250, l=(100,150), s=175).stretch(10, hsl=True),
     Palette().spectrum(2, h=290, l=(75,175), s=(230,25)).stretch(10, hsl=True),
