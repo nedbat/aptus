@@ -285,6 +285,8 @@ class AptusView(wx.Frame, AptusApp):
             if shift:
                 kw = 'saturation'
             self.cmd_adjust_palette(**{kw:delta})
+        elif keycode == ord('0'):
+            self.cmd_reset_palette()
         elif keycode == ord(' '):
             self.panning = True
         elif keycode == ord('H'):
@@ -458,6 +460,13 @@ class AptusView(wx.Frame, AptusApp):
         self.palette.adjust(**kwargs)
         self.bitmap = None
         self.Refresh()
+
+    def cmd_reset_palette(self):
+        self.palette_phase = 0
+        self.palette_scale = 1.0
+        self.palette.reset()
+        self.bitmap = None
+        self.Refresh()
         
     def cmd_help(self):
         dlg = HtmlDialog(self, help_html, "Aptus")
@@ -466,7 +475,7 @@ class AptusView(wx.Frame, AptusApp):
 
 class HtmlDialog(wx.Dialog):
     def __init__(self, parent, html_text, caption,
-                 pos=wx.DefaultPosition, size=(500,300),
+                 pos=wx.DefaultPosition, size=(500,500),
                  style=wx.DEFAULT_DIALOG_STYLE):
         wx.Dialog.__init__(self, parent, -1, caption, pos, size, style)
         x, y = pos
@@ -496,12 +505,12 @@ class HtmlDialog(wx.Dialog):
 # The help text
 
 terms = {
-    'ctrl': 'Ctrl',
+    'ctrl': 'ctrl',
     'iconsrc': data_file('icon48.png'),
     'version': __version__,
     }
 if 'wxMac' in wx.PlatformInfo:
-    terms['ctrl'] = 'Cmd'
+    terms['ctrl'] = 'cmd'
     
 help_html = """\
 <table width='100%%'>
@@ -519,16 +528,18 @@ help_html = """\
 
 <blockquote>
 <b>b</b>: set the radius of the bailout circle.<br>
+<b>c</b>: toggle continuous coloring.<br>
+<b>h</b> or <b>?</b>: show this help.<br>
 <b>i</b>: set the limit on iterations.<br>
 <b>j</b>: jump among a few pre-determined locations.<br>
 <b>r</b>: redraw the current image.<br>
 <b>s</b>: save the current image or settings.<br>
-<b>h</b> or <b>?</b>: show this help.<br>
 <b>&lt;</b> or <b>&gt;</b>: switch to the next palette.<br>
 <b>comma</b> or <b>period</b>: cycle the current palette one color.<br>
 <b>semicolon</b> or <b>quote</b>: stretch the palette colors.<br>
 <b>[</b> or <b>]</b>: adjust the hue of the palette (+%(ctrl)s: just a little).<br>
 <b>{</b> or <b>}</b>: adjust the saturation of the palette (+%(ctrl)s: just a little).<br>
+<b>0</b> (zero): reset all palette adjustments.<br>
 <b>space</b>: drag mode: click to drag the image to a new position.<br>
 <b>left-click</b>: zoom in (+%(ctrl)s: just a little).<br>
 <b>right-click</b>: zoom out (+%(ctrl)s: just a little).<br>
