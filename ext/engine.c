@@ -5,12 +5,16 @@
 #include "structmember.h"
 
 // Type definitions.
+
+// A floating-point number.
 typedef double aptfloat;
 
+// A complex number.
 typedef struct {
     aptfloat i, r;
 } aptcomplex;
 
+// Specific-sized integers.
 typedef npy_uint8 u1int;
 typedef npy_uint32 u4int;
 typedef npy_uint64 u8int;
@@ -43,6 +47,8 @@ typedef struct {
     } stats;
 
 } AptEngine;
+
+// Class methods
 
 static void
 AptEngine_dealloc(AptEngine * self)
@@ -78,6 +84,8 @@ AptEngine_init(AptEngine *self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
+// xy0 property methods
+
 static PyObject *
 AptEngine_get_xy0(AptEngine *self, void *closure)
 {
@@ -98,6 +106,8 @@ AptEngine_set_xy0(AptEngine *self, PyObject *value, void *closure)
 
     return 0;
 }
+
+// xyd property methods
 
 static PyObject *
 AptEngine_get_xyd(AptEngine *self, void *closure)
@@ -122,27 +132,37 @@ AptEngine_set_xyd(AptEngine *self, PyObject *value, void *closure)
     return 0;
 }
 
-#define INITIAL_CYCLE_PERIOD 7
-#define CYCLE_TRIES 10
-
+// Are two floating point numbers equal?
 inline int
 fequal(AptEngine * self, aptfloat a, aptfloat b)
 {
     return fabs(a - b) < self->epsilon;
 }
 
+// compute_count: the heart of the Mandelbrot algorithm.
+//
+// Given an integer coordinate xi,yi, return the iteration count for that point
+// in the current array.
+
+#define INITIAL_CYCLE_PERIOD 7
+#define CYCLE_TRIES 10
+
 static int
 compute_count(AptEngine * self, int xi, int yi)
 {
     int count = 0;
+
+    // The complex point we're computing for.
     aptcomplex c;
     c.r = self->xy0.r + xi*self->xyd.r;
     c.i = self->xy0.i + yi*self->xyd.i;
 
+    // z is the value we're iterating, znew and z2 are intermediates.
     aptcomplex z = {0,0};
     aptcomplex znew;
     aptcomplex z2;
     
+    // Cycle checking bookkeeping variables.
     aptcomplex cycle_check = z;
 
     int cycle_period = INITIAL_CYCLE_PERIOD;
@@ -151,6 +171,8 @@ compute_count(AptEngine * self, int xi, int yi)
 
     aptfloat bail2 = self->bailout * self->bailout;
     
+    // Macros for the meat of the iterations, since we need to do them in a few
+    // places.
 #define ITER1                               \
     z2.r = z.r * z.r;                       \
     z2.i = z.i * z.i;
@@ -161,9 +183,11 @@ compute_count(AptEngine * self, int xi, int yi)
     z = znew;                               \
     self->stats.totaliter++;
 
+    // Loop over the iterations.
     while (count <= self->iter_limit) {
         ITER1;
         if (z2.r + z2.i > bail2) {
+            // The point has escaped the bailout.  Update the stats and bail out.
             if (count > self->stats.maxiter) {
                 self->stats.maxiter = count;
             }
@@ -178,13 +202,13 @@ compute_count(AptEngine * self, int xi, int yi)
         if (self->check_for_cycles) {
             // Check for cycles
             if (fequal(self, z.r, cycle_check.r) && fequal(self, z.i, cycle_check.i)) {
-                // We're in a cycle!
+                // We're in a cycle! Update stats, and end the iterations.
                 self->stats.totalcycles++;
                 if (count > self->stats.maxitercycle) {
                     self->stats.maxitercycle = count;
                 }
+                // A cycle means we're inside the set (count of 0).
                 count = 0;
-                //count = cycle_period;
                 break;
             }
             
@@ -200,11 +224,13 @@ compute_count(AptEngine * self, int xi, int yi)
         }
     }
 
+    // Counts above the iteration limit are colored as if they were in the set.
     if (count > self->iter_limit) {
         self->stats.maxedpoints++;
         count = 0;
     }
     
+    // Smooth coloring.
     if (count > 0 && self->cont_levels != 1) {
         // http://linas.org/art-gallery/escape/smooth.html
 
@@ -637,7 +663,7 @@ get_stats(AptEngine *self, PyObject *args)
         "computedpoints", self->stats.computedpoints,
         "boundaries", self->stats.boundaries,
         "boundariesfilled", self->stats.boundariesfilled
-        );        
+        );
 }
 
 // type_check
