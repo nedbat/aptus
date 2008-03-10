@@ -35,6 +35,7 @@ class AptusApp:
         self.bailout = 0
         self.palette = None
         self.palette_phase = 0
+        self.palette_scale = 1.0
         self.supersample = 1
         self.outfile = 'Aptus.png'
         self.continuous = False
@@ -53,7 +54,10 @@ class AptusApp:
         if self.continuous:
             m.cont_levels = m.blend_colors = 256
         return m
-                
+    
+    def color_mandel(self, m):
+        return m.color_pixels(self.palette, self.palette_phase, self.palette_scale)
+    
     def write_image(self, im, fpath, mandel=None):
         """ Write the image `im` to the path `fpath`.  If `mandel` is not None,
             it is the AptusMandelbrot from `create_mandel` that computed the
@@ -108,9 +112,9 @@ class AptusMandelbrot(AptEngine):
         self.progress.end()
         print self.get_stats()
 
-    def color_pixels(self, palette, phase):
+    def color_pixels(self, palette, phase, scale=1.0):
         pix = numpy.zeros((self.counts.shape[0], self.counts.shape[1], 3), dtype=numpy.uint8)
-        self.apply_palette(self.counts, palette.color_bytes(), phase, palette.incolor, pix)
+        self.apply_palette(self.counts, palette.color_bytes(), phase, scale, palette.incolor, pix)
         return pix
 
 class ConsoleProgressReporter:

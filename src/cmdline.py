@@ -20,7 +20,7 @@ class AptusCmdApp(AptusApp):
         
         m.progress = ConsoleProgressReporter()
         m.compute_pixels()
-        pix = m.color_pixels(self.palette, self.palette_phase)
+        pix = self.color_mandel(m)
         im = Image.fromarray(pix)
         if self.supersample > 1:
             print "Resampling image..."

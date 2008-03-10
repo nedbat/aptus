@@ -271,6 +271,10 @@ class AptusView(wx.Frame, AptusApp):
                 self.cmd_change_palette(1)
             else:
                 self.cmd_cycle_palette(1)
+        elif keycode == ord(';'):
+            self.cmd_scale_palette(1/1.1)
+        elif keycode == ord("'"):
+            self.cmd_scale_palette(1.1)
         elif keycode in [ord('['), ord(']')]:
             kw = 'hue'
             delta = 10
@@ -312,18 +316,7 @@ class AptusView(wx.Frame, AptusApp):
     def draw(self):
         self.m.progress = GuiProgressReporter()
         self.m.compute_pixels()
-        pix = self.m.color_pixels(self.palette, self.palette_phase)
-        pix2 = None
-        if 0:
-            set_check_cycles(0)
-            self.m.compute_pixels()
-            pix2 = self.m.color_pixels(self.palette, self.palette_phase)
-            set_check_cycles(1)
-        if pix2 is not None:
-            Image.fromarray(pix).save('one.png')
-            Image.fromarray(pix2).save('two.png')
-            wrong_count = numpy.sum(numpy.logical_not(numpy.equal(pix, pix2)))
-            print wrong_count
+        pix = self.color_mandel(self.m)
         bmp = wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix)
         return bmp
 
@@ -400,7 +393,7 @@ class AptusView(wx.Frame, AptusApp):
                 m = self.create_mandel((w*3, h*3))
                 m.progress = ConsoleProgressReporter()
                 m.compute_pixels()
-                pix = m.color_pixels(self.palette, self.palette_phase)
+                pix = self.color_mandel(m)
                 im = Image.fromarray(pix)
                 im = im.resize((w,h), Image.ANTIALIAS)
                 self.write_image(im, dlg.GetPath(), mandel=m)
@@ -447,11 +440,17 @@ class AptusView(wx.Frame, AptusApp):
         self.bitmap = None
         self.Refresh()
         
+    def cmd_scale_palette(self, factor):
+        self.palette_scale *= factor
+        self.bitmap = None
+        self.Refresh()
+        
     def cmd_change_palette(self, delta):
         self.palette_index += delta
         self.palette_index %= len(all_palettes)
         self.palette = all_palettes[self.palette_index]
         self.palette_phase = 0
+        self.palette_scale = 1.0
         self.bitmap = None
         self.Refresh()
     
@@ -525,8 +524,9 @@ help_html = """\
 <b>r</b>: redraw the current image.<br>
 <b>s</b>: save the current image or settings.<br>
 <b>h</b> or <b>?</b>: show this help.<br>
-<b>comma</b> or <b>period</b>: cycle the current palette one color.<br>
 <b>&lt;</b> or <b>&gt;</b>: switch to the next palette.<br>
+<b>comma</b> or <b>period</b>: cycle the current palette one color.<br>
+<b>semicolon</b> or <b>quote</b>: stretch the palette colors.<br>
 <b>[</b> or <b>]</b>: adjust the hue of the palette (+%(ctrl)s: just a little).<br>
 <b>{</b> or <b>}</b>: adjust the saturation of the palette (+%(ctrl)s: just a little).<br>
 <b>space</b>: drag mode: click to drag the image to a new position.<br>
