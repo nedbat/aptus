@@ -28,6 +28,7 @@ class AptusOptions:
         parser.add_option("-i", "--iterlimit", dest="iter_limit", help="set the limit on the iteration count")
         parser.add_option("-o", "--output", dest="outfile", help="set the output filename (aptuscmd.py only)")
         parser.add_option("--phase", dest="palette_phase", help="set the palette phase", metavar="PHASE")
+        parser.add_option("--pscale", dest="palette_scale", help="set the palette scale", metavar="SCALE")
         parser.add_option("-s", "--size", dest="size", help="set the pixel size of the image", metavar="WIDxHGT")
         parser.add_option("--super", dest="supersample", help="set the supersample rate (aptuscmd.py only)", metavar="S")
         
@@ -46,6 +47,8 @@ class AptusOptions:
             self.target.outfile = options.outfile
         if options.palette_phase:
             self.target.palette_phase = int(options.palette_phase)
+        if options.palette_scale:
+            self.target.palette_scale = float(options.palette_scale)
         if options.size:
             self.target.size = map(int, options.size.split('x'))
         if options.supersample:
@@ -96,7 +99,7 @@ class AptusState:
             f = open(f, 'wb')
         f.write(self.write_string())
     
-    simple_attrs = "center diam iter_limit palette_phase supersample continuous".split()
+    simple_attrs = "center diam iter_limit palette_phase palette_scale supersample continuous".split()
     
     def write_string(self):
         d = {'Aptus State':1}

@@ -557,12 +557,13 @@ apply_palette(AptEngine *self, PyObject *args)
     PyObject * incolor_obj;
     PyArrayObject *pix;
     int phase;
+    double scale;
     
     // Objects we get during the function.
     PyObject * pint = NULL;
     int ok = 0;
     
-    if (!PyArg_ParseTuple(args, "O!OiOO!", &PyArray_Type, &counts, &colbytes_obj, &phase, &incolor_obj, &PyArray_Type, &pix)) {
+    if (!PyArg_ParseTuple(args, "O!OidOO!", &PyArray_Type, &counts, &colbytes_obj, &phase, &scale, &incolor_obj, &PyArray_Type, &pix)) {
         goto done;
     }
     
@@ -601,9 +602,9 @@ apply_palette(AptEngine *self, PyObject *args)
                     memcpy(ppix, (colbytes + cindex*3), 3);
                 }
                 else {
-                    int cbase = c / self->blend_colors;
-                    float cfrac = c % self->blend_colors;
-                    cfrac /= self->blend_colors;
+                    double cf = c * scale / self->blend_colors;
+                    int cbase = cf;
+                    float cfrac = cf - cbase;
                     int c1index = (cbase + phase) % ncolors;
                     int c2index = (cbase + 1 + phase) % ncolors;
                     for (i = 0; i < 3; i++) {
