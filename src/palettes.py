@@ -167,7 +167,14 @@ class Palette:
         adj['saturation'] = _clip(adj['saturation'] + saturation, -255, 255)
         self._colors_from_fcolors()
         return self
-            
+
+    def reset(self):
+        """ Reset all palette adjustments.
+        """
+        self.adjusts = {'hue': 0, 'saturation': 0}
+        self._colors_from_fcolors()
+        return self
+
     def rgb_incolor(self, color):
         """ Set the color for the interior of the Mandelbrot set.
         """
