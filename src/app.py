@@ -74,17 +74,18 @@ class AptusApp:
         im.save(fpath, 'PNG', pnginfo=info)
     
 class AptusMandelbrot(AptEngine):
+    """ A Python wrapper around the C AptEngine class.
+    """
     def __init__(self, center, diam, size, iter_limit):
         self.size = size
         
-        pixsize = max(diam[0] / size[0], diam[1] / size[1])
-        diam = pixsize * size[0], pixsize * size[1]
+        self.pixsize = max(diam[0] / size[0], diam[1] / size[1])
+        diam = self.pixsize * size[0], self.pixsize * size[1]
         
         # The upper-left corner is computed from the center, minus the radii,
         # plus half a pixel, so that we're sampling the center of the pixel.
-        self.xy0 = (center[0] - diam[0]/2 + pixsize/2, center[1] - diam[1]/2 + pixsize/2)
-        self.xyd = (pixsize, pixsize)
-        #print "Coords: (%r,%r,%r,%r)" % (self.xcenter, self.ycenter, xdiam, ydiam)
+        self.xy0 = (center[0] - diam[0]/2 + self.pixsize/2, center[1] - diam[1]/2 + self.pixsize/2)
+        self.xydxdy = (self.pixsize, 0, 0, self.pixsize)
  
         self.iter_limit = iter_limit
         self.progress = NullProgressReporter()
@@ -98,12 +99,17 @@ class AptusMandelbrot(AptEngine):
         # The .5 adjustment is because the grid is aligned to the center of the
         # pixels, but we need to return the upper-left of the pixel so that other
         # math comes out right.
-        return self.xy0[0]+self.xyd[0]*(float(x)-.5), self.xy0[1]+self.xyd[1]*(float(y)-.5)
+        x = float(x) - 0.5
+        y = float(y) - 0.5
+        return (
+            self.xy0[0] + self.xydxdy[0]*x + self.xydxdy[2]*y,
+            self.xy0[1] + self.xydxdy[1]*x + self.xydxdy[3]*y
+            )
 
     def compute_pixels(self):
         if self.counts is not None:
             return
-        print "x, y %r step %r, iter_limit %r, size %r" % (self.xy0, self.xyd, self.iter_limit, self.size)
+        print "x, y %r step %r, iter_limit %r, size %r" % (self.xy0, self.pixsize, self.iter_limit, self.size)
 
         self.clear_stats()
         self.progress.begin()
