@@ -69,7 +69,7 @@ x Optimize boundary.py so we can use it for high iterations
 - Xaos palette options:
     + Palette shifting
     - Algorithmic palette
-- Rotation (simply store the pixel offsets as dx and dy computed from angle).
++ Rotation (simply store the pixel offsets as dx and dy computed from angle).
 + Continuous coloring (http://linas.org/art-gallery/escape/smooth.html)
 + A palette specification, so the complete specs for a pic can be stored.
 - Try to reduce flicker during palette changing (http://wiki.wxpython.org/index.cgi/DoubleBufferedDrawing)
