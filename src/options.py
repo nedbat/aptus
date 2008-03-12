@@ -23,6 +23,7 @@ class AptusOptions:
             usage="%prog [options] [parameterfile]",
             description=description
         )
+        parser.add_option("-a", "--angle", dest="rotation", help="set the angle of rotation")
         parser.add_option("-b", "--bailout", dest="bailout", help="set the radius of the escape circle")
         parser.add_option("-c", "--continuous", dest="continuous", help="use continuous coloring", action="store_true")
         parser.add_option("-i", "--iterlimit", dest="iter_limit", help="set the limit on the iteration count")
@@ -37,6 +38,8 @@ class AptusOptions:
         if len(args) > 0:
             self.opts_from_file(args[0])
 
+        if options.rotation:
+            self.target.rotation = float(options.rotation)
         if options.bailout:
             self.target.bailout = float(options.bailout)
         if options.continuous:
@@ -64,6 +67,7 @@ class AptusOptions:
             xaos.read(fname)
             self.target.center = xaos.center
             self.target.diam = xaos.diam
+            self.target.rotation = xaos.rotation
             self.target.iter_limit = xaos.maxiter
             self.target.palette = xaos.palette
             self.target.palette_phase = xaos.palette_phase
@@ -99,7 +103,7 @@ class AptusState:
             f = open(f, 'wb')
         f.write(self.write_string())
     
-    simple_attrs = "center diam iter_limit palette_phase palette_scale supersample continuous".split()
+    simple_attrs = "center diam rotation iter_limit palette_phase palette_scale supersample continuous".split()
     
     def write_string(self):
         d = {'Aptus State':1}
@@ -131,6 +135,7 @@ class XaosState:
         self.maxiter = 170
         self.center = -0.75, 0.0
         self.diam = 2.55, 2.55
+        self.rotation = 0.0
         self.palette_phase = 0
         self.palette = Palette().xaos()
         
@@ -152,6 +157,9 @@ class XaosState:
         
     def handle_shiftpalette(self, op, phase):
         self.palette_phase = int(phase)
+    
+    def handle_angle(self, op, angle):
+        self.rotation = self.read_float(angle)
         
     def read_float(self, fstr):
         # Xaos writes out floats with extra characters tacked on the end sometimes.

@@ -243,7 +243,9 @@ class AptusView(wx.Frame, AptusApp):
         shift = event.ShiftDown()
         cmd = event.CmdDown()
         keycode = event.KeyCode
-        if keycode == ord('S'):
+        if keycode == ord('A'):
+            self.cmd_set_angle()
+        elif keycode == ord('S'):
             if shift:
                 self.cmd_save_big()
             else:
@@ -427,6 +429,21 @@ class AptusView(wx.Frame, AptusApp):
                 self.cmd_redraw()
             except Exception, e:
                 self.message("Couldn't set bailout: %s" % e)
+
+        dlg.Destroy()
+        
+    def cmd_set_angle(self):
+        dlg = wx.TextEntryDialog(
+                self, 'Angle:',
+                'Set the angle of rotation', str(self.rotation)
+                )
+
+        if dlg.ShowModal() == wx.ID_OK:
+            try:
+                self.rotation = float(dlg.GetValue())
+                self.cmd_redraw()
+            except Exception, e:
+                self.message("Couldn't set angle: %s" % e)
 
         dlg.Destroy()
         

@@ -12,7 +12,7 @@ AptEngine = importer('AptEngine')
 
 numpy = importer('numpy')
 
-import os.path, time
+import math, os.path, time
 
 class NullProgressReporter:
     def begin(self):
@@ -31,6 +31,7 @@ class AptusApp:
         self.center = -0.5, 0.0
         self.diam = 3.0, 3.0
         self.size = 600, 600
+        self.rotation = 0.0
         self.iter_limit = 999
         self.bailout = 0
         self.palette = None
@@ -42,7 +43,7 @@ class AptusApp:
         
     def create_mandel(self):
         size = self.size[0]*self.supersample, self.size[1]*self.supersample
-        m = AptusMandelbrot(self.center, self.diam, size, self.iter_limit)
+        m = AptusMandelbrot(self.center, self.diam, size, self.rotation, self.iter_limit)
         # If bailout was never specified, then default differently based on
         # continuous or discrete coloring.
         if self.bailout:
@@ -76,16 +77,23 @@ class AptusApp:
 class AptusMandelbrot(AptEngine):
     """ A Python wrapper around the C AptEngine class.
     """
-    def __init__(self, center, diam, size, iter_limit):
+    def __init__(self, center, diam, size, rotation, iter_limit):
         self.size = size
+        self.rotation = rotation
         
         self.pixsize = max(diam[0] / size[0], diam[1] / size[1])
         diam = self.pixsize * size[0], self.pixsize * size[1]
         
+        dx = math.cos(math.radians(rotation)) * self.pixsize
+        dy = math.sin(math.radians(rotation)) * self.pixsize
+
         # The upper-left corner is computed from the center, minus the radii,
         # plus half a pixel, so that we're sampling the center of the pixel.
-        self.xy0 = (center[0] - diam[0]/2 + self.pixsize/2, center[1] - diam[1]/2 + self.pixsize/2)
-        self.xydxdy = (self.pixsize, 0, 0, self.pixsize)
+        self.xydxdy = (dx, dy, dy, -dx)
+        self.xy0 = (
+            center[0] - size[0]/2 * self.xydxdy[0] - size[1]/2 * self.xydxdy[2],
+            center[1] - size[0]/2 * self.xydxdy[1] - size[1]/2 * self.xydxdy[3]
+            )
  
         self.iter_limit = iter_limit
         self.progress = NullProgressReporter()
@@ -109,7 +117,7 @@ class AptusMandelbrot(AptEngine):
     def compute_pixels(self):
         if self.counts is not None:
             return
-        print "x, y %r step %r, iter_limit %r, size %r" % (self.xy0, self.pixsize, self.iter_limit, self.size)
+        print "x, y %r step %r, rotation %r, iter_limit %r, size %r" % (self.xy0, self.pixsize, self.rotation, self.iter_limit, self.size)
 
         self.clear_stats()
         self.progress.begin()
