@@ -24,7 +24,8 @@ typedef npy_uint64 u8int;
 typedef struct {
     PyObject_HEAD
     aptcomplex xy0;         // upper-left point (a pair of floats)
-    aptcomplex xyd;         // delta per pixel (a pair of floats)
+    aptcomplex xydx;        // delta per pixel in x direction (a pair of floats)
+    aptcomplex xydy;        // delta per pixel in y direction (a pair of floats)
     
     int iter_limit;         // limit on iteration count.
     aptfloat bailout;       // escape radius.
@@ -65,8 +66,10 @@ AptEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
     if (self != NULL) {
         self->xy0.i = 0.0;
         self->xy0.r = 0.0;
-        self->xyd.i = 0.001;
-        self->xyd.r = 0.001;
+        self->xydx.i = 0.0;
+        self->xydx.r = 0.001;
+        self->xydy.i = 0.001;
+        self->xydy.r = 0.0;
         self->iter_limit = 999;
         self->bailout = 2.0;
         self->check_for_cycles = 1;
@@ -107,27 +110,28 @@ AptEngine_set_xy0(AptEngine *self, PyObject *value, void *closure)
     return 0;
 }
 
-// xyd property methods
+// xydxdy property methods
 
 static PyObject *
-AptEngine_get_xyd(AptEngine *self, void *closure)
+AptEngine_get_xydxdy(AptEngine *self, void *closure)
 {
-    return Py_BuildValue("dd", self->xyd.r, self->xyd.i);
+    return Py_BuildValue("dddd", self->xydx.r, self->xydx.i, self->xydy.r, self->xydy.i);
 }
 
 static int
-AptEngine_set_xyd(AptEngine *self, PyObject *value, void *closure)
+AptEngine_set_xydxdy(AptEngine *self, PyObject *value, void *closure)
 {
     if (value == NULL) {
-        PyErr_SetString(PyExc_TypeError, "Cannot delete the xyd attribute");
+        PyErr_SetString(PyExc_TypeError, "Cannot delete the xydxdy attribute");
         return -1;
     }
   
-    if (!PyArg_ParseTuple(value, "dd", &self->xyd.r, &self->xyd.i)) {
+    if (!PyArg_ParseTuple(value, "dddd", &self->xydx.r, &self->xydx.i, &self->xydy.r, &self->xydy.i)) {
         return -1;
     }
 
-    self->epsilon = self->xyd.r/2;
+    // Make a crude estimate of an epsilon to use for cycle checking.
+    self->epsilon = (self->xydx.r+self->xydx.i)/2;
     
     return 0;
 }
@@ -154,8 +158,8 @@ compute_count(AptEngine * self, int xi, int yi)
 
     // The complex point we're computing for.
     aptcomplex c;
-    c.r = self->xy0.r + xi*self->xyd.r;
-    c.i = self->xy0.i + yi*self->xyd.i;
+    c.r = self->xy0.r + xi*self->xydx.r + yi*self->xydy.r;
+    c.i = self->xy0.i + xi*self->xydx.i + yi*self->xydy.i;
 
     // z is the value we're iterating, znew and z2 are intermediates.
     aptcomplex z = {0,0};
@@ -704,7 +708,7 @@ AptEngine_members[] = {
 static PyGetSetDef
 AptEngine_getsetters[] = {
     { "xy0", (getter)AptEngine_get_xy0, (setter)AptEngine_set_xy0, "Upper-left corner coordinates", NULL },
-    { "xyd", (getter)AptEngine_get_xyd, (setter)AptEngine_set_xyd, "Pixel offsets", NULL },
+    { "xydxdy", (getter)AptEngine_get_xydxdy, (setter)AptEngine_set_xydxdy, "Pixel offsets", NULL },
     { NULL }
 };
 
