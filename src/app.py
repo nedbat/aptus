@@ -31,7 +31,7 @@ class AptusApp:
         self.center = -0.5, 0.0
         self.diam = 3.0, 3.0
         self.size = 600, 600
-        self.rotation = 0.0
+        self.angle = 0.0
         self.iter_limit = 999
         self.bailout = 0
         self.palette = None
@@ -43,7 +43,7 @@ class AptusApp:
         
     def create_mandel(self):
         size = self.size[0]*self.supersample, self.size[1]*self.supersample
-        m = AptusMandelbrot(self.center, self.diam, size, self.rotation, self.iter_limit)
+        m = AptusMandelbrot(self.center, self.diam, size, self.angle, self.iter_limit)
         # If bailout was never specified, then default differently based on
         # continuous or discrete coloring.
         if self.bailout:
@@ -77,15 +77,15 @@ class AptusApp:
 class AptusMandelbrot(AptEngine):
     """ A Python wrapper around the C AptEngine class.
     """
-    def __init__(self, center, diam, size, rotation, iter_limit):
+    def __init__(self, center, diam, size, angle, iter_limit):
         self.size = size
-        self.rotation = rotation
+        self.angle = angle
         
         self.pixsize = max(diam[0] / size[0], diam[1] / size[1])
         diam = self.pixsize * size[0], self.pixsize * size[1]
         
-        dx = math.cos(math.radians(rotation)) * self.pixsize
-        dy = math.sin(math.radians(rotation)) * self.pixsize
+        dx = math.cos(math.radians(self.angle)) * self.pixsize
+        dy = math.sin(math.radians(self.angle)) * self.pixsize
 
         # The upper-left corner is computed from the center, minus the radii,
         # plus half a pixel, so that we're sampling the center of the pixel.
@@ -117,7 +117,7 @@ class AptusMandelbrot(AptEngine):
     def compute_pixels(self):
         if self.counts is not None:
             return
-        print "x, y %r step %r, rotation %r, iter_limit %r, size %r" % (self.xy0, self.pixsize, self.rotation, self.iter_limit, self.size)
+        print "x, y %r step %r, angle %r, iter_limit %r, size %r" % (self.xy0, self.pixsize, self.angle, self.iter_limit, self.size)
 
         self.clear_stats()
         self.progress.begin()

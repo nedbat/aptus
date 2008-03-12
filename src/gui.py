@@ -435,12 +435,12 @@ class AptusView(wx.Frame, AptusApp):
     def cmd_set_angle(self):
         dlg = wx.TextEntryDialog(
                 self, 'Angle:',
-                'Set the angle of rotation', str(self.rotation)
+                'Set the angle of rotation', str(self.angle)
                 )
 
         if dlg.ShowModal() == wx.ID_OK:
             try:
-                self.rotation = float(dlg.GetValue())
+                self.angle = float(dlg.GetValue())
                 self.cmd_redraw()
             except Exception, e:
                 self.message("Couldn't set angle: %s" % e)
