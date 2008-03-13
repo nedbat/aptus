@@ -91,8 +91,8 @@ class AptusMandelbrot(AptEngine):
         # plus half a pixel, so that we're sampling the center of the pixel.
         self.xydxdy = (dx, dy, dy, -dx)
         self.xy0 = (
-            center[0] - size[0]/2 * self.xydxdy[0] - size[1]/2 * self.xydxdy[2],
-            center[1] - size[0]/2 * self.xydxdy[1] - size[1]/2 * self.xydxdy[3]
+            center[0] - (size[0]/2 - 0.5) * self.xydxdy[0] - (size[1]/2 - 0.5) * self.xydxdy[2],
+            center[1] - (size[0]/2 - 0.5) * self.xydxdy[1] - (size[1]/2 - 0.5) * self.xydxdy[3]
             )
  
         self.iter_limit = iter_limit
