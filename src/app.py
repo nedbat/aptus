@@ -90,9 +90,11 @@ class AptusMandelbrot(AptEngine):
         # The upper-left corner is computed from the center, minus the radii,
         # plus half a pixel, so that we're sampling the center of the pixel.
         self.xydxdy = (dx, dy, dy, -dx)
+        halfsizew = size[0]/2.0 - 0.5
+        halfsizeh = size[1]/2.0 - 0.5
         self.xy0 = (
-            center[0] - (size[0]/2 - 0.5) * self.xydxdy[0] - (size[1]/2 - 0.5) * self.xydxdy[2],
-            center[1] - (size[0]/2 - 0.5) * self.xydxdy[1] - (size[1]/2 - 0.5) * self.xydxdy[3]
+            center[0] - halfsizew * self.xydxdy[0] - halfsizeh * self.xydxdy[2],
+            center[1] - halfsizew * self.xydxdy[1] - halfsizeh * self.xydxdy[3]
             )
  
         self.iter_limit = iter_limit
