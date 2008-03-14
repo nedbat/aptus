@@ -198,10 +198,11 @@ class AptusView(wx.Frame, AptusApp):
         mx, my = event.GetPosition()
         if self.rubberbanding:
             # Set a new view that encloses the rectangle.
-            ulx, uly = self.m.coords_from_pixel(*self.pt_down)
+            px, py = self.pt_down
+            ulx, uly = self.m.coords_from_pixel(px, py)
             lrx, lry = self.m.coords_from_pixel(mx, my)
             self.center = ((ulx+lrx)/2, (uly+lry)/2)
-            self.diam = (abs(ulx-lrx), abs(uly-lry))
+            self.diam = (abs(self.m.pixsize*(px-mx)), abs(self.m.pixsize*(py-my)))
             self.set_view()
         elif self.panning:
             self.finish_panning(mx, my)
