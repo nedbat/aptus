@@ -119,6 +119,8 @@ class AptusView(wx.Frame, AptusApp):
         self.pan_locked = False
 
     def finish_panning(self, mx, my):
+        if not self.pt_down:
+            return
         cx, cy = self.size[0]/2.0, self.size[1]/2.0
         cx -= mx - self.pt_down[0]
         cy -= my - self.pt_down[1]
