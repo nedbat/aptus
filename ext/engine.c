@@ -573,7 +573,7 @@ apply_palette(AptEngine *self, PyObject *args)
     
     // Unpack the palette a bit.
     u1int * colbytes;
-    int ncolbytes;
+    Py_ssize_t ncolbytes;
     if (PyString_AsStringAndSize(colbytes_obj, (char**)&colbytes, &ncolbytes) < 0) {
         goto done;
     }
