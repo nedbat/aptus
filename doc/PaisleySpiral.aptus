@@ -1,9 +1,10 @@
 {"Aptus state": 1,
-"center": [-1.6739383698999999,-5.0026959188999998e-006],
+"center": [-1.6739383698999999,5.0026959188999998e-006],
 "diam": [6.0990112716999998e-007,6.0990112716999998e-007],
 "iter_limit": 70000,
 "palette_phase": 29,
 "supersample": 1,
+"continuous": true,
 "size": [500,370],
 "palette": [["spectrum",{"ncolors":12}],["stretch",{"steps":10,"hsl":true}]]
 }
