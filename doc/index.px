@@ -3,6 +3,7 @@
 <section title='Aptus' order='70'/>
 <history>
 <what when='20071010T061700'>Created.</what>
+<what when='20080329T150400'>Update to 1.5.</what>
 </history>
 
 <p>Aptus is a Mandelbrot set viewer and renderer.  It is written in Python
@@ -30,8 +31,8 @@ Before installing Aptus, you'll need to install these prerequisite Python packag
 <p>Download the kit that's right for you.  Linux and Mac use the tar.gz, Windows
 users will probably be happier with the .exe:</p>
 
-<download path='code/aptus/Aptus-1.0.tar.gz' />
-<download path='code/aptus/Aptus-1.0.win32-py2.5.exe' />
+<download path='code/aptus/Aptus-1.5.tar.gz' />
+<download path='code/aptus/Aptus-1.5.win32-py2.5.exe' />
 
 <p>Install the kit with the usual command:</p>
 
@@ -81,15 +82,56 @@ for interactive exploration, and aptuscmd.py for high-quality rendering.
 
 Options:
   -h, --help            show this help message and exit
+  -a ANGLE, --angle=ANGLE
+                        set the angle of rotation
+  -b BAILOUT, --bailout=BAILOUT
+                        set the radius of the escape circle
+  -c, --continuous      use continuous coloring
   -i ITER_LIMIT, --iterlimit=ITER_LIMIT
                         set the limit on the iteration count
   -o OUTFILE, --output=OUTFILE
                         set the output filename (aptuscmd.py only)
   --phase=PHASE         set the palette phase
+  --pscale=SCALE        set the palette scale
   -s WIDxHGT, --size=WIDxHGT
                         set the pixel size of the image
   --super=S             set the supersample rate (aptuscmd.py only)
 </code>
+
+
+<h1>History</h1>
+
+<h2>Version 1.5, March 2008</h2>
+
+<ul>
+    <li>Continuous coloring.</li>
+
+    <li>Aribitrary rotation support.</li>
+
+    <li>Middle mouse button drags the image.</li>
+
+    <li>Palette tweaking:
+        <ul>
+        <li>Hue and saturation adjustments.</li>
+        <li>Scaling the palette to adjust distance between colors.</li>
+        </ul></li>
+    
+    <li>Statistics:
+        <ul>
+        <li>More statistics: boundaries traced, boundaries filled, and points computed.</li>
+        <li>Statistics are written into the final .PNG files.</li>
+        </ul></li>
+        
+    <li>Reads .xet files from <a href='http://hbar.servebeer.com/mandelbrot/coordinates.html'>servebeer.com</a>.</li>
+    
+    <li>Some old .aptus files recorded the y coordinate incorrectly,
+        and will now render upside-down: negate the y component of the center to fix this.</li>
+</ul>
+
+
+<h2>Version 1.0, October 2007</h2>
+
+<p>First version</p>
 
 
 <h1>More samples</h1>
