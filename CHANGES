@@ -1,0 +1,17 @@
+Aptus 2.0
+
+* Continuous coloring
+
+* Rotation support
+
+* Middle mouse button drags the image.
+
+* Palette tweaking:
+    * Hue and saturation adjustments.
+    * Scaling the palette to adjust distance between colors.
+    
+* More statistics: boundaries traced, boundaries filled, and points computed.
+
+* Statistics are written into the final .PNG files
+
+* Reads .xet files from http://hbar.servebeer.com/mandelbrot/coordinates.html
