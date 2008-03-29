@@ -1,7 +1,7 @@
 """ Aptus Mandelbrot set viewer and renderer.
 """
 
-__version__ = '1.1'
+__version__ = '2.0'
 
 import os.path
 
