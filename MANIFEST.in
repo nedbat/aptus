@@ -1,3 +1,4 @@
 recursive-include scripts *.py
 recursive-include src *.py
 recursive-include src *.png
+include CHANGES
