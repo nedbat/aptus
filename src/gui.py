@@ -277,14 +277,12 @@ class AptusView(wx.Frame, AptusApp):
             else:
                 self.cmd_cycle_palette(1)
         elif keycode == ord(';'):
-            self.cmd_scale_palette(1/1.1)
+            self.cmd_scale_palette(1/(1.01 if cmd else 1.1))
         elif keycode == ord("'"):
-            self.cmd_scale_palette(1.1)
+            self.cmd_scale_palette(1.01 if cmd else 1.1)
         elif keycode in [ord('['), ord(']')]:
             kw = 'hue'
-            delta = 10
-            if cmd:
-                delta = 1
+            delta = 1 if cmd else 10
             if keycode == ord('['):
                 delta = -delta
             if shift:
@@ -463,9 +461,10 @@ class AptusView(wx.Frame, AptusApp):
         self.Refresh()
         
     def cmd_scale_palette(self, factor):
-        self.palette_scale *= factor
-        self.bitmap = None
-        self.Refresh()
+        if self.continuous:
+            self.palette_scale *= factor
+            self.bitmap = None
+            self.Refresh()
         
     def cmd_change_palette(self, delta):
         self.palette_index += delta
@@ -555,8 +554,8 @@ help_html = """\
 <b>r</b>: redraw the current image.<br>
 <b>s</b>: save the current image or settings.<br>
 <b>&lt;</b> or <b>&gt;</b>: switch to the next palette.<br>
-<b>comma</b> or <b>period</b>: cycle the current palette one color.<br>
-<b>semicolon</b> or <b>quote</b>: stretch the palette colors.<br>
+<b>,</b> or <b>.</b>: cycle the current palette one color.<br>
+<b>;</b> or <b>'</b>: stretch the palette colors (+%(ctrl)s: just a little), if continuous.<br>
 <b>[</b> or <b>]</b>: adjust the hue of the palette (+%(ctrl)s: just a little).<br>
 <b>{</b> or <b>}</b>: adjust the saturation of the palette (+%(ctrl)s: just a little).<br>
 <b>0</b> (zero): reset all palette adjustments.<br>
