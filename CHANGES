@@ -1,13 +1,20 @@
+----------------------
 Aptus 1.51, March 2008
+----------------------
 
 * Painting didn't work at all on Mac or Linux!
 
+* Some keys didn't respond on Linux.
 
+* Shifting the palette into negative offsets caused incorrect jumps in colors.
+
+---------------------
 Aptus 1.5, March 2008
+---------------------
 
-* Continuous coloring
+* Continuous coloring.
 
-* Rotation support
+* Rotation support.
 
 * Middle mouse button drags the image.
 
@@ -17,6 +24,6 @@ Aptus 1.5, March 2008
     
 * More statistics: boundaries traced, boundaries filled, and points computed.
 
-* Statistics are written into the final .PNG files
+* Statistics are written into the final .PNG files.
 
 * Reads .xet files from http://hbar.servebeer.com/mandelbrot/coordinates.html
