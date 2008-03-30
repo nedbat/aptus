@@ -312,12 +312,12 @@ class AptusView(wx.Frame, AptusApp):
     def on_paint(self, event):
         if not self.bitmap:
             self.bitmap = self.draw()
-        if 1:
-            dc = wx.BufferedPaintDC(self.panel, self.bitmap)
-        else:
-            dc = wx.PaintDC(self.panel)
-            dc.DrawBitmap(self.bitmap, 0, 0, False)
- 
+        # Some doc somewhere said to use this to prevent flickering, but it
+        # didn't help, and made Mac and Linux be totally blank!
+        #   dc = wx.BufferedPaintDC(self.panel, self.bitmap)
+        dc = wx.PaintDC(self.panel)
+        dc.DrawBitmap(self.bitmap, 0, 0, False)
+
     def draw(self):
         self.m.progress = GuiProgressReporter()
         self.m.compute_pixels()
