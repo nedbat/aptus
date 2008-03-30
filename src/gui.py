@@ -266,12 +266,12 @@ class AptusView(wx.Frame, AptusApp):
             self.set_view()
         elif keycode == ord('R'):
             self.cmd_redraw()
-        elif keycode == ord(','):
+        elif keycode in [ord(','), ord('<')]:
             if shift:
                 self.cmd_change_palette(-1)
             else:
                 self.cmd_cycle_palette(-1)
-        elif keycode == ord('.'):
+        elif keycode in [ord('.'), ord('>')]:
             if shift:
                 self.cmd_change_palette(1)
             else:
