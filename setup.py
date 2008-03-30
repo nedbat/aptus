@@ -14,7 +14,7 @@ try:
 except:
     raise Exception("Need numpy, from http://numpy.scipy.org/")
 
-version = "1.5"
+version = "1.51"
 
 doclines = __doc__.split("\n")
 
