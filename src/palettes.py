@@ -43,7 +43,10 @@ class Palette:
         self.adjusts = {'hue': 0, 'saturation': 0}
 
         self._colors_from_fcolors()
-        
+    
+    def __len__(self):
+        return len(self.fcolors)
+    
     def _colors_from_fcolors(self):
         """ Set self.colors from self.fcolors, adjusting them for hue, etc,
             in the process.

@@ -457,6 +457,7 @@ class AptusView(wx.Frame, AptusApp):
         
     def cmd_cycle_palette(self, delta):
         self.palette_phase += delta
+        self.palette_phase %= len(self.palette)
         self.bitmap = None
         self.Refresh()
         
