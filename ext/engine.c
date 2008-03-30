@@ -588,15 +588,15 @@ apply_palette(AptEngine *self, PyObject *args)
     }
     
     // Walk the arrays
-    int w = PyArray_DIM(counts, 0);
-    int h = PyArray_DIM(counts, 1);
+    int h = PyArray_DIM(counts, 0);
+    int w = PyArray_DIM(counts, 1);
     int x, y;
     for (y = 0; y < h; y++) {
         for (x = 0; x < w; x++) {
             // The count for this pixel.
-            npy_uint32 c = *(npy_uint32 *)PyArray_GETPTR2(counts, x, y);
+            npy_uint32 c = *(npy_uint32 *)PyArray_GETPTR2(counts, y, x);
             // The pointer to the pixels RGB bytes.
-            npy_uint8 *ppix = (npy_uint8 *)PyArray_GETPTR3(pix, x, y, 0);
+            npy_uint8 *ppix = (npy_uint8 *)PyArray_GETPTR3(pix, y, x, 0);
             if (c > 0) {
                 // The pixel is outside the set, color it with the palette.
                 if (self->blend_colors == 1) {
