@@ -3,7 +3,6 @@
 from aptus.app import ConsoleProgressReporter, AptusApp
 from aptus.importer import importer
 from aptus.options import AptusOptions
-from aptus.palettes import all_palettes
 
 Image = importer('Image')
 

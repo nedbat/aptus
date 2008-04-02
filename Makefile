@@ -27,6 +27,9 @@ icon:
 	python scripts/aptuscmd.py etc/icon.aptus -s 31x31
 	python scripts/aptuscmd.py etc/icon.aptus -s 15x15
 
+lint:
+	python -x /Python25/Scripts/pylint.bat --rcfile=.pylintrc src
+	
 WEBHOME = c:/ned/web/stellated/pages/code/aptus
 
 %.png: %.aptus

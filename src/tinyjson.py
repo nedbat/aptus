@@ -10,66 +10,55 @@ class UnsafeSourceError(Exception):
         self.error = error
         self.descr = descr
         self.node = node
-        self.lineno = getattr(node,"lineno",None)
+        self.lineno = getattr(node, "lineno", 0)
+        Exception.__init__(self, str(self))
         
     def __repr__(self):
         return "Line %d.  %s: %s" % (self.lineno, self.error, self.descr)
+    
     __str__ = __repr__    
            
-class SafeEval(object):
+class SafeEvalWithErrors(object):
     
     def visit(self, node, **kw):
         cls = node.__class__
         meth = getattr(self, 'visit'+cls.__name__, self.default)
         return meth(node, **kw)
 
-    def default(self, node, **kw):
+    def default(self, node, **kw_unused):
+        raise UnsafeSourceError("Unsupported source construct", node.__class__, node)
+
+    def visitExpression(self, node, **kw):
         for child in node.getChildNodes():
             return self.visit(child, **kw)
-
-    visitExpression = default
     
-    def visitConst(self, node, **kw):
+    def visitConst(self, node, **kw_unused):
         return node.value
 
-    def visitDict(self, node, **kw):
+    def visitDict(self, node, **kw_unused):
         return dict([(self.visit(k),self.visit(v)) for k,v in node.items])
         
-    def visitTuple(self, node, **kw):
+    def visitTuple(self, node, **kw_unused):
         return tuple(self.visit(i) for i in node.nodes)
         
-    def visitList(self, node, **kw):
+    def visitList(self, node, **kw_unused):
         return [self.visit(i) for i in node.nodes]
 
-    def visitUnarySub(self, node, **kw):
+    def visitUnarySub(self, node, **kw_unused):
         return -self.visit(node.getChildNodes()[0])
     
-    def visitName(self, node, **kw):
+    def visitName(self, node, **kw_unused):
         names = { 'true':True, 'false':False }
         name = node.name.lower()
         if name in names:
             return names[name]
         raise UnsafeSourceError("Unknown name", node.name, node)
     
-class SafeEvalWithErrors(SafeEval):
 
-    def default(self, node, **kw):
-        raise Unsafe_Source_Error("Unsupported source construct",
-                                node.__class__,node)
-            
-    # Add more specific errors if desired
-            
-
-def safe_eval(source, fail_on_error=True):
-    walker = fail_on_error and SafeEvalWithErrors() or SafeEval()
-    try:
-        ast = compiler.parse(source,"eval")
-    except SyntaxError, err:
-        raise
-    try:
-        return walker.visit(ast)
-    except UnsafeSourceError, err:
-        raise
+def safe_eval(source):
+    walker = SafeEvalWithErrors()
+    ast = compiler.parse(source,"eval")
+    return walker.visit(ast)
 
 
 class JsonWriter:
@@ -89,13 +78,14 @@ class JsonWriter:
         else:
             raise Exception("Don't know how to serialize: %r" % v)
 
-    def dumps_dict(self, v, comma=",", colon=":", first_keys=[]):
+    def dumps_dict(self, v, comma=",", colon=":", first_keys=None):
         """ Dump a dictionary to a JSON string.
             `comma` and `colon` override the the separators in the dictionary.
             `first_keys` is a list of keys to write first.
         """
         keys = v.keys()
-        keys = [ fk for fk in first_keys if fk in keys ] + [ k for k in keys if k not in first_keys ]
+        if first_keys:
+            keys = [ fk for fk in first_keys if fk in keys ] + [ k for k in keys if k not in first_keys ]
         return "{" + comma.join([ self.dumps(k) + colon + self.dumps(v[k]) for k in keys ]) + "}"
 
 class JsonReader:

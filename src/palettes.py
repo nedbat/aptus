@@ -3,7 +3,7 @@
     Copyright 2007-2008, Ned Batchelder
 """
 
-from aptus import data_file
+#from aptus import data_file
 import colorsys
 
 # Pure data-munging functions
@@ -268,7 +268,7 @@ all_palettes = [
 
 # A simple viewer to see the palettes.
 if __name__ == '__main__':
-    import sys, wx
+    import wx
 
     class PalettesView(wx.Frame):
         def __init__(self, palettes):
@@ -279,15 +279,15 @@ if __name__ == '__main__':
             self.panel.Bind(wx.EVT_PAINT, self.on_paint)
             self.panel.Bind(wx.EVT_SIZE, self.on_size)
 
-        def on_paint(self, event):
+        def on_paint(self, event_unused):
             dc = wx.PaintDC(self.panel)
-            cw, ch = self.GetClientSize()
+            cw_unused, ch = self.GetClientSize()
             stripe_height = ch/len(self.palettes)
             for y, pal in enumerate(self.palettes):
                 self.paint_palette(dc, pal, y*stripe_height, stripe_height)
                 
         def paint_palette(self, dc, pal, y0, height):
-            cw, ch = self.GetClientSize()
+            cw, ch_unused = self.GetClientSize()
             ncolors = len(pal.colors)
             width = float(cw)/ncolors
             for c in range(0, ncolors):
@@ -295,7 +295,7 @@ if __name__ == '__main__':
                 dc.SetBrush(wx.Brush(wx.Colour(*pal.colors[c]), wx.SOLID))
                 dc.DrawRectangle(int(c*width), y0, int(width+1), height)
         
-        def on_size(self, event):
+        def on_size(self, event_unused):
             self.Refresh()
 
     app = wx.PySimpleApp()

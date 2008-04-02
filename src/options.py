@@ -1,7 +1,7 @@
 """ Options handling for Aptus.
 """
 
-import optparse, sys
+import optparse
 from aptus.palettes import Palette
 from aptus.importer import importer
 from aptus.tinyjson import JsonReader, JsonWriter
@@ -148,17 +148,17 @@ class XaosState:
                 if hasattr(self, 'handle_'+argv[0]):
                     getattr(self, 'handle_'+argv[0])(*argv)
                     
-    def handle_maxiter(self, op, maxiter):
+    def handle_maxiter(self, op_unused, maxiter):
         self.maxiter = int(maxiter)
         
-    def handle_view(self, op, cx, cy, rx, ry):
+    def handle_view(self, op_unused, cx, cy, rx, ry):
         self.center = self.read_float(cx), self.read_float(cy)
         self.diam = self.read_float(rx), self.read_float(ry)
         
-    def handle_shiftpalette(self, op, phase):
+    def handle_shiftpalette(self, op_unused, phase):
         self.palette_phase = int(phase)
     
-    def handle_angle(self, op, angle):
+    def handle_angle(self, op_unused, angle):
         self.angle = self.read_float(angle)
         
     def read_float(self, fstr):
@@ -174,6 +174,12 @@ class XaosState:
 class XetState:
     """ The state of a .xet file from http://hbar.servebeer.com/art/mandelbrot/index-1.html
     """
+    def __init__(self):
+        self.center = None
+        self.diam = None
+        self.iter_limit = None
+        self.size = None
+        
     def read(self, f):
         if isinstance(f, basestring):
             f = open(f)
