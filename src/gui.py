@@ -14,7 +14,7 @@ wx = importer('wx')
 numpy = importer('numpy')
 Image = importer('Image')
 
-import os, os.path, re, sys, traceback, webbrowser, zlib
+import os, os.path, sys, webbrowser
 import wx.lib.layoutf  as layoutf
 import wx.html 
 

@@ -64,14 +64,14 @@ class GimpGradient:
 
         # Find the correct interpolation factor.
         if seg.fn == 1:   # Curved
-            f = math.pow(pos, math.log(0.5) / math.log(mid));
+            f = math.pow(pos, math.log(0.5) / math.log(mid))
         elif seg.fn == 2:   # Sinusoidal
             f = (math.sin((-math.pi/2) + math.pi*f) + 1)/2
         elif seg.fn == 3:   # Spherical increasing
             f -= 1
             f = math.sqrt(1 - f*f)
         elif seg.fn == 4:   # Spherical decreasing
-            f = 1 - math.sqrt(1 - f*f);
+            f = 1 - math.sqrt(1 - f*f)
 
         # Interpolate the colors
         if seg.space == 0:

@@ -34,13 +34,13 @@ def duration(s):
     else:
         return "0s"
 
-def future(s):
+def future(secs):
     """ Make a nice string representation of a point in time in the future,
-        s seconds from now.
+        `secs` seconds from now.
     """
     now = time.time()
-    nowyr, nowmon, nowday, nowhr, nowmin, nowsec, _, _, _ = time.localtime(now)
-    thenyr, thenmon, thenday, thenhr, thenmin, thensec, _, _, _ = parts = time.localtime(now + s)
+    nowyr, nowmon, nowday, _, _, _, _, _, _ = time.localtime(now)
+    thenyr, thenmon, thenday, _, _, _, _, _, _ = parts = time.localtime(now + secs)
     
     fmt = " "   # An initial space to make the leading-zero thing work right.
     if (nowyr, nowmon, nowday) != (thenyr, thenmon, thenday):
