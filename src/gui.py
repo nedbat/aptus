@@ -43,6 +43,7 @@ class AptusView(wx.Frame, AptusApp):
         # Make the panel and bind events to it. 
         self.panel = wx.Panel(self, style=wx.NO_BORDER+wx.WANTS_CHARS)
         self.panel.Bind(wx.EVT_PAINT, self.on_paint)
+        self.panel.Bind(wx.EVT_ERASE_BACKGROUND, self.on_erase)
         self.panel.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
         self.panel.Bind(wx.EVT_MIDDLE_DOWN, self.on_middle_down)
         self.panel.Bind(wx.EVT_MOTION, self.on_motion)
@@ -176,12 +177,7 @@ class AptusView(wx.Frame, AptusApp):
                 # We've moved the image: redraw it.
                 self.pt_pan = (mx, my)
                 self.pan_locked = True
-                dc = wx.ClientDC(self.panel)
-                dc.SetBrush(wx.Brush(wx.Colour(128,128,128), wx.SOLID))
-                dc.SetPen(wx.Pen(wx.Colour(128,128,128), 1, wx.SOLID))
-                dc.DrawRectangle(0, 0, self.size[0], self.size[1])
-                dc.DrawBitmap(self.bitmap, self.pt_pan[0]-self.pt_down[0], self.pt_pan[1]-self.pt_down[1], False)
-                
+                self.panel.Refresh()
         else:
             if not self.rubberbanding:
                 # Start rubberbanding when we have a 10-pixel rectangle at least.
@@ -312,17 +308,33 @@ class AptusView(wx.Frame, AptusApp):
     def on_paint(self, event):
         if not self.bitmap:
             self.bitmap = self.draw()
-        # Some doc somewhere said to use this to prevent flickering, but it
-        # didn't help, and made Mac and Linux be totally blank!
-        #   dc = wx.BufferedPaintDC(self.panel, self.bitmap)
-        dc = wx.PaintDC(self.panel)
-        dc.DrawBitmap(self.bitmap, 0, 0, False)
+
+        if self.panning:
+            dc = wx.MemoryDC()
+            bmp = wx.EmptyBitmap(*self.size)
+            dc.SelectObject(bmp)
+            dc.SetBrush(wx.Brush(wx.Colour(128,128,128), wx.SOLID))
+            dc.SetPen(wx.Pen(wx.Colour(128,128,128), 1, wx.SOLID))
+            dc.DrawRectangle(0, 0, self.size[0], self.size[1])
+            dc.DrawBitmap(self.bitmap, self.pt_pan[0]-self.pt_down[0], self.pt_pan[1]-self.pt_down[1], False)
+            dc = wx.BufferedPaintDC(self.panel, bmp, wx.BUFFER_VIRTUAL_AREA)
+        else:
+            dc = wx.BufferedPaintDC(self.panel, self.bitmap, wx.BUFFER_VIRTUAL_AREA)
+        event.Skip()
+    
+    def on_erase(self, event):
+        # Windows needs this override of EVT_ERASE_BACKGROUND, otherwise it
+        # clears the window at every paint event.
+        pass
 
     def draw(self):
         self.m.progress = GuiProgressReporter()
         self.m.compute_pixels()
         pix = self.color_mandel(self.m)
-        bmp = wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix)
+        dc = wx.MemoryDC()
+        bmp = wx.EmptyBitmap(*self.size)
+        dc.SelectObject(bmp)
+        dc.DrawBitmap(wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix), 0,0, True)
         return bmp
 
     # Command handlers.
