@@ -317,9 +317,9 @@ class AptusView(wx.Frame, AptusApp):
             dc.SetPen(wx.Pen(wx.Colour(128,128,128), 1, wx.SOLID))
             dc.DrawRectangle(0, 0, self.size[0], self.size[1])
             dc.DrawBitmap(self.bitmap, self.pt_pan[0]-self.pt_down[0], self.pt_pan[1]-self.pt_down[1], False)
-            dc = wx.BufferedPaintDC(self.panel, bmp, wx.BUFFER_VIRTUAL_AREA)
+            wx.BufferedPaintDC(self.panel, bmp, wx.BUFFER_VIRTUAL_AREA)
         else:
-            dc = wx.BufferedPaintDC(self.panel, self.bitmap, wx.BUFFER_VIRTUAL_AREA)
+            wx.BufferedPaintDC(self.panel, self.bitmap, wx.BUFFER_VIRTUAL_AREA)
         event.Skip()
     
     def on_erase(self, event):
