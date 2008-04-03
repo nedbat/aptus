@@ -7,16 +7,16 @@ import compiler
 
 class UnsafeSourceError(Exception):
     def __init__(self, error, descr=None, node=None):
+        Exception.__init__(self)
         self.error = error
         self.descr = descr
         self.node = node
         self.lineno = getattr(node, "lineno", 0)
-        Exception.__init__(self, str(self))
         
     def __repr__(self):
         return "Line %d.  %s: %s" % (self.lineno, self.error, self.descr)
     
-    __str__ = __repr__    
+    __str__ = __repr__
            
 class SafeEvalWithErrors(object):
     
