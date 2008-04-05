@@ -18,6 +18,9 @@ import os, os.path, sys, webbrowser
 import wx.lib.layoutf  as layoutf
 import wx.html 
 
+# There are a few places we conditionalize on platform.
+is_mac = ('wxMac' in wx.PlatformInfo)
+
 # A pre-set list of places to visit, with the j command.
 jumps = [
     ((-0.5,0.0), (3.0,3.0)),
@@ -309,18 +312,22 @@ class AptusView(wx.Frame, AptusApp):
         if not self.bitmap:
             self.bitmap = self.draw()
 
-        if self.panning:
-            dc = wx.MemoryDC()
-            bmp = wx.EmptyBitmap(*self.size)
-            dc.SelectObject(bmp)
-            dc.SetBrush(wx.Brush(wx.Colour(128,128,128), wx.SOLID))
-            dc.SetPen(wx.Pen(wx.Colour(128,128,128), 1, wx.SOLID))
-            dc.DrawRectangle(0, 0, self.size[0], self.size[1])
-            dc.DrawBitmap(self.bitmap, self.pt_pan[0]-self.pt_down[0], self.pt_pan[1]-self.pt_down[1], False)
-            wx.BufferedPaintDC(self.panel, bmp, wx.BUFFER_VIRTUAL_AREA)
+        if is_mac:
+            if self.panning:
+                dc = wx.PaintDC(self.panel)
+                self.draw_panning(dc)
+            else:
+                dc = wx.PaintDC(self.panel)
+                dc.DrawBitmap(self.bitmap, 0, 0, False)
         else:
-            wx.BufferedPaintDC(self.panel, self.bitmap, wx.BUFFER_VIRTUAL_AREA)
-        event.Skip()
+            if self.panning:
+                dc = wx.MemoryDC()
+                bmp = wx.EmptyBitmap(*self.size)
+                dc.SelectObject(bmp)
+                self.draw_panning(dc)
+                wx.BufferedPaintDC(self.panel, bmp, wx.BUFFER_VIRTUAL_AREA)
+            else:
+                wx.BufferedPaintDC(self.panel, self.bitmap, wx.BUFFER_VIRTUAL_AREA)
     
     def on_erase(self, event):
         # Windows needs this override of EVT_ERASE_BACKGROUND, otherwise it
@@ -328,15 +335,21 @@ class AptusView(wx.Frame, AptusApp):
         pass
 
     def draw(self):
+        """ Return a bitmap with the image to display in the window.
+        """
         self.m.progress = GuiProgressReporter()
         self.m.compute_pixels()
         pix = self.color_mandel(self.m)
-        dc = wx.MemoryDC()
-        bmp = wx.EmptyBitmap(*self.size)
-        dc.SelectObject(bmp)
-        dc.DrawBitmap(wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix), 0,0, True)
-        return bmp
+        return wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix)
 
+    def draw_panning(self, dc):
+        """ Return a bitmap with the image to display while panning.
+        """
+        dc.SetBrush(wx.Brush(wx.Colour(128,128,128), wx.SOLID))
+        dc.SetPen(wx.Pen(wx.Colour(128,128,128), 1, wx.SOLID))
+        dc.DrawRectangle(0, 0, self.size[0], self.size[1])
+        dc.DrawBitmap(self.bitmap, self.pt_pan[0]-self.pt_down[0], self.pt_pan[1]-self.pt_down[1], False)
+        
     # Command handlers.
     
     def show_file_dialog(self, dlg):
@@ -541,7 +554,7 @@ terms = {
     'iconsrc': data_file('icon48.png'),
     'version': __version__,
     }
-if 'wxMac' in wx.PlatformInfo:
+if is_mac:
     terms['ctrl'] = 'cmd'
     
 help_html = """\
