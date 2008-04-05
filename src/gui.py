@@ -591,6 +591,8 @@ help_html = """\
 <b>left-drag</b>: select a new rectangle to display.<br>
 <b>middle-drag</b>: drag the image to a new position.
 </blockquote>
+
+<p>Thanks to Rob McMullen for the drawing code.</p>
 """ % terms
 
 def main(args):
