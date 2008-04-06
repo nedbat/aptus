@@ -5,6 +5,7 @@
 <what when='20071010T061700'>Created.</what>
 <what when='20080329T150400'>Update to 1.5.</what>
 <what when='20080330T150400'>Update to 1.51.</what>
+<what when='20080405T211600'>Update to 1.55.</what>
 </history>
 
 <p>Aptus is a Mandelbrot set viewer and renderer.  It is written in Python
