@@ -1,4 +1,11 @@
 ----------------------
+Aptus 1.55, April 2008
+----------------------
+
+* Painting is now flicker-free. Thanks, Rob McMullen.
+
+
+----------------------
 Aptus 1.51, March 2008
 ----------------------
 
@@ -7,6 +14,7 @@ Aptus 1.51, March 2008
 * Some keys didn't respond on Linux.
 
 * Shifting the palette into negative offsets caused incorrect jumps in colors.
+
 
 ---------------------
 Aptus 1.5, March 2008
