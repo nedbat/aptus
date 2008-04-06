@@ -520,7 +520,7 @@ class AptusView(wx.Frame, AptusApp):
 
 class HtmlDialog(wx.Dialog):
     def __init__(self, parent, html_text, caption,
-                 pos=wx.DefaultPosition, size=(500,500),
+                 pos=wx.DefaultPosition, size=(500,530),
                  style=wx.DEFAULT_DIALOG_STYLE):
         wx.Dialog.__init__(self, parent, -1, caption, pos, size, style)
         x, y = pos
@@ -592,7 +592,7 @@ help_html = """\
 <b>middle-drag</b>: drag the image to a new position.
 </blockquote>
 
-<p>Thanks to Rob McMullen for the drawing code.</p>
+<p>Thanks to Rob McMullen for help with the drawing code.</p>
 """ % terms
 
 def main(args):
