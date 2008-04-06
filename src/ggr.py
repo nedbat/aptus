@@ -113,9 +113,9 @@ if __name__ == '__main__':
             self.panel.Bind(wx.EVT_PAINT, self.on_paint)
             self.panel.Bind(wx.EVT_SIZE, self.on_size)
 
-        def on_paint(self, event):
+        def on_paint(self, event_unused):
             dc = wx.PaintDC(self.panel)
-            cw, ch = self.GetClientSize()
+            cw_unused, ch = self.GetClientSize()
             if self.chunks:
                 self.paint_some(dc, 0, 0, ch/2)
                 self.paint_some(dc, self.chunks, ch/2, ch)
@@ -123,7 +123,7 @@ if __name__ == '__main__':
                 self.paint_some(dc, 0, 0, ch)
                 
         def paint_some(self, dc, chunks, y0, y1):
-            cw, ch = self.GetClientSize()
+            cw, ch_unused = self.GetClientSize()
             chunkw = 1
             if chunks:
                 chunkw = (cw // chunks) or 1
@@ -133,7 +133,7 @@ if __name__ == '__main__':
                 dc.SetBrush(wx.Brush(wx.Colour(*c), wx.SOLID))
                 dc.DrawRectangle(x, y0, chunkw, y1-y0)
         
-        def on_size(self, event):
+        def on_size(self, event_unused):
             self.Refresh()
 
     app = wx.PySimpleApp()

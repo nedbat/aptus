@@ -227,15 +227,15 @@ class AptusView(wx.Frame, AptusApp):
         self.dilate_view(event.GetPosition(), scale)
         self.reset_mousing()
         
-    def on_leave_window(self, event):
+    def on_leave_window(self, event_unused):
         if self.rubberrect:
             self.xor_rectangle(self.rubberrect)
         self.reset_mousing()
         
-    def on_size(self, event):
+    def on_size(self, event_unused):
         self.check_size = True
         
-    def on_idle(self, event):
+    def on_idle(self, event_unused):
         self.set_cursor()
         if self.check_size and self.GetClientSize() != self.size:
             if self.GetClientSize() != (0,0):
@@ -308,7 +308,7 @@ class AptusView(wx.Frame, AptusApp):
             if not self.pan_locked:
                 self.panning = False
             
-    def on_paint(self, event):
+    def on_paint(self, event_unused):
         if not self.bitmap:
             self.bitmap = self.draw()
 
