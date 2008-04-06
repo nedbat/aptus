@@ -102,9 +102,16 @@ Options:
 
 <h1>History</h1>
 
+
+<h2>Version 1.55, April 2008</h2>
+
+<p>The display is now flicker-free.  Thanks, Rob McMullen.</p>
+
+
 <h2>Version 1.51, March 2008</h2>
 
 <p>Fixed a few bugs, including not drawing at all on Mac or Linux!</p>
+
 
 <h2>Version 1.5, March 2008</h2>
 
