@@ -31,6 +31,7 @@ lint:
 	python -x /Python25/Scripts/pylint.bat --rcfile=.pylintrc src
 	
 WEBHOME = c:/ned/web/stellated/pages/code/aptus
+LOCALHOME = c:/www/code/aptus
 
 %.png: %.aptus
 	python scripts/aptuscmd.py $< --super=3 -o $*.png -s 1000x740
@@ -51,3 +52,6 @@ publish_doc:
 	cp -v doc/*.px $(WEBHOME)
 
 publish: publish_samples publish_kit publish_doc
+
+local_kit: kit
+	cp -v dist/*.* $(LOCALHOME)
