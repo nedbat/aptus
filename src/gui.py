@@ -45,8 +45,9 @@ class AptusView(wx.Frame, AptusApp):
 
         # Make the panel and bind events to it. 
         self.panel = wx.Panel(self, style=wx.NO_BORDER+wx.WANTS_CHARS)
+        self.panel.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
+
         self.panel.Bind(wx.EVT_PAINT, self.on_paint)
-        self.panel.Bind(wx.EVT_ERASE_BACKGROUND, self.on_erase)
         self.panel.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
         self.panel.Bind(wx.EVT_MIDDLE_DOWN, self.on_middle_down)
         self.panel.Bind(wx.EVT_MOTION, self.on_motion)
@@ -311,29 +312,16 @@ class AptusView(wx.Frame, AptusApp):
     def on_paint(self, event_unused):
         if not self.bitmap:
             self.bitmap = self.draw()
-
-        if is_mac:
-            if self.panning:
-                dc = wx.PaintDC(self.panel)
-                self.draw_panning(dc)
-            else:
-                dc = wx.PaintDC(self.panel)
-                dc.DrawBitmap(self.bitmap, 0, 0, False)
+        
+        dc = wx.AutoBufferedPaintDC(self.panel)
+        if self.panning:
+            dc.SetBrush(wx.Brush(wx.Colour(128,128,128), wx.SOLID))
+            dc.SetPen(wx.Pen(wx.Colour(128,128,128), 1, wx.SOLID))
+            dc.DrawRectangle(0, 0, self.size[0], self.size[1])
+            dc.DrawBitmap(self.bitmap, self.pt_pan[0]-self.pt_down[0], self.pt_pan[1]-self.pt_down[1], False)
         else:
-            if self.panning:
-                dc = wx.MemoryDC()
-                bmp = wx.EmptyBitmap(*self.size)
-                dc.SelectObject(bmp)
-                self.draw_panning(dc)
-                wx.BufferedPaintDC(self.panel, bmp, wx.BUFFER_VIRTUAL_AREA)
-            else:
-                wx.BufferedPaintDC(self.panel, self.bitmap, wx.BUFFER_VIRTUAL_AREA)
-    
-    def on_erase(self, event):
-        # Windows needs this override of EVT_ERASE_BACKGROUND, otherwise it
-        # clears the window at every paint event.
-        pass
-
+            dc.DrawBitmap(self.bitmap, 0, 0, False)
+            
     def draw(self):
         """ Return a bitmap with the image to display in the window.
         """
@@ -342,14 +330,6 @@ class AptusView(wx.Frame, AptusApp):
         pix = self.color_mandel(self.m)
         return wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix)
 
-    def draw_panning(self, dc):
-        """ Return a bitmap with the image to display while panning.
-        """
-        dc.SetBrush(wx.Brush(wx.Colour(128,128,128), wx.SOLID))
-        dc.SetPen(wx.Pen(wx.Colour(128,128,128), 1, wx.SOLID))
-        dc.DrawRectangle(0, 0, self.size[0], self.size[1])
-        dc.DrawBitmap(self.bitmap, self.pt_pan[0]-self.pt_down[0], self.pt_pan[1]-self.pt_down[1], False)
-        
     # Command handlers.
     
     def show_file_dialog(self, dlg):
@@ -592,7 +572,7 @@ help_html = """\
 <b>middle-drag</b>: drag the image to a new position.
 </blockquote>
 
-<p>Thanks to Rob McMullen for help with the drawing code.</p>
+<p>Thanks to Rob McMullen and Paul Ollis for help with the drawing code.</p>
 """ % terms
 
 def main(args):
