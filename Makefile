@@ -19,9 +19,6 @@ kit: build
 	python setup.py sdist --formats=gztar
 	python setup.py bdist_wininst --bitmap etc/wininst.bmp
 
-doc:
-	python /Python25/Scripts/rst2html.py --template=etc/rst_template.txt --link-stylesheet README.txt README.html
-
 icon:
 	python scripts/aptuscmd.py etc/icon.aptus -s 47x47
 	python scripts/aptuscmd.py etc/icon.aptus -s 31x31
@@ -40,9 +37,9 @@ LOCALHOME = c:/www/code/aptus
 
 SAMPLE_PNGS := $(patsubst %.aptus,%.png,$(wildcard doc/*.aptus))
 
-samples: $(SAMPLE_PNGS)
+samples: $(SAMPLE_PNGS) build
 
-publish_samples: $(SAMPLE_PNGS)
+publish_samples: samples
 	cp -v doc/*.png $(WEBHOME)
 
 publish_kit: kit
@@ -51,7 +48,7 @@ publish_kit: kit
 publish_doc:
 	cp -v doc/*.px $(WEBHOME)
 
-publish: publish_samples publish_kit publish_doc
+publish: publish_kit publish_doc publish_samples
 
 local_kit: kit
 	cp -v dist/*.* $(LOCALHOME)

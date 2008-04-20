@@ -6,6 +6,7 @@
 <what when='20080329T150400'>Update to 1.5.</what>
 <what when='20080330T150400'>Update to 1.51.</what>
 <what when='20080405T211600'>Update to 1.55.</what>
+<what when='20080420T111000'>Update to 1.56.</what>
 </history>
 
 <p>Aptus is a Mandelbrot set viewer and renderer.  It is written in Python
@@ -33,8 +34,8 @@ Before installing Aptus, you'll need to install these prerequisite Python packag
 <p>Download the kit that's right for you.  Linux and Mac use the tar.gz, Windows
 users will probably be happier with the .exe:</p>
 
-<download path='code/aptus/Aptus-1.55.tar.gz' />
-<download path='code/aptus/Aptus-1.55.win32-py2.5.exe' />
+<download path='code/aptus/Aptus-1.56.tar.gz' />
+<download path='code/aptus/Aptus-1.56.win32-py2.5.exe' />
 
 <p>Install the kit with the usual command:</p>
 
@@ -102,6 +103,11 @@ Options:
 
 
 <h1>History</h1>
+
+
+<h2>Version 1.55, April 2008</h2>
+
+<p>More display improvements and simplifications.  Thanks, Paul Ollis.</p>
 
 
 <h2>Version 1.55, April 2008</h2>
