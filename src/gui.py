@@ -260,9 +260,17 @@ class AptusView(wx.Frame, AptusApp):
         elif keycode == ord('C'):
             self.cmd_toggle_continuous()
         elif keycode == ord('J'):
-            self.jump_index += 1
-            self.jump_index %= len(jumps)
-            self.center, self.diam = jumps[self.jump_index]
+            if shift:
+                if self.julia:
+                    pass
+                else:
+                    self.juliaxy = self.center
+                    self.center, self.diam = (-0.5,0.0), (3.0,3.0)
+                self.julia = not self.julia
+            else:
+                self.jump_index += 1
+                self.jump_index %= len(jumps)
+                self.center, self.diam = jumps[self.jump_index]
             self.set_view()
         elif keycode == ord('R'):
             self.cmd_redraw()

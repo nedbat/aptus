@@ -34,6 +34,8 @@ class AptusApp:
         self.angle = 0.0
         self.iter_limit = 999
         self.bailout = 0
+        self.julia = False
+        self.juliaxy = 0.0, 0.0
         self.palette = None
         self.palette_phase = 0
         self.palette_scale = 1.0
@@ -54,6 +56,10 @@ class AptusApp:
             m.bailout = 2.0
         if self.continuous:
             m.cont_levels = m.blend_colors = 256
+        m.julia = int(self.julia)
+        if self.julia:
+            m.juliaxy = self.juliaxy
+            m.trace_boundary = 0
         return m
     
     def color_mandel(self, m):

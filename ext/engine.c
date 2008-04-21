@@ -26,6 +26,7 @@ typedef struct {
     aptcomplex xy0;         // upper-left point (a pair of floats)
     aptcomplex xydx;        // delta per pixel in x direction (a pair of floats)
     aptcomplex xydy;        // delta per pixel in y direction (a pair of floats)
+    aptcomplex juliaxy;     // julia xy point.
     
     int iter_limit;         // limit on iteration count.
     aptfloat bailout;       // escape radius.
@@ -34,6 +35,7 @@ typedef struct {
     aptfloat cont_levels;   // the number of continuous levels to compute.
     int blend_colors;       // how many levels of color should we blend?
     int trace_boundary;     // should we use boundary tracing?
+    int julia;              // are we doing julia or mandelbrot?
     
     struct {
         int     maxiter;        // Max iteration that isn't in the set.
@@ -70,12 +72,15 @@ AptEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         self->xydx.r = 0.001;
         self->xydy.i = 0.001;
         self->xydy.r = 0.0;
+        self->juliaxy.i = 0.0;
+        self->juliaxy.r = 0.0;
         self->iter_limit = 999;
         self->bailout = 2.0;
         self->check_for_cycles = 1;
         self->trace_boundary = 1;
         self->cont_levels = 1.0;
         self->blend_colors = 1;
+        self->julia = 0;
     }
 
     return (PyObject *)self;
@@ -136,6 +141,29 @@ AptEngine_set_xydxdy(AptEngine *self, PyObject *value, void *closure)
     return 0;
 }
 
+// juliaxy property methods
+
+static PyObject *
+AptEngine_get_juliaxy(AptEngine *self, void* closure)
+{
+    return Py_BuildValue("dd", self->juliaxy.r, self->juliaxy.i);
+}
+
+static int
+AptEngine_set_juliaxy(AptEngine *self, PyObject *value, void *closure)
+{
+    if (value == NULL) {
+        PyErr_SetString(PyExc_TypeError, "Cannot delete the juliaxy attribute");
+        return -1;
+    }
+  
+    if (!PyArg_ParseTuple(value, "dd", &self->juliaxy.r, &self->juliaxy.i)) {
+        return -1;
+    }
+
+    return 0;
+}
+
 // Are two floating point numbers equal?
 inline int
 fequal(AptEngine * self, aptfloat a, aptfloat b)
@@ -158,13 +186,24 @@ compute_count(AptEngine * self, int xi, int yi)
 
     // The complex point we're computing for.
     aptcomplex c;
-    c.r = self->xy0.r + xi*self->xydx.r + yi*self->xydy.r;
-    c.i = self->xy0.i + xi*self->xydx.i + yi*self->xydy.i;
 
     // z is the value we're iterating, znew and z2 are intermediates.
-    aptcomplex z = {0,0};
+    aptcomplex z;
     aptcomplex znew;
     aptcomplex z2;
+
+    if (self->julia) {
+        c.r = self->juliaxy.r;
+        c.i = self->juliaxy.i;
+        z.r = self->xy0.r + xi*self->xydx.r + yi*self->xydy.r;
+        z.i = self->xy0.i + xi*self->xydx.i + yi*self->xydy.i;
+    }
+    else {
+        c.r = self->xy0.r + xi*self->xydx.r + yi*self->xydy.r;
+        c.i = self->xy0.i + xi*self->xydx.i + yi*self->xydy.i;
+        z.r = 0.0;
+        z.i = 0.0;
+    }
     
     // Cycle checking bookkeeping variables.
     aptcomplex cycle_check = z;
@@ -702,6 +741,7 @@ AptEngine_members[] = {
     { "cont_levels", T_DOUBLE, offsetof(AptEngine, cont_levels), 0, "Number of fractional levels to compute" },
     { "blend_colors", T_INT, offsetof(AptEngine, blend_colors), 0, "How many levels of color to blend" },
     { "trace_boundary", T_INT, offsetof(AptEngine, trace_boundary), 0, "Control whether boundaries are traced" },
+    { "julia", T_INT, offsetof(AptEngine, julia), 0, "Compute Julia set?" },
     { NULL }
 };
 
@@ -709,6 +749,7 @@ static PyGetSetDef
 AptEngine_getsetters[] = {
     { "xy0", (getter)AptEngine_get_xy0, (setter)AptEngine_set_xy0, "Upper-left corner coordinates", NULL },
     { "xydxdy", (getter)AptEngine_get_xydxdy, (setter)AptEngine_set_xydxdy, "Pixel offsets", NULL },
+    { "juliaxy", (getter)AptEngine_get_juliaxy, (setter)AptEngine_set_juliaxy, "Julia point", NULL },
     { NULL }
 };
 
@@ -719,7 +760,7 @@ AptEngine_methods[] = {
     { "apply_palette",      (PyCFunction) apply_palette,      METH_VARARGS, apply_palette_doc },
     { "clear_stats",        (PyCFunction) clear_stats,        METH_NOARGS,  clear_stats_doc },
     { "get_stats",          (PyCFunction) get_stats,          METH_VARARGS, get_stats_doc },
-    { NULL, NULL }
+    { NULL }
 };
 
 static PyTypeObject
