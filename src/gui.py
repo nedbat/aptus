@@ -262,10 +262,10 @@ class AptusView(wx.Frame, AptusApp):
         elif keycode == ord('J'):
             if shift:
                 if self.julia:
-                    pass
+                    self.center = self.juliaxy
                 else:
                     self.juliaxy = self.center
-                    self.center, self.diam = (-0.5,0.0), (3.0,3.0)
+                    self.center, self.diam = (0.0,0.0), (3.0,3.0)
                 self.julia = not self.julia
             else:
                 self.jump_index += 1
