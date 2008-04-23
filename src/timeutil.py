@@ -1,4 +1,4 @@
-""" Time utilities for Mand.
+""" Time utilities for Aptus.
 """
 
 import time
