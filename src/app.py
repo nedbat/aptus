@@ -15,13 +15,24 @@ numpy = importer('numpy')
 import math, time
 
 class NullProgressReporter:
+    """ Basic interface for reporting rendering progress.
+    """
+    
     def begin(self):
+        """ Called once at the beginning of a render.
+        """
         pass
     
-    def progress(self, frac_done):
+    def progress(self, frac_done, info=''):
+        """ Called repeatedly to report progress.  `frac_done` is a float between
+            zero and one indicating the fraction of work done.  `info` is a
+            string giving some information about what just got completed.
+        """
         pass
     
     def end(self):
+        """ Called once at the end of a render.
+        """
         pass
     
 class AptusApp:
@@ -140,6 +151,8 @@ class AptusMandelbrot(AptEngine):
         return pix
 
 class ConsoleProgressReporter:
+    """ A progress reporter that writes lines to the console every ten seconds.
+    """
     def begin(self):
         self.start = time.time()
         self.latest = self.start

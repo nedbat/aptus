@@ -113,7 +113,7 @@ class AptusView(wx.Frame, AptusApp):
         dlg.Destroy()
     
     def reset_mousing(self):
-        """ Set all the mousing variables to turn rubberbanding and panning off.
+        """ Set all the mousing variables to turn off rubberbanding and panning.
         """
         self.pt_down = None
         self.rubberbanding = False
@@ -538,12 +538,10 @@ class HtmlDialog(wx.Dialog):
 # The help text
 
 terms = {
-    'ctrl': 'ctrl',
+    'ctrl': 'cmd' if is_mac else 'ctrl',
     'iconsrc': data_file('icon48.png'),
     'version': __version__,
     }
-if is_mac:
-    terms['ctrl'] = 'cmd'
     
 help_html = """\
 <table width='100%%'>
