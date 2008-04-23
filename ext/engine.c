@@ -11,7 +11,7 @@ typedef double aptfloat;
 
 // A complex number.
 typedef struct {
-    aptfloat i, r;
+    aptfloat r, i;
 } aptcomplex;
 
 // Specific-sized integers.
@@ -66,14 +66,14 @@ AptEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     self = (AptEngine *)type->tp_alloc(type, 0);
     if (self != NULL) {
-        self->xy0.i = 0.0;
         self->xy0.r = 0.0;
-        self->xydx.i = 0.0;
+        self->xy0.i = 0.0;
         self->xydx.r = 0.001;
-        self->xydy.i = 0.001;
+        self->xydx.i = 0.0;
         self->xydy.r = 0.0;
-        self->juliaxy.i = 0.0;
+        self->xydy.i = 0.001;
         self->juliaxy.r = 0.0;
+        self->juliaxy.i = 0.0;
         self->iter_limit = 999;
         self->bailout = 2.0;
         self->check_for_cycles = 1;
