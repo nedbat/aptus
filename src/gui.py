@@ -42,7 +42,6 @@ class GuiProgressReporter(ConsoleProgressReporter):
 
 # Command ids
 id_set_angle = wx.NewId()
-id_save_big = wx.NewId()
 id_save = wx.NewId()
 id_set_iter_limit = wx.NewId()
 id_set_bailout = wx.NewId()
@@ -58,16 +57,16 @@ id_reset_palette = wx.NewId()
 id_help = wx.NewId()
 
 
-class AptusPanel(wx.Panel, AptusApp):
+class AptusPanel(wx.Panel):
     """ A panel capable of drawing a Mandelbrot.
     """
     def __init__(self, parent):
-        AptusApp.__init__(self)
         wx.Panel.__init__(self, parent, style=wx.NO_BORDER+wx.WANTS_CHARS)
-        
-        # Bind events
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
 
+        self.m = AptusApp()
+        
+        # Bind events
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
         self.Bind(wx.EVT_MIDDLE_DOWN, self.on_middle_down)
@@ -94,7 +93,7 @@ class AptusPanel(wx.Panel, AptusApp):
         self.Bind(wx.EVT_MENU, self.cmd_reset_palette, id=id_reset_palette)
                   
         # AptusApp default values        
-        self.palette = all_palettes[0]
+        self.m.palette = all_palettes[0]
         
         # Gui state values
         self.palette_index = 0
@@ -119,10 +118,10 @@ class AptusPanel(wx.Panel, AptusApp):
     def finish_panning(self, mx, my):
         if not self.pt_down:
             return
-        cx, cy = self.size[0]/2.0, self.size[1]/2.0
+        cx, cy = self.m.size[0]/2.0, self.m.size[1]/2.0
         cx -= mx - self.pt_down[0]
         cy -= my - self.pt_down[1]
-        self.center = self.m.coords_from_pixel(cx, cy)
+        self.m.center = self.m.coords_from_pixel(cx, cy)
         self.set_view()
         
     def xor_rectangle(self, rect):
@@ -211,8 +210,8 @@ class AptusPanel(wx.Panel, AptusApp):
             px, py = self.pt_down
             ulx, uly = self.m.coords_from_pixel(px, py)
             lrx, lry = self.m.coords_from_pixel(mx, my)
-            self.center = ((ulx+lrx)/2, (uly+lry)/2)
-            self.diam = (abs(self.m.pixsize*(px-mx)), abs(self.m.pixsize*(py-my)))
+            self.m.center = ((ulx+lrx)/2, (uly+lry)/2)
+            self.m.diam = (abs(self.m.pixsize*(px-mx)), abs(self.m.pixsize*(py-my)))
             self.set_view()
         elif self.panning:
             self.finish_panning(mx, my)
@@ -246,7 +245,7 @@ class AptusPanel(wx.Panel, AptusApp):
         
     def on_idle(self, event_unused):
         self.set_cursor()
-        if self.check_size and self.GetClientSize() != self.size:
+        if self.check_size and self.GetClientSize() != self.m.size:
             if self.GetClientSize() != (0,0):
                 self.set_view()
 
@@ -258,10 +257,7 @@ class AptusPanel(wx.Panel, AptusApp):
         if keycode == ord('A'):
             self.fire_command(id_set_angle)
         elif keycode == ord('S'):
-            if shift:
-                self.fire_command(id_save_big)
-            else:
-                self.fire_command(id_save)
+            self.fire_command(id_save)
         elif keycode == ord('I'):
             self.fire_command(id_set_iter_limit)
         elif keycode == ord('B'):
@@ -270,12 +266,12 @@ class AptusPanel(wx.Panel, AptusApp):
             self.fire_command(id_toggle_continuous)
         elif keycode == ord('J'):
             if shift:
-                if self.julia:
-                    self.center = self.juliaxy
+                if self.m.julia:
+                    self.m.center = self.m.juliaxy
                 else:
-                    self.juliaxy = self.center
-                    self.center, self.diam = (0.0,0.0), (3.0,3.0)
-                self.julia = not self.julia
+                    self.m.juliaxy = self.m.center
+                    self.m.center, self.m.diam = (0.0,0.0), (3.0,3.0)
+                self.m.julia = not self.m.julia
                 self.set_view()
             else:
                 self.fire_command(id_jump)
@@ -312,6 +308,7 @@ class AptusPanel(wx.Panel, AptusApp):
         elif keycode == ord('/') and shift:
             self.fire_command(id_help)
         elif 0:
+            # Debugging aid: find the symbol for the key we didn't handle.
             revmap = dict([(getattr(wx,n), n) for n in dir(wx) if n.startswith('WXK')])
             sym = revmap.get(keycode, "")
             if not sym:
@@ -332,7 +329,7 @@ class AptusPanel(wx.Panel, AptusApp):
         if self.panning:
             dc.SetBrush(wx.Brush(wx.Colour(128,128,128), wx.SOLID))
             dc.SetPen(wx.Pen(wx.Colour(128,128,128), 1, wx.SOLID))
-            dc.DrawRectangle(0, 0, self.size[0], self.size[1])
+            dc.DrawRectangle(0, 0, self.m.size[0], self.m.size[1])
             dc.DrawBitmap(self.bitmap, self.pt_pan[0]-self.pt_down[0], self.pt_pan[1]-self.pt_down[1], False)
         else:
             dc.DrawBitmap(self.bitmap, 0, 0, False)
@@ -344,14 +341,14 @@ class AptusPanel(wx.Panel, AptusApp):
         """
         self.m.progress = GuiProgressReporter()
         self.m.compute_pixels()
-        pix = self.color_mandel(self.m)
+        pix = self.m.color_mandel()
         return wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix)
 
     def set_view(self):
-        self.size = self.GetClientSize()
+        self.m.size = self.GetClientSize()
         self.bitmap = None
 
-        self.m = self.create_mandel()
+        self.m.create_mandel()
         self.check_size = False
         self.Refresh()
 
@@ -361,85 +358,85 @@ class AptusPanel(wx.Panel, AptusApp):
         """
         # Refuse to zoom out so that the whole escape circle is visible: it makes
         # boundary tracing erase the entire thing!
-        if self.diam[0] * scale >= 3.9:
+        if self.m.diam[0] * scale >= 3.9:
             return
-        cx = center[0] + (self.size[0]/2 - center[0]) * scale
-        cy = center[1] + (self.size[1]/2 - center[1]) * scale
-        self.center = self.m.coords_from_pixel(cx, cy)
-        self.diam = (self.diam[0]*scale, self.diam[1]*scale)
+        cx = center[0] + (self.m.size[0]/2 - center[0]) * scale
+        cy = center[1] + (self.m.size[1]/2 - center[1]) * scale
+        self.m.center = self.m.coords_from_pixel(cx, cy)
+        self.m.diam = (self.m.diam[0]*scale, self.m.diam[1]*scale)
         self.set_view()
         
     # Commands
     
-    def cmd_set_angle(self, event_dummy):
+    def cmd_set_angle(self, event_unused):
         dlg = wx.TextEntryDialog(
                 self.GetTopLevelParent(), 'Angle:',
-                'Set the angle of rotation', str(self.angle)
+                'Set the angle of rotation', str(self.m.angle)
                 )
 
         if dlg.ShowModal() == wx.ID_OK:
             try:
-                self.angle = float(dlg.GetValue())
+                self.m.angle = float(dlg.GetValue())
                 self.set_view()
             except ValueError, e:
                 self.message("Couldn't set angle: %s" % e)
 
         dlg.Destroy()
         
-    def cmd_set_iter_limit(self, event_dummy):
+    def cmd_set_iter_limit(self, event_unused):
         dlg = wx.TextEntryDialog(
                 self.GetTopLevelParent(), 'Iteration limit:',
-                'Set the iteration limit', str(self.iter_limit)
+                'Set the iteration limit', str(self.m.iter_limit)
                 )
 
         if dlg.ShowModal() == wx.ID_OK:
             try:
-                self.iter_limit = int(dlg.GetValue())
+                self.m.iter_limit = int(dlg.GetValue())
                 self.set_view()
             except ValueError, e:
                 self.message("Couldn't set iter_limit: %s" % e)
 
         dlg.Destroy()
         
-    def cmd_set_bailout(self, event_dummy):
+    def cmd_set_bailout(self, event_unused):
         dlg = wx.TextEntryDialog(
                 self.GetTopLevelParent(), 'Bailout:',
-                'Set the radius of the escape circle', str(self.bailout)
+                'Set the radius of the escape circle', str(self.m.bailout)
                 )
 
         if dlg.ShowModal() == wx.ID_OK:
             try:
-                self.bailout = float(dlg.GetValue())
+                self.m.bailout = float(dlg.GetValue())
                 self.set_view()
             except ValueError, e:
                 self.message("Couldn't set bailout: %s" % e)
 
         dlg.Destroy()
         
-    def cmd_toggle_continuous(self, event_dummy):
-        self.continuous = not self.continuous
+    def cmd_toggle_continuous(self, event_unused):
+        self.m.continuous = not self.m.continuous
         self.set_view()
 
-    def cmd_redraw(self, event_dummy):
+    def cmd_redraw(self, event_unused):
         self.set_view()
         
-    def cmd_jump(self, event_dummy):
+    def cmd_jump(self, event_unused):
         self.jump_index += 1
         self.jump_index %= len(jumps)
-        self.center, self.diam = jumps[self.jump_index]
+        self.m.center, self.m.diam = jumps[self.jump_index]
         self.set_view()
         
     def cmd_cycle_palette(self, event):
         delta = event.GetClientData()
-        self.palette_phase += delta
-        self.palette_phase %= len(self.palette)
+        self.m.palette_phase += delta
+        self.m.palette_phase %= len(self.m.palette)
         self.bitmap = None
         self.Refresh()
         
     def cmd_scale_palette(self, event):
         factor = event.GetClientData()
-        if self.continuous:
-            self.palette_scale *= factor
+        if self.m.continuous:
+            self.m.palette_scale *= factor
             self.bitmap = None
             self.Refresh()
         
@@ -447,25 +444,41 @@ class AptusPanel(wx.Panel, AptusApp):
         delta = event.GetClientData()
         self.palette_index += delta
         self.palette_index %= len(all_palettes)
-        self.palette = all_palettes[self.palette_index]
-        self.palette_phase = 0
-        self.palette_scale = 1.0
+        self.m.palette = all_palettes[self.palette_index]
+        self.m.palette_phase = 0
+        self.m.palette_scale = 1.0
         self.bitmap = None
         self.Refresh()
     
     def cmd_adjust_palette(self, event):
-        self.palette.adjust(**event.GetClientData())
+        self.m.palette.adjust(**event.GetClientData())
         self.bitmap = None
         self.Refresh()
 
-    def cmd_reset_palette(self, event_dummy):
-        self.palette_phase = 0
-        self.palette_scale = 1.0
-        self.palette.reset()
+    def cmd_reset_palette(self, event_unused):
+        self.m.palette_phase = 0
+        self.m.palette_scale = 1.0
+        self.m.palette.reset()
         self.bitmap = None
         self.Refresh()
         
+    # Output-writing methods
     
+    def write_png(self, pth):
+        """ Write the current image as a PNG to the path `pth`.
+        """
+        image = wx.ImageFromBitmap(self.bitmap)
+        im = Image.new('RGB', (image.GetWidth(), image.GetHeight()))
+        im.fromstring(image.GetData())
+        self.m.write_image(im, pth)
+
+    def write_aptus(self, pth):
+        """ Write the current Aptus state of the panel to the path `pth`.
+        """
+        aptst = AptusState(self.m)
+        aptst.write(pth)
+
+
 class AptusFrame(wx.Frame):
     def __init__(self):
         wx.Frame.__init__(self, None, -1, 'Aptus')
@@ -482,13 +495,11 @@ class AptusFrame(wx.Frame):
 
         # Bind commands
         self.Bind(wx.EVT_MENU, self.cmd_save, id=id_save)
-        self.Bind(wx.EVT_MENU, self.cmd_save_big, id=id_save_big)
         self.Bind(wx.EVT_MENU, self.cmd_help, id=id_help)
 
     def Show(self):
         # Override Show so we can set the view properly.
-        chromew, chromeh = 8, 28    # Windows- and theme-specific
-        self.SetSize((self.panel.size[0]+chromew, self.panel.size[1]+chromeh))
+        self.SetClientSize(self.panel.m.size)
         self.panel.set_view()
         wx.Frame.Show(self)
         self.panel.SetFocus()
@@ -528,7 +539,7 @@ class AptusFrame(wx.Frame):
         else:
             return None, None
         
-    def cmd_save(self, event_dummy):
+    def cmd_save(self, event_unused):
         wildcard = (
             "PNG image (*.png)|*.png|"     
             "Aptus state (*.aptus)|*.aptus|"
@@ -543,40 +554,13 @@ class AptusFrame(wx.Frame):
         typ, pth = self.show_file_dialog(dlg)
         if typ:
             if typ == 'png':
-                image = wx.ImageFromBitmap(self.bitmap)
-                im = Image.new('RGB', (image.GetWidth(), image.GetHeight()))
-                im.fromstring(image.GetData())
-                self.write_image(im, pth, mandel=self.m)
+                self.panel.write_png(pth)
             elif typ == 'aptus':
-                aptst = AptusState(self)
-                aptst.write(pth)
+                self.panel.write_aptus(pth)
             else:
                 self.message("Don't understand how to write file '%s'" % pth)
                 
-    def cmd_save_big(self, event_dummy):
-        wildcard = (
-            "PNG image (*.png)|*.png|"     
-            "All files (*.*)|*.*"
-            )
-
-        dlg = wx.FileDialog(
-            self, message="Save big image", defaultDir=os.getcwd(), 
-            defaultFile="", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard=wildcard, 
-            )
-
-        if dlg.ShowModal() == wx.ID_OK:
-            ext = dlg.GetFilename().split('.')[-1].lower()
-            if ext == 'png':
-                w, h = 1680, 1050
-                m = self.create_mandel((w*3, h*3))
-                m.progress = ConsoleProgressReporter()
-                m.compute_pixels()
-                pix = self.color_mandel(m)
-                im = Image.fromarray(pix)
-                im = im.resize((w,h), Image.ANTIALIAS)
-                self.write_image(im, dlg.GetPath(), mandel=m)
-
-    def cmd_help(self, event_dummy):
+    def cmd_help(self, event_unused):
         dlg = HtmlDialog(self, help_html, "Aptus")
         dlg.ShowModal()
 
@@ -655,17 +639,19 @@ help_html = """\
 <p>Thanks to Rob McMullen and Paul Ollis for help with the drawing code.</p>
 """ % terms
 
+class AptusGuiApp(wx.PySimpleApp):
+    def __init__(self, args):
+        wx.PySimpleApp.__init__(self)
+        f = AptusFrame()
+        opts = AptusOptions(f.panel.m)
+        opts.read_args(args)
+        f.panel.supersample = 1
+        f.Show()
+        
 def main(args):
     """ The main for the Aptus GUI.
     """
-    app = wx.PySimpleApp()
-    f = AptusFrame()
-
-    opts = AptusOptions(f)
-    opts.read_args(args)
-    f.supersample = 1    
-    f.Show()
-    app.MainLoop()
+    AptusGuiApp(args).MainLoop()
 
 if __name__ == '__main__':
     main(sys.argv[1:])
