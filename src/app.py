@@ -4,37 +4,16 @@
 from aptus import __version__
 from aptus.importer import importer
 from aptus.options import AptusState
-from aptus.timeutil import duration, future
 from aptus.tinyjson import dumps
+from aptus.progress import NullProgressReporter
 
 # Import our extension engine.
 AptEngine = importer('AptEngine')
 
 numpy = importer('numpy')
 
-import math, time
+import math
 
-class NullProgressReporter:
-    """ Basic interface for reporting rendering progress.
-    """
-    
-    def begin(self):
-        """ Called once at the beginning of a render.
-        """
-        pass
-    
-    def progress(self, frac_done, info=''):
-        """ Called repeatedly to report progress.  `frac_done` is a float between
-            zero and one indicating the fraction of work done.  `info` is a
-            string giving some information about what just got completed.
-        """
-        pass
-    
-    def end(self):
-        """ Called once at the end of a render.
-        """
-        pass
-    
 class AptusApp:
     """ A mixin class for any Aptus application.
     """
@@ -149,26 +128,3 @@ class AptusMandelbrot(AptEngine):
         pix = numpy.zeros((self.counts.shape[0], self.counts.shape[1], 3), dtype=numpy.uint8)
         self.apply_palette(self.counts, palette.color_bytes(), phase, scale, palette.incolor, pix)
         return pix
-
-class ConsoleProgressReporter:
-    """ A progress reporter that writes lines to the console every ten seconds.
-    """
-    def begin(self):
-        self.start = time.time()
-        self.latest = self.start
-
-    def progress(self, frac_done, info=''):
-        now = time.time()
-        if now - self.latest > 10:
-            so_far = int(now - self.start)
-            to_go = int(so_far / frac_done * (1-frac_done))
-            if info:
-                info = '  ' + info
-            print "%5.2f%%: %11s done, %11s to go, eta %10s%s" % (
-                frac_done*100, duration(so_far), duration(to_go), future(to_go), info
-                )
-            self.latest = now
-    
-    def end(self):
-        total = time.time() - self.start
-        print "Total: %s (%.2fs)" % (duration(total), total)
