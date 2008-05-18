@@ -4,7 +4,8 @@
 """
 
 from aptus import data_file, __version__
-from aptus.app import ConsoleProgressReporter, AptusApp
+from aptus.app import AptusApp
+from aptus.progress import ConsoleProgressReporter
 from aptus.importer import importer
 from aptus.options import AptusOptions, AptusState
 from aptus.palettes import all_palettes
