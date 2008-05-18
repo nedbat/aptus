@@ -18,6 +18,7 @@ class AptusApp:
     """ A mixin class for any Aptus application.
     """
     def __init__(self):
+        self.m = None
         self.center = -0.5, 0.0
         self.diam = 3.0, 3.0
         self.size = 600, 600
@@ -35,27 +36,33 @@ class AptusApp:
         
     def create_mandel(self):
         size = self.size[0]*self.supersample, self.size[1]*self.supersample
-        m = AptusMandelbrot(self.center, self.diam, size, self.angle, self.iter_limit)
+        self.m = AptusMandelbrot(self.center, self.diam, size, self.angle, self.iter_limit)
         # If bailout was never specified, then default differently based on
         # continuous or discrete coloring.
         if self.bailout:
-            m.bailout = self.bailout
+            self.m.bailout = self.bailout
         elif self.continuous:
-            m.bailout = 100.0
+            self.m.bailout = 100.0
         else:
-            m.bailout = 2.0
+            self.m.bailout = 2.0
         if self.continuous:
-            m.cont_levels = m.blend_colors = 256
-        m.julia = int(self.julia)
+            self.m.cont_levels = self.m.blend_colors = 256
+        self.m.julia = int(self.julia)
         if self.julia:
-            m.juliaxy = self.juliaxy
-            m.trace_boundary = 0
-        return m
+            self.m.juliaxy = self.juliaxy
+            self.m.trace_boundary = 0
+        self.pixsize = self.m.pixsize
+
+    def color_mandel(self):
+        return self.m.color_pixels(self.palette, self.palette_phase, self.palette_scale)
     
-    def color_mandel(self, m):
-        return m.color_pixels(self.palette, self.palette_phase, self.palette_scale)
-    
-    def write_image(self, im, fpath, mandel=None):
+    def coords_from_pixel(self, x, y):
+        return self.m.coords_from_pixel(x, y)
+
+    def compute_pixels(self):
+        self.m.compute_pixels()
+
+    def write_image(self, im, fpath):
         """ Write the image `im` to the path `fpath`.  If `mandel` is not None,
             it is the AptusMandelbrot from `create_mandel` that computed the
             image.
@@ -66,12 +73,12 @@ class AptusApp:
         info = PngImagePlugin.PngInfo()
         info.add_text("Software", "Aptus %s" % __version__)
         info.add_text("Aptus State", aptst.write_string())
-        if mandel:
-            info.add_text("Aptus Stats", dumps(mandel.get_stats()))
+        if self.m:
+            info.add_text("Aptus Stats", dumps(self.m.get_stats()))
         im.save(fpath, 'PNG', pnginfo=info)
     
 class AptusMandelbrot(AptEngine):
-    """ A Python wrapper around the C AptEngine class.
+    """ A Python wrapper around the low-level C AptEngine class.
     """
     def __init__(self, center, diam, size, angle, iter_limit):
         self.size = size
@@ -115,7 +122,9 @@ class AptusMandelbrot(AptEngine):
     def compute_pixels(self):
         if self.counts is not None:
             return
-        print "x, y %r step %r, angle %r, iter_limit %r, size %r" % (self.xy0, self.pixsize, self.angle, self.iter_limit, self.size)
+        print "x, y %r step %r, angle %r, iter_limit %r, size %r" % (
+            self.xy0, self.pixsize, self.angle, self.iter_limit, self.size
+            )
 
         self.clear_stats()
         self.progress.begin()
