@@ -4,7 +4,7 @@
 """
 
 from aptus import data_file, __version__
-from aptus.app import AptusApp
+from aptus.app import AptusCompute
 from aptus.progress import ConsoleProgressReporter
 from aptus.importer import importer
 from aptus.options import AptusOptions, AptusState
@@ -64,7 +64,7 @@ class AptusPanel(wx.Panel):
         wx.Panel.__init__(self, parent, style=wx.NO_BORDER+wx.WANTS_CHARS)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
 
-        self.m = AptusApp()
+        self.m = AptusCompute()
         
         # Bind events
         self.Bind(wx.EVT_PAINT, self.on_paint)
@@ -92,7 +92,7 @@ class AptusPanel(wx.Panel):
         self.Bind(wx.EVT_MENU, self.cmd_adjust_palette, id=id_adjust_palette)
         self.Bind(wx.EVT_MENU, self.cmd_reset_palette, id=id_reset_palette)
                   
-        # AptusApp default values        
+        # AptusCompute default values        
         self.m.palette = all_palettes[0]
         
         # Gui state values
