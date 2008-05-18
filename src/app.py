@@ -1,4 +1,4 @@
-""" Fundamental application building blocks for Aptus.
+""" Mandelbrot computation.
 """
 
 from aptus import __version__
@@ -14,11 +14,11 @@ numpy = importer('numpy')
 
 import math
 
-class AptusApp:
-    """ A mixin class for any Aptus application.
+class AptusCompute:
+    """ The Mandelbrot compute class.  It wraps the AptEngine to provide pythonic
+        convenience.
     """
     def __init__(self):
-        self.m = None
         self.center = -0.5, 0.0
         self.diam = 3.0, 3.0
         self.size = 600, 600
@@ -35,76 +35,53 @@ class AptusApp:
         self.continuous = False
         
     def create_mandel(self):
-        size = self.size[0]*self.supersample, self.size[1]*self.supersample
-        self.m = AptusMandelbrot(self.center, self.diam, size, self.angle, self.iter_limit)
-        # If bailout was never specified, then default differently based on
-        # continuous or discrete coloring.
-        if self.bailout:
-            self.m.bailout = self.bailout
-        elif self.continuous:
-            self.m.bailout = 100.0
-        else:
-            self.m.bailout = 2.0
-        if self.continuous:
-            self.m.cont_levels = self.m.blend_colors = 256
-        self.m.julia = int(self.julia)
-        if self.julia:
-            self.m.juliaxy = self.juliaxy
-            self.m.trace_boundary = 0
-        self.pixsize = self.m.pixsize
-
-    def color_mandel(self):
-        return self.m.color_pixels(self.palette, self.palette_phase, self.palette_scale)
-    
-    def coords_from_pixel(self, x, y):
-        return self.m.coords_from_pixel(x, y)
-
-    def compute_pixels(self):
-        self.m.compute_pixels()
-
-    def write_image(self, im, fpath):
-        """ Write the image `im` to the path `fpath`.  If `mandel` is not None,
-            it is the AptusMandelbrot from `create_mandel` that computed the
-            image.
-        """
-        # PNG info mojo from: http://blog.modp.com/2007/08/python-pil-and-png-metadata-take-2.html
-        from PIL import PngImagePlugin
-        aptst = AptusState(self)
-        info = PngImagePlugin.PngInfo()
-        info.add_text("Software", "Aptus %s" % __version__)
-        info.add_text("Aptus State", aptst.write_string())
-        if self.m:
-            info.add_text("Aptus Stats", dumps(self.m.get_stats()))
-        im.save(fpath, 'PNG', pnginfo=info)
-    
-class AptusMandelbrot(AptEngine):
-    """ A Python wrapper around the low-level C AptEngine class.
-    """
-    def __init__(self, center, diam, size, angle, iter_limit):
-        self.size = size
-        self.angle = angle
+        self.eng = AptEngine()
         
-        self.pixsize = max(diam[0] / size[0], diam[1] / size[1])
-        diam = self.pixsize * size[0], self.pixsize * size[1]
+        # ssize is the dimensions of the sample array, in samples across and down.
+        self.ssize = self.size[0]*self.supersample, self.size[1]*self.supersample
         
-        dx = math.cos(math.radians(self.angle)) * self.pixsize
-        dy = math.sin(math.radians(self.angle)) * self.pixsize
+        # pixsize is the size of a single sample, in real units.
+        self.pixsize = max(self.diam[0] / self.ssize[0], self.diam[1] / self.ssize[1])
+        
+        rad = math.radians(self.angle)
+        dx = math.cos(rad) * self.pixsize
+        dy = math.sin(rad) * self.pixsize
 
         # The upper-left corner is computed from the center, minus the radii,
         # plus half a pixel, so that we're sampling the center of the pixel.
-        self.xydxdy = (dx, dy, dy, -dx)
-        halfsizew = size[0]/2.0 - 0.5
-        halfsizeh = size[1]/2.0 - 0.5
-        self.xy0 = (
-            center[0] - halfsizew * self.xydxdy[0] - halfsizeh * self.xydxdy[2],
-            center[1] - halfsizew * self.xydxdy[1] - halfsizeh * self.xydxdy[3]
+        self.eng.xydxdy = (dx, dy, dy, -dx)
+        halfsizew = self.ssize[0]/2.0 - 0.5
+        halfsizeh = self.ssize[1]/2.0 - 0.5
+        self.eng.xy0 = (
+            self.center[0] - halfsizew * self.eng.xydxdy[0] - halfsizeh * self.eng.xydxdy[2],
+            self.center[1] - halfsizew * self.eng.xydxdy[1] - halfsizeh * self.eng.xydxdy[3]
             )
  
-        self.iter_limit = iter_limit
+        self.eng.iter_limit = self.iter_limit
+        self.eng.trace_boundary = 1
         self.progress = NullProgressReporter()
         self.counts = None
-        self.trace_boundary = 1
-        
+
+        # If bailout was never specified, then default differently based on
+        # continuous or discrete coloring.
+        if self.bailout:
+            self.eng.bailout = self.bailout
+        elif self.continuous:
+            self.eng.bailout = 100.0
+        else:
+            self.eng.bailout = 2.0
+        if self.continuous:
+            self.eng.cont_levels = self.eng.blend_colors = 256
+        self.eng.julia = int(self.julia)
+        if self.julia:
+            self.eng.juliaxy = self.juliaxy
+            self.eng.trace_boundary = 0
+
+    def color_mandel(self):
+        pix = numpy.zeros((self.counts.shape[0], self.counts.shape[1], 3), dtype=numpy.uint8)
+        self.eng.apply_palette(self.counts, self.palette.color_bytes(), self.palette_phase, self.palette_scale, self.palette.incolor, pix)
+        return pix
+    
     def coords_from_pixel(self, x, y):
         """ Get the coords of a pixel in the grid. Note that x and y can be
             fractional.
@@ -115,25 +92,33 @@ class AptusMandelbrot(AptEngine):
         x = float(x) - 0.5
         y = float(y) - 0.5
         return (
-            self.xy0[0] + self.xydxdy[0]*x + self.xydxdy[2]*y,
-            self.xy0[1] + self.xydxdy[1]*x + self.xydxdy[3]*y
+            self.eng.xy0[0] + self.eng.xydxdy[0]*x + self.eng.xydxdy[2]*y,
+            self.eng.xy0[1] + self.eng.xydxdy[1]*x + self.eng.xydxdy[3]*y
             )
 
     def compute_pixels(self):
         if self.counts is not None:
             return
+
         print "x, y %r step %r, angle %r, iter_limit %r, size %r" % (
-            self.xy0, self.pixsize, self.angle, self.iter_limit, self.size
+            self.eng.xy0, self.pixsize, self.angle, self.eng.iter_limit, self.ssize
             )
 
-        self.clear_stats()
+        self.eng.clear_stats()
         self.progress.begin()
-        self.counts = numpy.zeros((self.size[1], self.size[0]), dtype=numpy.uint32)
-        self.mandelbrot_array(self.counts, self.progress.progress)
+        self.counts = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint32)
+        self.eng.mandelbrot_array(self.counts, self.progress.progress)
         self.progress.end()
-        print self.get_stats()
+        print self.eng.get_stats()
 
-    def color_pixels(self, palette, phase, scale=1.0):
-        pix = numpy.zeros((self.counts.shape[0], self.counts.shape[1], 3), dtype=numpy.uint8)
-        self.apply_palette(self.counts, palette.color_bytes(), phase, scale, palette.incolor, pix)
-        return pix
+    def write_image(self, im, fpath):
+        """ Write the image `im` to the path `fpath`.
+        """
+        # PNG info mojo from: http://blog.modp.com/2007/08/python-pil-and-png-metadata-take-2.html
+        from PIL import PngImagePlugin
+        aptst = AptusState(self)
+        info = PngImagePlugin.PngInfo()
+        info.add_text("Software", "Aptus %s" % __version__)
+        info.add_text("Aptus State", aptst.write_string())
+        info.add_text("Aptus Stats", dumps(self.eng.get_stats()))
+        im.save(fpath, 'PNG', pnginfo=info)
