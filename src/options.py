@@ -31,7 +31,8 @@ class AptusOptions:
         parser.add_option("--phase", dest="palette_phase", help="set the palette phase", metavar="PHASE")
         parser.add_option("--pscale", dest="palette_scale", help="set the palette scale", metavar="SCALE")
         parser.add_option("-s", "--size", dest="size", help="set the pixel size of the image", metavar="WIDxHGT")
-        parser.add_option("--super", dest="supersample", help="set the supersample rate (aptuscmd.py only)", metavar="S")
+        parser.add_option("--super", dest="supersample",
+                          help="set the supersample rate (aptuscmd.py only)", metavar="S")
         
         options, args = parser.parse_args(argv)
 

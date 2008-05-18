@@ -145,14 +145,14 @@ class AptusPanel(wx.Panel):
 
     # GUI helpers
     
-    def fire_command(self, id, data=None):
+    def fire_command(self, cmdid, data=None):
         # I'm not entirely sure about why this is the right event type to use,
         # but it works...
         evt = wx.CommandEvent(wx.wxEVT_COMMAND_TOOL_CLICKED)
-        evt.SetId(id)
+        evt.SetId(cmdid)
         evt.SetClientData(data)
         if not self.ProcessEvent(evt):
-            print "Whoa! Didn't handle %r" % id
+            print "Whoa! Didn't handle %r" % cmdid
         
     def message(self, msg):
         top = self.GetTopLevelParent()
