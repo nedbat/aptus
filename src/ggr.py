@@ -30,7 +30,7 @@ class GimpGradient:
         self.name = line.split(": ", 1)[1]
         nsegs = int(f.readline().strip())
         self.segs = []
-        for i in range(nsegs):
+        for dummy in range(nsegs):
             line = f.readline().strip()
             seg = self._segment()
             (seg.l, seg.m, seg.r,
@@ -45,8 +45,9 @@ class GimpGradient:
             [0..1).
         """
         # Find the segment.
-        for seg in self.segs:
-            if seg.l <= x <= seg.r:
+        for s in self.segs:
+            if s.l <= x <= s.r:
+                seg = s
                 break
         else:
             # No segment applies! Return black I guess.
@@ -96,7 +97,7 @@ class GimpGradient:
                 )
         return c
     
-if __name__ == '__main__':
+def test_it():
     import sys, wx
 
     class GgrView(wx.Frame):
@@ -144,3 +145,6 @@ if __name__ == '__main__':
     f = GgrView(ggr, chunks)
     f.Show()
     app.MainLoop()
+
+if __name__ == '__main__':
+    test_it()

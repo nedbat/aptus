@@ -46,7 +46,7 @@ def future(secs):
     if (nowyr, nowmon, nowday) != (thenyr, thenmon, thenday):
         # A different day: decide how to describe the other day.
         fmt += "%a"
-        if s > 6*24*60*60:
+        if secs > 6*24*60*60:
             # More than a week away: use a real date.
             fmt += ", %d %b"
             if nowyr != thenyr:
@@ -58,7 +58,7 @@ def future(secs):
     text = text.replace(" 0", " ")      # Trim the leading zeros.
     return text[1:]                     # Trim the initial space.
 
-if __name__ == '__main__':
+def test_it():
     import sys
     
     if len(sys.argv) > 1:
@@ -69,3 +69,6 @@ if __name__ == '__main__':
             for m in [1,2,5]:
                 s = m*10**p
                 print "%10d sec from now is %s" % (s, future(s))
+    
+if __name__ == '__main__':
+    test_it()

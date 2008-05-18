@@ -26,7 +26,8 @@ icon:
 
 lint:
 	python -x /Python25/Scripts/pylint.bat --rcfile=.pylintrc src
-	
+	python checkeol.py
+
 WEBHOME = c:/ned/web/stellated/pages/code/aptus
 LOCALHOME = c:/www/code/aptus
 
