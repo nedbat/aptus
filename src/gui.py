@@ -74,11 +74,6 @@ class AptusPanel(wx.Panel):
         # AptusCompute default values        
         self.m.palette = all_palettes[0]
         
-        # Gui state values
-        self.palette_index = 0
-        self.jump_index = 0
-        self.zoom = 2.0
-
     # GUI helpers
     
     def fire_command(self, cmdid, data=None):
@@ -183,6 +178,11 @@ class AptusViewPanel(AptusPanel):
         self.Bind(wx.EVT_MENU, self.cmd_reset_palette, id=id_reset_palette)
 
         self.reset_mousing()
+
+        # Gui state values
+        self.palette_index = 0      # The index of the currently displayed palette
+        self.jump_index = 0         # The index of the last jumped-to spot.
+        self.zoom = 2.0             # A constant zoom amt per click.
 
     # Input methods
     
