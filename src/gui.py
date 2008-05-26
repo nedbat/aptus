@@ -66,14 +66,14 @@ class AptusPanel(wx.Panel):
 
         self.m = AptusCompute()
         
+        # AptusCompute default values        
+        self.m.palette = all_palettes[0]
+
         # Bind events
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_IDLE, self.on_idle)
                   
-        # AptusCompute default values        
-        self.m.palette = all_palettes[0]
-        
     # GUI helpers
     
     def fire_command(self, cmdid, data=None):
@@ -106,8 +106,8 @@ class AptusPanel(wx.Panel):
         
         dc = wx.AutoBufferedPaintDC(self)
         if self.panning:
-            dc.SetBrush(wx.Brush(wx.Colour(128,128,128), wx.SOLID))
-            dc.SetPen(wx.Pen(wx.Colour(128,128,128), 1, wx.SOLID))
+            dc.SetBrush(wx.Brush(wx.Colour(224,224,128), wx.SOLID))
+            dc.SetPen(wx.Pen(wx.Colour(224,224,128), 1, wx.SOLID))
             dc.DrawRectangle(0, 0, self.m.size[0], self.m.size[1])
             dc.DrawBitmap(self.bitmap, self.pt_pan[0]-self.pt_down[0], self.pt_pan[1]-self.pt_down[1], False)
         else:
