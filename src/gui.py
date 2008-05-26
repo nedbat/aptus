@@ -68,6 +68,98 @@ class AptusPanel(wx.Panel):
         
         # Bind events
         self.Bind(wx.EVT_PAINT, self.on_paint)
+        self.Bind(wx.EVT_SIZE, self.on_size)
+        self.Bind(wx.EVT_IDLE, self.on_idle)
+                  
+        # AptusCompute default values        
+        self.m.palette = all_palettes[0]
+        
+        # Gui state values
+        self.palette_index = 0
+        self.jump_index = 0
+        self.zoom = 2.0
+
+    # GUI helpers
+    
+    def fire_command(self, cmdid, data=None):
+        # I'm not entirely sure about why this is the right event type to use,
+        # but it works...
+        evt = wx.CommandEvent(wx.wxEVT_COMMAND_TOOL_CLICKED)
+        evt.SetId(cmdid)
+        evt.SetClientData(data)
+        if not self.ProcessEvent(evt):
+            print "Whoa! Didn't handle %r" % cmdid
+        
+    def message(self, msg):
+        top = self.GetTopLevelParent()
+        top.message(msg)
+        
+    # Event handlers
+    
+    def on_size(self, event_unused):
+        self.check_size = True
+        
+    def on_idle(self, event_unused):
+        self.set_cursor()
+        if self.check_size and self.GetClientSize() != self.m.size:
+            if self.GetClientSize() != (0,0):
+                self.set_view()
+
+    def on_paint(self, event_unused):
+        if not self.bitmap:
+            self.bitmap = self.draw()
+        
+        dc = wx.AutoBufferedPaintDC(self)
+        if self.panning:
+            dc.SetBrush(wx.Brush(wx.Colour(128,128,128), wx.SOLID))
+            dc.SetPen(wx.Pen(wx.Colour(128,128,128), 1, wx.SOLID))
+            dc.DrawRectangle(0, 0, self.m.size[0], self.m.size[1])
+            dc.DrawBitmap(self.bitmap, self.pt_pan[0]-self.pt_down[0], self.pt_pan[1]-self.pt_down[1], False)
+        else:
+            dc.DrawBitmap(self.bitmap, 0, 0, False)
+
+    # Ouptut methods
+    
+    def draw(self):
+        """ Return a bitmap with the image to display in the window.
+        """
+        self.m.progress = GuiProgressReporter()
+        self.m.compute_pixels()
+        pix = self.m.color_mandel()
+        return wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix)
+
+    def set_view(self):
+        self.m.size = self.GetClientSize()
+        self.bitmap = None
+
+        self.m.create_mandel()
+        self.check_size = False
+        self.Refresh()
+
+    # Output-writing methods
+    
+    def write_png(self, pth):
+        """ Write the current image as a PNG to the path `pth`.
+        """
+        image = wx.ImageFromBitmap(self.bitmap)
+        im = Image.new('RGB', (image.GetWidth(), image.GetHeight()))
+        im.fromstring(image.GetData())
+        self.m.write_image(im, pth)
+
+    def write_aptus(self, pth):
+        """ Write the current Aptus state of the panel to the path `pth`.
+        """
+        aptst = AptusState(self.m)
+        aptst.write(pth)
+
+
+class AptusViewPanel(AptusPanel):
+    """ A panel implementing the primary Aptus view and controller.
+    """
+    def __init__(self, parent):
+        AptusPanel.__init__(self, parent)
+
+        # Bind input events.
         self.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
         self.Bind(wx.EVT_MIDDLE_DOWN, self.on_middle_down)
         self.Bind(wx.EVT_MOTION, self.on_motion)
@@ -75,8 +167,6 @@ class AptusPanel(wx.Panel):
         self.Bind(wx.EVT_MIDDLE_UP, self.on_middle_up)
         self.Bind(wx.EVT_RIGHT_UP, self.on_right_up)
         self.Bind(wx.EVT_LEAVE_WINDOW, self.on_leave_window)
-        self.Bind(wx.EVT_SIZE, self.on_size)
-        self.Bind(wx.EVT_IDLE, self.on_idle)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.Bind(wx.EVT_KEY_UP, self.on_key_up)
 
@@ -91,14 +181,6 @@ class AptusPanel(wx.Panel):
         self.Bind(wx.EVT_MENU, self.cmd_scale_palette, id=id_scale_palette)
         self.Bind(wx.EVT_MENU, self.cmd_adjust_palette, id=id_adjust_palette)
         self.Bind(wx.EVT_MENU, self.cmd_reset_palette, id=id_reset_palette)
-                  
-        # AptusCompute default values        
-        self.m.palette = all_palettes[0]
-        
-        # Gui state values
-        self.palette_index = 0
-        self.jump_index = 0
-        self.zoom = 2.0
 
         self.reset_mousing()
 
@@ -143,20 +225,19 @@ class AptusPanel(wx.Panel):
         else:
             self.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
 
-    # GUI helpers
-    
-    def fire_command(self, cmdid, data=None):
-        # I'm not entirely sure about why this is the right event type to use,
-        # but it works...
-        evt = wx.CommandEvent(wx.wxEVT_COMMAND_TOOL_CLICKED)
-        evt.SetId(cmdid)
-        evt.SetClientData(data)
-        if not self.ProcessEvent(evt):
-            print "Whoa! Didn't handle %r" % cmdid
-        
-    def message(self, msg):
-        top = self.GetTopLevelParent()
-        top.message(msg)
+    def dilate_view(self, center, scale):
+        """ Change the view by a certain scale factor, keeping the center in the
+            same spot.
+        """
+        # Refuse to zoom out so that the whole escape circle is visible: it makes
+        # boundary tracing erase the entire thing!
+        if self.m.diam[0] * scale >= 3.9:
+            return
+        cx = center[0] + (self.m.size[0]/2 - center[0]) * scale
+        cy = center[1] + (self.m.size[1]/2 - center[1]) * scale
+        self.m.center = self.m.coords_from_pixel(cx, cy)
+        self.m.diam = (self.m.diam[0]*scale, self.m.diam[1]*scale)
+        self.set_view()
         
     # Event handlers
     
@@ -240,15 +321,6 @@ class AptusPanel(wx.Panel):
             self.xor_rectangle(self.rubberrect)
         self.reset_mousing()
         
-    def on_size(self, event_unused):
-        self.check_size = True
-        
-    def on_idle(self, event_unused):
-        self.set_cursor()
-        if self.check_size and self.GetClientSize() != self.m.size:
-            if self.GetClientSize() != (0,0):
-                self.set_view()
-
     def on_key_down(self, event):
         # Turn keystrokes into commands.
         shift = event.ShiftDown()
@@ -321,51 +393,6 @@ class AptusPanel(wx.Panel):
             if not self.pan_locked:
                 self.panning = False
             
-    def on_paint(self, event_unused):
-        if not self.bitmap:
-            self.bitmap = self.draw()
-        
-        dc = wx.AutoBufferedPaintDC(self)
-        if self.panning:
-            dc.SetBrush(wx.Brush(wx.Colour(128,128,128), wx.SOLID))
-            dc.SetPen(wx.Pen(wx.Colour(128,128,128), 1, wx.SOLID))
-            dc.DrawRectangle(0, 0, self.m.size[0], self.m.size[1])
-            dc.DrawBitmap(self.bitmap, self.pt_pan[0]-self.pt_down[0], self.pt_pan[1]-self.pt_down[1], False)
-        else:
-            dc.DrawBitmap(self.bitmap, 0, 0, False)
-
-    # Ouptut methods
-    
-    def draw(self):
-        """ Return a bitmap with the image to display in the window.
-        """
-        self.m.progress = GuiProgressReporter()
-        self.m.compute_pixels()
-        pix = self.m.color_mandel()
-        return wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix)
-
-    def set_view(self):
-        self.m.size = self.GetClientSize()
-        self.bitmap = None
-
-        self.m.create_mandel()
-        self.check_size = False
-        self.Refresh()
-
-    def dilate_view(self, center, scale):
-        """ Change the view by a certain scale factor, keeping the center in the
-            same spot.
-        """
-        # Refuse to zoom out so that the whole escape circle is visible: it makes
-        # boundary tracing erase the entire thing!
-        if self.m.diam[0] * scale >= 3.9:
-            return
-        cx = center[0] + (self.m.size[0]/2 - center[0]) * scale
-        cy = center[1] + (self.m.size[1]/2 - center[1]) * scale
-        self.m.center = self.m.coords_from_pixel(cx, cy)
-        self.m.diam = (self.m.diam[0]*scale, self.m.diam[1]*scale)
-        self.set_view()
-        
     # Commands
     
     def cmd_set_angle(self, event_unused):
@@ -462,29 +489,15 @@ class AptusPanel(wx.Panel):
         self.bitmap = None
         self.Refresh()
         
-    # Output-writing methods
-    
-    def write_png(self, pth):
-        """ Write the current image as a PNG to the path `pth`.
-        """
-        image = wx.ImageFromBitmap(self.bitmap)
-        im = Image.new('RGB', (image.GetWidth(), image.GetHeight()))
-        im.fromstring(image.GetData())
-        self.m.write_image(im, pth)
-
-    def write_aptus(self, pth):
-        """ Write the current Aptus state of the panel to the path `pth`.
-        """
-        aptst = AptusState(self.m)
-        aptst.write(pth)
-
 
 class AptusFrame(wx.Frame):
+    """ The main window frame of the Aptus app.
+    """
     def __init__(self):
         wx.Frame.__init__(self, None, -1, 'Aptus')
 
         # Make the panel
-        self.panel = AptusPanel(self)
+        self.panel = AptusViewPanel(self)
         
         # Set the window icon
         ib = wx.IconBundle()
