@@ -393,53 +393,32 @@ class AptusViewPanel(AptusPanel):
             if not self.pan_locked:
                 self.panning = False
             
+    # Command helpers
+
+    def set_value(self, dtitle, dprompt, attr, caster):
+        cur_val = getattr(self.m, attr)
+        dlg = wx.TextEntryDialog(self.GetTopLevelParent(), dtitle, dprompt, str(cur_val))
+
+        if dlg.ShowModal() == wx.ID_OK:
+            try:
+                setattr(self.m, attr, caster(dlg.GetValue()))
+                self.set_view()
+            except ValueError, e:
+                self.message("Couldn't set %s: %s" % (attr, e))
+
+        dlg.Destroy()
+
     # Commands
     
     def cmd_set_angle(self, event_unused):
-        dlg = wx.TextEntryDialog(
-                self.GetTopLevelParent(), 'Angle:',
-                'Set the angle of rotation', str(self.m.angle)
-                )
-
-        if dlg.ShowModal() == wx.ID_OK:
-            try:
-                self.m.angle = float(dlg.GetValue())
-                self.set_view()
-            except ValueError, e:
-                self.message("Couldn't set angle: %s" % e)
-
-        dlg.Destroy()
+        self.set_value('Angle:', 'Set the angle of rotation', 'angle', float)
         
     def cmd_set_iter_limit(self, event_unused):
-        dlg = wx.TextEntryDialog(
-                self.GetTopLevelParent(), 'Iteration limit:',
-                'Set the iteration limit', str(self.m.iter_limit)
-                )
-
-        if dlg.ShowModal() == wx.ID_OK:
-            try:
-                self.m.iter_limit = int(dlg.GetValue())
-                self.set_view()
-            except ValueError, e:
-                self.message("Couldn't set iter_limit: %s" % e)
-
-        dlg.Destroy()
+        self.set_value('Iteration limit:', 'Set the iteration limit', 'iter_limit', int)
         
     def cmd_set_bailout(self, event_unused):
-        dlg = wx.TextEntryDialog(
-                self.GetTopLevelParent(), 'Bailout:',
-                'Set the radius of the escape circle', str(self.m.bailout)
-                )
+        self.set_value('Bailout:', 'Set the radius of the escape circle', 'bailout', float)
 
-        if dlg.ShowModal() == wx.ID_OK:
-            try:
-                self.m.bailout = float(dlg.GetValue())
-                self.set_view()
-            except ValueError, e:
-                self.message("Couldn't set bailout: %s" % e)
-
-        dlg.Destroy()
-        
     def cmd_toggle_continuous(self, event_unused):
         self.m.continuous = not self.m.continuous
         self.set_view()
