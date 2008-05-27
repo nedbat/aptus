@@ -619,11 +619,13 @@ help_html = """\
 <p><b>Controls:</b></p>
 
 <blockquote>
+<b>a</b>: set the angle of rotation.<br>
 <b>b</b>: set the radius of the bailout circle.<br>
 <b>c</b>: toggle continuous coloring.<br>
 <b>h</b> or <b>?</b>: show this help.<br>
 <b>i</b>: set the limit on iterations.<br>
 <b>j</b>: jump among a few pre-determined locations.<br>
+<b>n</b>: open a new window.<br>
 <b>r</b>: redraw the current image.<br>
 <b>s</b>: save the current image or settings.<br>
 <b>&lt;</b> or <b>&gt;</b>: switch to the next palette.<br>
@@ -639,7 +641,11 @@ help_html = """\
 <b>middle-drag</b>: drag the image to a new position.
 </blockquote>
 
-<p>Thanks to Rob McMullen and Paul Ollis for help with the drawing code.</p>
+<p>Built with
+<a href='http://python.org'>Python</a>, <a href='http://wxpython.org'>wxPython</a>,
+<a href='http://numpy.scipy.org/'>numpy</a>, and
+<a href='http://www.pythonware.com/library/pil/handbook/index.htm'>PIL</a>.
+Thanks to Rob McMullen and Paul Ollis for help with the wxPython drawing code.</p>
 """ % terms
 
 class AptusGuiApp(wx.PySimpleApp):
