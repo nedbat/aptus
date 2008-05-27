@@ -328,14 +328,14 @@ class AptusViewPanel(AptusPanel):
         keycode = event.KeyCode
         if keycode == ord('A'):
             self.fire_command(id_set_angle)
-        elif keycode == ord('S'):
-            self.fire_command(id_save)
-        elif keycode == ord('I'):
-            self.fire_command(id_set_iter_limit)
         elif keycode == ord('B'):
             self.fire_command(id_set_bailout)
         elif keycode == ord('C'):
             self.fire_command(id_toggle_continuous)
+        elif keycode == ord('H'):
+            self.fire_command(id_help)
+        elif keycode == ord('I'):
+            self.fire_command(id_set_iter_limit)
         elif keycode == ord('J'):
             if shift:
                 if self.m.julia:
@@ -349,6 +349,10 @@ class AptusViewPanel(AptusPanel):
                 self.fire_command(id_jump)
         elif keycode == ord('R'):
             self.fire_command(id_redraw)
+        elif keycode == ord('S'):
+            self.fire_command(id_save)
+        elif keycode == ord('0'):
+            self.fire_command(id_reset_palette)
         elif keycode in [ord(','), ord('<')]:
             if shift:
                 self.fire_command(id_change_palette, -1)
@@ -371,12 +375,8 @@ class AptusViewPanel(AptusPanel):
             if shift:
                 kw = 'saturation'
             self.fire_command(id_adjust_palette, {kw:delta})
-        elif keycode == ord('0'):
-            self.fire_command(id_reset_palette)
         elif keycode == ord(' '):
             self.panning = True
-        elif keycode == ord('H'):
-            self.fire_command(id_help)
         elif keycode == ord('/') and shift:
             self.fire_command(id_help)
         elif 0:
