@@ -55,7 +55,7 @@ id_scale_palette = wx.NewId()
 id_adjust_palette = wx.NewId()
 id_reset_palette = wx.NewId()
 id_help = wx.NewId()
-
+id_new = wx.NewId()
 
 class AptusPanel(wx.Panel):
     """ A panel capable of drawing a Mandelbrot.
@@ -102,7 +102,7 @@ class AptusPanel(wx.Panel):
 
     def on_paint(self, event_unused):
         if not self.bitmap:
-            self.bitmap = self.draw()
+            self.bitmap = self.draw_bitmap()
         
         dc = wx.AutoBufferedPaintDC(self)
         if self.panning:
@@ -113,9 +113,9 @@ class AptusPanel(wx.Panel):
         else:
             dc.DrawBitmap(self.bitmap, 0, 0, False)
 
-    # Ouptut methods
+    # Output methods
     
-    def draw(self):
+    def draw_bitmap(self):
         """ Return a bitmap with the image to display in the window.
         """
         self.m.progress = GuiProgressReporter()
@@ -347,6 +347,8 @@ class AptusViewPanel(AptusPanel):
                 self.set_view()
             else:
                 self.fire_command(id_jump)
+        elif keycode == ord('N'):
+            self.fire_command(id_new)
         elif keycode == ord('R'):
             self.fire_command(id_redraw)
         elif keycode == ord('S'):
@@ -469,14 +471,19 @@ class AptusViewPanel(AptusPanel):
         self.Refresh()
         
 
-class AptusFrame(wx.Frame):
+class AptusMainFrame(wx.Frame):
     """ The main window frame of the Aptus app.
     """
-    def __init__(self):
+    def __init__(self, args=None):
         wx.Frame.__init__(self, None, -1, 'Aptus')
 
         # Make the panel
         self.panel = AptusViewPanel(self)
+        
+        if args:
+            opts = AptusOptions(self.panel.m)
+            opts.read_args(args)
+        self.panel.supersample = 1
         
         # Set the window icon
         ib = wx.IconBundle()
@@ -486,6 +493,7 @@ class AptusFrame(wx.Frame):
         self.SetIcons(ib)
 
         # Bind commands
+        self.Bind(wx.EVT_MENU, self.cmd_new, id=id_new)
         self.Bind(wx.EVT_MENU, self.cmd_save, id=id_save)
         self.Bind(wx.EVT_MENU, self.cmd_help, id=id_help)
 
@@ -530,6 +538,9 @@ class AptusFrame(wx.Frame):
             return typ, pth
         else:
             return None, None
+
+    def cmd_new(self, event_unused):
+        wx.GetApp().new_window()#AptusMainFrame().Show()
         
     def cmd_save(self, event_unused):
         wildcard = (
@@ -634,11 +645,10 @@ help_html = """\
 class AptusGuiApp(wx.PySimpleApp):
     def __init__(self, args):
         wx.PySimpleApp.__init__(self)
-        f = AptusFrame()
-        opts = AptusOptions(f.panel.m)
-        opts.read_args(args)
-        f.panel.supersample = 1
-        f.Show()
+        self.new_window(args)
+            
+    def new_window(self, args=None):
+        AptusMainFrame(args).Show()
         
 def main(args):
     """ The main for the Aptus GUI.
