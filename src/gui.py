@@ -73,7 +73,7 @@ class AptusPanel(wx.Panel):
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_IDLE, self.on_idle)
-                  
+
     # GUI helpers
     
     def fire_command(self, cmdid, data=None):
@@ -82,8 +82,7 @@ class AptusPanel(wx.Panel):
         evt = wx.CommandEvent(wx.wxEVT_COMMAND_TOOL_CLICKED)
         evt.SetId(cmdid)
         evt.SetClientData(data)
-        if not self.ProcessEvent(evt):
-            print "Whoa! Didn't handle %r" % cmdid
+        wx.PostEvent(self, evt)
         
     def message(self, msg):
         top = self.GetTopLevelParent()
