@@ -445,7 +445,7 @@ class AptusViewPanel(AptusPanel):
 
     def cmd_toggle_continuous(self, event_unused):
         self.m.continuous = not self.m.continuous
-        self.coloring_changed()
+        self.set_view()
 
     def cmd_redraw(self, event_unused):
         self.set_view()
