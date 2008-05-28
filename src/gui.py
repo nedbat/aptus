@@ -16,8 +16,10 @@ numpy = importer('numpy')
 Image = importer('Image')
 
 import os, os.path, sys, webbrowser
-import wx.lib.layoutf  as layoutf
+import wx.lib.layoutf
 import wx.html 
+import wx.lib.newevent
+from wx.lib.evtmgr import eventManager
 
 # There are a few places we conditionalize on platform.
 is_mac = ('wxMac' in wx.PlatformInfo)
@@ -39,6 +41,8 @@ class GuiProgressReporter(ConsoleProgressReporter):
         ConsoleProgressReporter.end(self)
         wx.EndBusyCursor()
         
+# Custom events
+AptusColoringChangedEvent, EVT_APTUS_COLORING_CHANGED = wx.lib.newevent.NewEvent()
 
 # Command ids
 id_set_angle = wx.NewId()
@@ -56,6 +60,7 @@ id_adjust_palette = wx.NewId()
 id_reset_palette = wx.NewId()
 id_help = wx.NewId()
 id_new = wx.NewId()
+id_show_youarehere = wx.NewId()
 
 class AptusPanel(wx.Panel):
     """ A panel capable of drawing a Mandelbrot.
@@ -94,7 +99,6 @@ class AptusPanel(wx.Panel):
         self.check_size = True
         
     def on_idle(self, event_unused):
-        self.set_cursor()
         if self.check_size and self.GetClientSize() != self.m.size:
             if self.GetClientSize() != (0,0):
                 self.set_view()
@@ -104,13 +108,7 @@ class AptusPanel(wx.Panel):
             self.bitmap = self.draw_bitmap()
         
         dc = wx.AutoBufferedPaintDC(self)
-        if self.panning:
-            dc.SetBrush(wx.Brush(wx.Colour(224,224,128), wx.SOLID))
-            dc.SetPen(wx.Pen(wx.Colour(224,224,128), 1, wx.SOLID))
-            dc.DrawRectangle(0, 0, self.m.size[0], self.m.size[1])
-            dc.DrawBitmap(self.bitmap, self.pt_pan[0]-self.pt_down[0], self.pt_pan[1]-self.pt_down[1], False)
-        else:
-            dc.DrawBitmap(self.bitmap, 0, 0, False)
+        dc.DrawBitmap(self.bitmap, 0, 0, False)
 
     # Output methods
     
@@ -123,9 +121,8 @@ class AptusPanel(wx.Panel):
         return wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix)
 
     def set_view(self):
-        self.m.size = self.GetClientSize()
         self.bitmap = None
-
+        self.m.size = self.GetClientSize()
         self.m.create_mandel()
         self.check_size = False
         self.Refresh()
@@ -238,8 +235,30 @@ class AptusViewPanel(AptusPanel):
         self.m.diam = (self.m.diam[0]*scale, self.m.diam[1]*scale)
         self.set_view()
         
+    def coloring_changed(self):
+        self.bitmap = None
+        self.Refresh()
+        self.GetEventHandler().ProcessEvent(AptusColoringChangedEvent())    # Make a simpler way to do this!
+
     # Event handlers
     
+    def on_idle(self, event):
+        self.set_cursor()
+        AptusPanel.on_idle(self, event)
+        
+    def on_paint(self, event_unused):
+        if not self.bitmap:
+            self.bitmap = self.draw_bitmap()
+        
+        dc = wx.AutoBufferedPaintDC(self)
+        if self.panning:
+            dc.SetBrush(wx.Brush(wx.Colour(224,224,128), wx.SOLID))
+            dc.SetPen(wx.Pen(wx.Colour(224,224,128), 1, wx.SOLID))
+            dc.DrawRectangle(0, 0, self.m.size[0], self.m.size[1])
+            dc.DrawBitmap(self.bitmap, self.pt_pan[0]-self.pt_down[0], self.pt_pan[1]-self.pt_down[1], False)
+        else:
+            dc.DrawBitmap(self.bitmap, 0, 0, False)
+
     def on_left_down(self, event):
         self.pt_down = event.GetPosition()
         self.rubberbanding = False
@@ -346,6 +365,8 @@ class AptusViewPanel(AptusPanel):
                 self.set_view()
             else:
                 self.fire_command(id_jump)
+        elif keycode == ord('L'):
+            self.fire_command(id_show_youarehere)
         elif keycode == ord('N'):
             self.fire_command(id_new)
         elif keycode == ord('R'):
@@ -437,15 +458,13 @@ class AptusViewPanel(AptusPanel):
         delta = event.GetClientData()
         self.m.palette_phase += delta
         self.m.palette_phase %= len(self.m.palette)
-        self.bitmap = None
-        self.Refresh()
+        self.coloring_changed()
         
     def cmd_scale_palette(self, event):
         factor = event.GetClientData()
         if self.m.continuous:
             self.m.palette_scale *= factor
-            self.bitmap = None
-            self.Refresh()
+            self.coloring_changed()
         
     def cmd_change_palette(self, event):
         delta = event.GetClientData()
@@ -454,21 +473,34 @@ class AptusViewPanel(AptusPanel):
         self.m.palette = all_palettes[self.palette_index]
         self.m.palette_phase = 0
         self.m.palette_scale = 1.0
-        self.bitmap = None
-        self.Refresh()
+        self.coloring_changed()
     
     def cmd_adjust_palette(self, event):
         self.m.palette.adjust(**event.GetClientData())
-        self.bitmap = None
-        self.Refresh()
+        self.coloring_changed()
 
     def cmd_reset_palette(self, event_unused):
         self.m.palette_phase = 0
         self.m.palette_scale = 1.0
         self.m.palette.reset()
-        self.bitmap = None
-        self.Refresh()
+        self.coloring_changed()
         
+
+class YouAreHereFrame(wx.Frame):
+    def __init__(self, mainwin):
+        wx.Frame.__init__(self, None, -1, 'You are here')
+
+        self.panel = AptusPanel(self)
+        self.panel.set_view()
+        
+        self.mainwin = mainwin
+
+        eventManager.Register(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.mainwin)
+        
+    def on_coloring_changed(self, event_unused):
+        self.panel.m.copy_appearance(self.mainwin.m)
+        self.panel.set_view()
+
 
 class AptusMainFrame(wx.Frame):
     """ The main window frame of the Aptus app.
@@ -495,7 +527,8 @@ class AptusMainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.cmd_new, id=id_new)
         self.Bind(wx.EVT_MENU, self.cmd_save, id=id_save)
         self.Bind(wx.EVT_MENU, self.cmd_help, id=id_help)
-
+        self.Bind(wx.EVT_MENU, self.cmd_show_youarehere, id=id_show_youarehere)
+        
     def Show(self):
         # Override Show so we can set the view properly.
         self.SetClientSize(self.panel.m.size)
@@ -539,7 +572,7 @@ class AptusMainFrame(wx.Frame):
             return None, None
 
     def cmd_new(self, event_unused):
-        wx.GetApp().new_window()#AptusMainFrame().Show()
+        wx.GetApp().new_window()
         
     def cmd_save(self, event_unused):
         wildcard = (
@@ -566,6 +599,8 @@ class AptusMainFrame(wx.Frame):
         dlg = HtmlDialog(self, help_html, "Aptus")
         dlg.ShowModal()
 
+    def cmd_show_youarehere(self, event_unused):
+        YouAreHereFrame(self.panel).Show()
 
 class HtmlDialog(wx.Dialog):
     def __init__(self, parent, html_text, caption,
@@ -581,11 +616,11 @@ class HtmlDialog(wx.Dialog):
         ok = wx.Button(self, wx.ID_OK, "OK")
         ok.SetDefault()
         
-        lc = layoutf.Layoutf('t=t#1;b=t5#2;l=l#1;r=r#1', (self,ok))
+        lc = wx.lib.layoutf.Layoutf('t=t#1;b=t5#2;l=l#1;r=r#1', (self,ok))
         self.html.SetConstraints(lc)
         self.html.SetPage(html_text)
         
-        lc = layoutf.Layoutf('b=b5#1;r=r5#1;w!80;h*', (self,))
+        lc = wx.lib.layoutf.Layoutf('b=b5#1;r=r5#1;w!80;h*', (self,))
         ok.SetConstraints(lc)
         
         self.SetAutoLayout(1)
