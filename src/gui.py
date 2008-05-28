@@ -43,6 +43,8 @@ class GuiProgressReporter(ConsoleProgressReporter):
         
 # Custom events
 AptusColoringChangedEvent, EVT_APTUS_COLORING_CHANGED = wx.lib.newevent.NewEvent()
+AptusComputationChangedEvent, EVT_APTUS_COMPUTATION_CHANGED = wx.lib.newevent.NewEvent()
+AptusGeometryChangedEvent, EVT_APTUS_GEOMETRY_CHANGED = wx.lib.newevent.NewEvent()
 
 # Command ids
 id_set_angle = wx.NewId()
@@ -93,6 +95,11 @@ class AptusPanel(wx.Panel):
         top = self.GetTopLevelParent()
         top.message(msg)
         
+    def coloring_changed(self):
+        self.bitmap = None
+        self.Refresh()
+        self.GetEventHandler().ProcessEvent(AptusColoringChangedEvent())    # Make a simpler way to do this!
+
     # Event handlers
     
     def on_size(self, event_unused):
@@ -235,11 +242,6 @@ class AptusViewPanel(AptusPanel):
         self.m.diam = (self.m.diam[0]*scale, self.m.diam[1]*scale)
         self.set_view()
         
-    def coloring_changed(self):
-        self.bitmap = None
-        self.Refresh()
-        self.GetEventHandler().ProcessEvent(AptusColoringChangedEvent())    # Make a simpler way to do this!
-
     # Event handlers
     
     def on_idle(self, event):
@@ -443,7 +445,7 @@ class AptusViewPanel(AptusPanel):
 
     def cmd_toggle_continuous(self, event_unused):
         self.m.continuous = not self.m.continuous
-        self.set_view()
+        self.coloring_changed()
 
     def cmd_redraw(self, event_unused):
         self.set_view()
@@ -486,21 +488,25 @@ class AptusViewPanel(AptusPanel):
         self.coloring_changed()
         
 
+class YouAreHerePanel(AptusPanel):
+    def __init__(self, parent, mainwin):
+        AptusPanel.__init__(self, parent)
+        self.set_view()
+        self.mainwin = mainwin
+        eventManager.Register(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.mainwin)
+        self.on_coloring_changed(None)
+
+    def on_coloring_changed(self, event_unused):
+        self.m.copy_coloring(self.mainwin.m)
+        self.coloring_changed()
+
+        
 class YouAreHereFrame(wx.Frame):
     def __init__(self, mainwin):
         wx.Frame.__init__(self, None, -1, 'You are here')
 
-        self.panel = AptusPanel(self)
-        self.panel.set_view()
+        self.panel = YouAreHerePanel(self, mainwin)
         
-        self.mainwin = mainwin
-
-        eventManager.Register(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.mainwin)
-        
-    def on_coloring_changed(self, event_unused):
-        self.panel.m.copy_appearance(self.mainwin.m)
-        self.panel.set_view()
-
 
 class AptusMainFrame(wx.Frame):
     """ The main window frame of the Aptus app.

@@ -77,7 +77,7 @@ class AptusCompute:
             self.eng.juliaxy = self.juliaxy
             self.eng.trace_boundary = 0
 
-    def copy_appearance(self, other):
+    def copy_coloring(self, other):
         self.iter_limit = other.iter_limit
         self.bailout = other.bailout
         self.palette = other.palette
