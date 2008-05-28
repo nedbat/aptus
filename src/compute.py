@@ -77,6 +77,14 @@ class AptusCompute:
             self.eng.juliaxy = self.juliaxy
             self.eng.trace_boundary = 0
 
+    def copy_appearance(self, other):
+        self.iter_limit = other.iter_limit
+        self.bailout = other.bailout
+        self.palette = other.palette
+        self.palette_phase = other.palette_phase
+        self.palette_scale = other.palette_scale
+        self.continuous = other.continuous
+
     def color_mandel(self):
         pix = numpy.zeros((self.counts.shape[0], self.counts.shape[1], 3), dtype=numpy.uint8)
         self.eng.apply_palette(self.counts, self.palette.color_bytes(), self.palette_phase, self.palette_scale, self.palette.incolor, pix)
