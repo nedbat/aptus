@@ -46,7 +46,13 @@ class Palette:
     
     def __len__(self):
         return len(self.fcolors)
+
+    def __eq__(self, other):
+        return self.colors == other.colors
     
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
     def _colors_from_fcolors(self):
         """ Set self.colors from self.fcolors, adjusting them for hue, etc,
             in the process.

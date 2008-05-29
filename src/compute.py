@@ -12,27 +12,31 @@ AptEngine = importer('AptEngine')
 
 numpy = importer('numpy')
 
-import math
+import copy, math
 
 class AptusCompute:
     """ The Mandelbrot compute class.  It wraps the AptEngine to provide pythonic
         convenience.
     """
     def __init__(self):
+        # geometry
         self.center = -0.5, 0.0
         self.diam = 3.0, 3.0
         self.size = 600, 600
         self.angle = 0.0
+        # computation
         self.iter_limit = 999
         self.bailout = 0
-        self.julia = False
-        self.juliaxy = 0.0, 0.0
+        self.continuous = False
+        self.supersample = 1
+        # coloring
         self.palette = None
         self.palette_phase = 0
         self.palette_scale = 1.0
-        self.supersample = 1
+        # other
+        self.julia = False
+        self.juliaxy = 0.0, 0.0
         self.outfile = 'Aptus.png'
-        self.continuous = False
         
     def create_mandel(self):
         self.eng = AptEngine()
@@ -78,13 +82,29 @@ class AptusCompute:
             self.eng.trace_boundary = 0
 
     def copy_coloring(self, other):
-        self.iter_limit = other.iter_limit
-        self.bailout = other.bailout
-        self.palette = other.palette
-        self.palette_phase = other.palette_phase
-        self.palette_scale = other.palette_scale
-        self.continuous = other.continuous
+        """ Copy the coloring attributes from other to self, returning True if
+            any of them actually changed.
+        """
+        return self.copy_attributes(other, ['palette', 'palette_phase', 'palette_scale'])
 
+    def copy_computation(self, other):
+        """ Copy the computation attributes from other to self, returning True if
+            any of them actually changed.
+        """
+        return self.copy_attributes(other, ['iter_limit', 'bailout', 'continuous', 'supersample'])
+    
+    def copy_attributes(self, other, attrs):
+        """ Copy a list of attributes from other to self, returning True if
+            any of them actually changed.
+        """
+        changed = False
+        for attr in attrs:
+            if getattr(self, attr) != getattr(other, attr):
+                otherval = copy.deepcopy(getattr(other, attr))
+                setattr(self, attr, otherval)
+                changed = True
+        return changed
+    
     def color_mandel(self):
         pix = numpy.zeros((self.counts.shape[0], self.counts.shape[1], 3), dtype=numpy.uint8)
         self.eng.apply_palette(self.counts, self.palette.color_bytes(), self.palette_phase, self.palette_scale, self.palette.incolor, pix)

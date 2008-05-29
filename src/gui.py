@@ -90,6 +90,9 @@ class AptusPanel(wx.Panel):
         evt.SetId(cmdid)
         evt.SetClientData(data)
         wx.PostEvent(self, evt)
+    
+    def fire_event(self, evclass):
+        self.GetEventHandler().ProcessEvent(evclass())
         
     def message(self, msg):
         top = self.GetTopLevelParent()
@@ -98,8 +101,16 @@ class AptusPanel(wx.Panel):
     def coloring_changed(self):
         self.bitmap = None
         self.Refresh()
-        self.GetEventHandler().ProcessEvent(AptusColoringChangedEvent())    # Make a simpler way to do this!
+        self.fire_event(AptusColoringChangedEvent)
 
+    def computation_changed(self):
+        self.set_view()
+        self.fire_event(AptusComputationChangedEvent)
+        
+    def geometry_changed(self):
+        self.set_view()
+        self.fire_event(AptusGeometryChangedEvent)
+        
     # Event handlers
     
     def on_size(self, event_unused):
@@ -207,7 +218,7 @@ class AptusViewPanel(AptusPanel):
         cx -= mx - self.pt_down[0]
         cy -= my - self.pt_down[1]
         self.m.center = self.m.coords_from_pixel(cx, cy)
-        self.set_view()
+        self.geometry_changed()
         
     def xor_rectangle(self, rect):
         dc = wx.ClientDC(self)
@@ -240,7 +251,7 @@ class AptusViewPanel(AptusPanel):
         cy = center[1] + (self.m.size[1]/2 - center[1]) * scale
         self.m.center = self.m.coords_from_pixel(cx, cy)
         self.m.diam = (self.m.diam[0]*scale, self.m.diam[1]*scale)
-        self.set_view()
+        self.geometry_changed()
         
     # Event handlers
     
@@ -313,7 +324,7 @@ class AptusViewPanel(AptusPanel):
             lrx, lry = self.m.coords_from_pixel(mx, my)
             self.m.center = ((ulx+lrx)/2, (uly+lry)/2)
             self.m.diam = (abs(self.m.pixsize*(px-mx)), abs(self.m.pixsize*(py-my)))
-            self.set_view()
+            self.geometry_changed()
         elif self.panning:
             self.finish_panning(mx, my)
         elif self.pt_down:
@@ -419,14 +430,14 @@ class AptusViewPanel(AptusPanel):
             
     # Command helpers
 
-    def set_value(self, dtitle, dprompt, attr, caster):
+    def set_value(self, dtitle, dprompt, attr, caster, when_done):
         cur_val = getattr(self.m, attr)
         dlg = wx.TextEntryDialog(self.GetTopLevelParent(), dtitle, dprompt, str(cur_val))
 
         if dlg.ShowModal() == wx.ID_OK:
             try:
                 setattr(self.m, attr, caster(dlg.GetValue()))
-                self.set_view()
+                when_done()
             except ValueError, e:
                 self.message("Couldn't set %s: %s" % (attr, e))
 
@@ -435,17 +446,17 @@ class AptusViewPanel(AptusPanel):
     # Commands
     
     def cmd_set_angle(self, event_unused):
-        self.set_value('Angle:', 'Set the angle of rotation', 'angle', float)
+        self.set_value('Angle:', 'Set the angle of rotation', 'angle', float, self.geometry_changed)
         
     def cmd_set_iter_limit(self, event_unused):
-        self.set_value('Iteration limit:', 'Set the iteration limit', 'iter_limit', int)
+        self.set_value('Iteration limit:', 'Set the iteration limit', 'iter_limit', int, self.computation_changed)
         
     def cmd_set_bailout(self, event_unused):
-        self.set_value('Bailout:', 'Set the radius of the escape circle', 'bailout', float)
+        self.set_value('Bailout:', 'Set the radius of the escape circle', 'bailout', float, self.computation_changed)
 
     def cmd_toggle_continuous(self, event_unused):
         self.m.continuous = not self.m.continuous
-        self.set_view()
+        self.computation_changed()
 
     def cmd_redraw(self, event_unused):
         self.set_view()
@@ -454,7 +465,7 @@ class AptusViewPanel(AptusPanel):
         self.jump_index += 1
         self.jump_index %= len(jumps)
         self.m.center, self.m.diam = jumps[self.jump_index]
-        self.set_view()
+        self.geometry_changed()
         
     def cmd_cycle_palette(self, event):
         delta = event.GetClientData()
@@ -494,17 +505,27 @@ class YouAreHerePanel(AptusPanel):
         self.set_view()
         self.mainwin = mainwin
         eventManager.Register(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.mainwin)
+        eventManager.Register(self.on_computation_changed, EVT_APTUS_COMPUTATION_CHANGED, self.mainwin)
+        eventManager.Register(self.on_geometry_changed, EVT_APTUS_GEOMETRY_CHANGED, self.mainwin)
         self.on_coloring_changed(None)
 
     def on_coloring_changed(self, event_unused):
-        self.m.copy_coloring(self.mainwin.m)
-        self.coloring_changed()
+        if self.m.copy_coloring(self.mainwin.m):
+            self.coloring_changed()
+
+    def on_computation_changed(self, event_unused):
+        if self.m.copy_computation(self.mainwin.m):
+            self.computation_changed()
+
+    def on_geometry_changed(self, event_unused):
+        if self.m.angle != self.mainwin.m.angle:
+            self.m.angle = self.mainwin.m.angle
+            self.geometry_changed()
 
         
 class YouAreHereFrame(wx.Frame):
     def __init__(self, mainwin):
         wx.Frame.__init__(self, None, -1, 'You are here')
-
         self.panel = YouAreHerePanel(self, mainwin)
         
 
