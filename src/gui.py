@@ -509,7 +509,7 @@ class YouAreHerePanel(AptusPanel):
         on the Set.
     """
     def __init__(self, parent, mainwin):
-        AptusPanel.__init__(self, parent, size=(100,100))
+        AptusPanel.__init__(self, parent)
         self.set_view()
         self.mainwin = mainwin
 
@@ -566,7 +566,8 @@ class YouAreHerePanel(AptusPanel):
         
 class YouAreHereFrame(wx.Frame):
     def __init__(self, mainwin):
-        wx.Frame.__init__(self, None, -1, 'You are here')
+        wx.Frame.__init__(self, None, name='You are here', size=(250,250),
+            style=wx.DEFAULT_FRAME_STYLE|wx.FRAME_TOOL_WINDOW)
         self.panel = YouAreHerePanel(self, mainwin)
         
 
