@@ -124,6 +124,16 @@ class AptusCompute:
             self.eng.xy0[1] + self.eng.xydxdy[1]*x + self.eng.xydxdy[3]*y
             )
 
+    def pixel_from_coords(self, mx, my):
+        """ Get the pixel coords containing the real coords.
+        """
+        d0, d1, d2, d3 = self.eng.xydxdy
+        xy00, xy01 = self.eng.xy0
+        # Thanks, Maxima!
+        px = (d2*(my-xy01)+d3*xy00-d3*mx)/(d1*d2-d0*d3)
+        py = -(d0*(my-xy01)+d1*xy00-d1*mx)/(d1*d2-d0*d3)
+        return px, py
+
     def compute_pixels(self):
         if self.counts is not None:
             return

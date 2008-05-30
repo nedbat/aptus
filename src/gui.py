@@ -15,7 +15,7 @@ wx = importer('wx')
 numpy = importer('numpy')
 Image = importer('Image')
 
-import os, os.path, sys, webbrowser
+import math, os, os.path, sys, webbrowser
 import wx.lib.layoutf
 import wx.html 
 import wx.lib.newevent
@@ -64,11 +64,12 @@ id_help = wx.NewId()
 id_new = wx.NewId()
 id_show_youarehere = wx.NewId()
 
+
 class AptusPanel(wx.Panel):
     """ A panel capable of drawing a Mandelbrot.
     """
-    def __init__(self, parent):
-        wx.Panel.__init__(self, parent, style=wx.NO_BORDER+wx.WANTS_CHARS)
+    def __init__(self, parent, size=wx.DefaultSize):
+        wx.Panel.__init__(self, parent, style=wx.NO_BORDER+wx.WANTS_CHARS, size=size)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
 
         self.m = AptusCompute()
@@ -119,7 +120,7 @@ class AptusPanel(wx.Panel):
     def on_idle(self, event_unused):
         if self.check_size and self.GetClientSize() != self.m.size:
             if self.GetClientSize() != (0,0):
-                self.set_view()
+                self.geometry_changed()
 
     def on_paint(self, event_unused):
         if not self.bitmap:
@@ -127,7 +128,11 @@ class AptusPanel(wx.Panel):
         
         dc = wx.AutoBufferedPaintDC(self)
         dc.DrawBitmap(self.bitmap, 0, 0, False)
-
+        self.on_paint_extras(dc)
+        
+    def on_paint_extras(self, dc):
+        pass
+    
     # Output methods
     
     def draw_bitmap(self):
@@ -500,14 +505,27 @@ class AptusViewPanel(AptusPanel):
         
 
 class YouAreHerePanel(AptusPanel):
+    """ A panel slaved to another AptusPanel to show where the master panel is
+        on the Set.
+    """
     def __init__(self, parent, mainwin):
-        AptusPanel.__init__(self, parent)
+        AptusPanel.__init__(self, parent, size=(100,100))
         self.set_view()
         self.mainwin = mainwin
+
+        self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
+        
         eventManager.Register(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.mainwin)
         eventManager.Register(self.on_computation_changed, EVT_APTUS_COMPUTATION_CHANGED, self.mainwin)
         eventManager.Register(self.on_geometry_changed, EVT_APTUS_GEOMETRY_CHANGED, self.mainwin)
+
         self.on_coloring_changed(None)
+        self.on_geometry_changed(None)
+
+    def on_destroy(self, event_unused):
+        eventManager.DeregisterListener(self.on_coloring_changed)
+        eventManager.DeregisterListener(self.on_computation_changed)
+        eventManager.DeregisterListener(self.on_geometry_changed)
 
     def on_coloring_changed(self, event_unused):
         if self.m.copy_coloring(self.mainwin.m):
@@ -518,9 +536,32 @@ class YouAreHerePanel(AptusPanel):
             self.computation_changed()
 
     def on_geometry_changed(self, event_unused):
+        # When a geometry_changed event comes in, copy the pertinent info from
+        # the master window, then compute the window visible in our coordinates
         if self.m.angle != self.mainwin.m.angle:
             self.m.angle = self.mainwin.m.angle
             self.geometry_changed()
+        ux, uy = self.m.pixel_from_coords(*self.mainwin.m.coords_from_pixel(0,0))
+        lx, ly = self.m.pixel_from_coords(*self.mainwin.m.coords_from_pixel(*self.mainwin.m.size))
+        ux = int(math.floor(ux))
+        uy = int(math.floor(uy))
+        lx = int(math.ceil(lx))+1
+        ly = int(math.ceil(ly))+1
+        w, h = lx-ux, ly-uy
+        # Never draw the box smaller than 3 pixels
+        if w < 3:
+            w = 3
+            ux -= 1     # Scooch back to adjust to the wider window.
+        if h < 3:
+            h = 3
+            uy -= 1
+        self.hererect = (ux, uy, w, h)
+        self.Refresh()
+        
+    def on_paint_extras(self, dc):
+        dc.SetBrush(wx.TRANSPARENT_BRUSH)
+        dc.SetPen(wx.Pen(wx.Colour(255,255,255), 1, wx.SOLID))
+        dc.DrawRectangle(*self.hererect)
 
         
 class YouAreHereFrame(wx.Frame):
@@ -629,6 +670,7 @@ class AptusMainFrame(wx.Frame):
     def cmd_show_youarehere(self, event_unused):
         YouAreHereFrame(self.panel).Show()
 
+
 class HtmlDialog(wx.Dialog):
     def __init__(self, parent, html_text, caption,
                  pos=wx.DefaultPosition, size=(500,530),
@@ -656,6 +698,7 @@ class HtmlDialog(wx.Dialog):
     def on_link_clicked(self, event):
         url = event.GetLinkInfo().GetHref()
         webbrowser.open(url)
+
         
 # The help text
 
@@ -709,6 +752,7 @@ help_html = """\
 Thanks to Rob McMullen and Paul Ollis for help with the wxPython drawing code.</p>
 """ % terms
 
+
 class AptusGuiApp(wx.PySimpleApp):
     def __init__(self, args):
         wx.PySimpleApp.__init__(self)
@@ -717,6 +761,7 @@ class AptusGuiApp(wx.PySimpleApp):
     def new_window(self, args=None):
         AptusMainFrame(args).Show()
         
+
 def main(args):
     """ The main for the Aptus GUI.
     """
