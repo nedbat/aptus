@@ -510,22 +510,35 @@ class YouAreHerePanel(AptusPanel):
     """
     def __init__(self, parent, mainwin):
         AptusPanel.__init__(self, parent)
-        self.set_view()
         self.mainwin = mainwin
-
+        self.hererect = None
+        
         self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
+        self.Bind(wx.EVT_SIZE, self.on_size)
+        self.Bind(wx.EVT_IDLE, self.on_idle)
         
         eventManager.Register(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.mainwin)
         eventManager.Register(self.on_computation_changed, EVT_APTUS_COMPUTATION_CHANGED, self.mainwin)
         eventManager.Register(self.on_geometry_changed, EVT_APTUS_GEOMETRY_CHANGED, self.mainwin)
 
-        self.on_coloring_changed(None)
-        self.on_geometry_changed(None)
+        self.set_view()
 
     def on_destroy(self, event_unused):
         eventManager.DeregisterListener(self.on_coloring_changed)
         eventManager.DeregisterListener(self.on_computation_changed)
         eventManager.DeregisterListener(self.on_geometry_changed)
+
+    def on_size(self, event):
+        # Need to recalc our rectangle.
+        self.hererect = None
+        AptusPanel.on_size(self, event)
+
+    def on_idle(self, event):
+        # Let the AptusPanel resize.
+        AptusPanel.on_idle(self, event)
+        # Then we can recalc our rectangle.
+        if not self.hererect:
+            self.calc_rectangle()
 
     def on_coloring_changed(self, event_unused):
         if self.m.copy_coloring(self.mainwin.m):
@@ -541,6 +554,10 @@ class YouAreHerePanel(AptusPanel):
         if self.m.angle != self.mainwin.m.angle:
             self.m.angle = self.mainwin.m.angle
             self.geometry_changed()
+        self.calc_rectangle()
+
+    def calc_rectangle(self):
+        # Compute the master rectangle in our coords.
         ux, uy = self.m.pixel_from_coords(*self.mainwin.m.coords_from_pixel(0,0))
         lx, ly = self.m.pixel_from_coords(*self.mainwin.m.coords_from_pixel(*self.mainwin.m.size))
         ux = int(math.floor(ux))
@@ -559,10 +576,11 @@ class YouAreHerePanel(AptusPanel):
         self.Refresh()
         
     def on_paint_extras(self, dc):
-        dc.SetBrush(wx.TRANSPARENT_BRUSH)
-        dc.SetPen(wx.Pen(wx.Colour(255,255,255), 1, wx.SOLID))
-        dc.DrawRectangle(*self.hererect)
-
+        # Draw the mainwin view window.
+        if self.hererect:
+            dc.SetBrush(wx.TRANSPARENT_BRUSH)
+            dc.SetPen(wx.Pen(wx.Colour(255,255,255), 1, wx.SOLID))
+            dc.DrawRectangle(*self.hererect)
         
 class YouAreHereFrame(wx.Frame):
     def __init__(self, mainwin):
