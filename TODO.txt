@@ -50,7 +50,7 @@ x Optimize boundary.py so we can use it for high iterations
 - GUI progress indicator.
 - Paint partial progress in the window.
 - Palette editor.
-- Multiple windows.
++ Multiple windows.
 - Back button
     - with a list of places you've been (with thumbnails).
 + Draggable rectangle in addition to click-to-zoom.
@@ -98,7 +98,7 @@ x Optimize boundary.py so we can use it for high iterations
 + Better progress reporting for trace_boundary: has to count pixels rather than scanlines.
 - Switchable coloring: standard, cycle count, etc.
 + Some way of embedding the mandelbrot parameters into the final .PNG, so it can be recreated.
-- A You-Are-Here mini panel showing the general location you are viewing
++ A You-Are-Here mini panel showing the general location you are viewing
     (maybe more than one step's worth).
 
 * Safety
