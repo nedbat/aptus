@@ -82,6 +82,12 @@ class AptusPanel(wx.Panel):
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_IDLE, self.on_idle)
 
+    def recenter(self, center):
+        """ Change the panel to display a new point on the Set.
+        """
+        self.m.center = center
+        self.geometry_changed()
+
     # GUI helpers
     
     def fire_command(self, cmdid, data=None):
@@ -516,6 +522,7 @@ class YouAreHerePanel(AptusPanel):
         self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_IDLE, self.on_idle)
+        self.Bind(wx.EVT_LEFT_UP, self.on_left_up)
         
         eventManager.Register(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.mainwin)
         eventManager.Register(self.on_computation_changed, EVT_APTUS_COMPUTATION_CHANGED, self.mainwin)
@@ -540,6 +547,10 @@ class YouAreHerePanel(AptusPanel):
         if not self.hererect:
             self.calc_rectangle()
 
+    def on_left_up(self, event):
+        mx, my = event.GetPosition()
+        self.mainwin.recenter(self.m.coords_from_pixel(mx, my))
+        
     def on_coloring_changed(self, event_unused):
         if self.m.copy_coloring(self.mainwin.m):
             self.coloring_changed()
