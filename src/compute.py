@@ -99,10 +99,13 @@ class AptusCompute:
         """
         changed = False
         for attr in attrs:
+            # Detect if changed, then copy the attribute regardless.  This makes
+            # the .palette copy every time, which guarantees proper drawing at
+            # the expense of a lot of palette copying.
             if getattr(self, attr) != getattr(other, attr):
-                otherval = copy.deepcopy(getattr(other, attr))
-                setattr(self, attr, otherval)
                 changed = True
+            otherval = copy.deepcopy(getattr(other, attr))
+            setattr(self, attr, otherval)
         return changed
     
     def color_mandel(self):
