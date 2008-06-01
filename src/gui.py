@@ -358,9 +358,11 @@ class AptusViewPanel(AptusPanel):
         self.dilate_view(event.GetPosition(), scale)
         self.reset_mousing()
         
-    def on_leave_window(self, event_unused):
+    def on_leave_window(self, event):
         if self.rubberrect:
             self.xor_rectangle(self.rubberrect)
+        if self.panning:
+            self.finish_panning(*event.GetPosition())
         self.reset_mousing()
         
     def on_key_down(self, event):
