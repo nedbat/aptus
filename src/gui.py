@@ -20,6 +20,7 @@ import wx.lib.layoutf
 import wx.html 
 import wx.lib.newevent
 from wx.lib.evtmgr import eventManager
+from wx.lib.scrolledpanel import ScrolledPanel
 
 # There are a few places we conditionalize on platform.
 is_mac = ('wxMac' in wx.PlatformInfo)
@@ -516,8 +517,8 @@ class YouAreHerePanel(AptusPanel):
     """ A panel slaved to another AptusPanel to show where the master panel is
         on the Set.
     """
-    def __init__(self, parent, mainwin):
-        AptusPanel.__init__(self, parent)
+    def __init__(self, parent, mainwin, size=wx.DefaultSize):
+        AptusPanel.__init__(self, parent, size=size)
         self.mainwin = mainwin
         self.hererect = None
         
@@ -531,7 +532,10 @@ class YouAreHerePanel(AptusPanel):
         eventManager.Register(self.on_geometry_changed, EVT_APTUS_GEOMETRY_CHANGED, self.mainwin)
 
         self.set_view()
-
+        self.on_coloring_changed(None)
+        self.on_computation_changed(None)
+        self.on_geometry_changed(None)
+        
     def on_destroy(self, event_unused):
         eventManager.DeregisterListener(self.on_coloring_changed)
         eventManager.DeregisterListener(self.on_computation_changed)
@@ -602,6 +606,24 @@ class YouAreHereFrame(wx.Frame):
         self.panel = YouAreHerePanel(self, mainwin)
         
 
+class FancyYouAreHereFrame(wx.Frame):
+    def __init__(self, mainwin):
+        wx.Frame.__init__(self, None, name='You are here', size=(250,250),
+            style=wx.DEFAULT_FRAME_STYLE|wx.FRAME_TOOL_WINDOW)
+
+        scrolledpanel = ScrolledPanel(self, -1, size=(140, 300),
+                                 style = wx.TAB_TRAVERSAL|wx.SUNKEN_BORDER, name="panel1")
+
+        box = wx.BoxSizer(wx.VERTICAL)
+        box.Add(YouAreHerePanel(scrolledpanel, mainwin, size=(250,250)))
+        box.Add(YouAreHerePanel(scrolledpanel, mainwin, size=(250,250)))
+        box.Add(YouAreHerePanel(scrolledpanel, mainwin, size=(250,250)))
+        
+        scrolledpanel.SetSizer(box)
+        scrolledpanel.SetAutoLayout(1)
+        scrolledpanel.SetupScrolling()
+
+        
 class AptusMainFrame(wx.Frame):
     """ The main window frame of the Aptus app.
     """
