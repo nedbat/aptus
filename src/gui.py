@@ -5,7 +5,7 @@
 
 from aptus import data_file, __version__
 from aptus.compute import AptusCompute
-from aptus.progress import ConsoleProgressReporter
+from aptus.progress import ConsoleProgressReporter, IntervalProgressReporter, AggregateProgressReporter
 from aptus.importer import importer
 from aptus.options import AptusOptions, AptusState
 from aptus.palettes import all_palettes
@@ -33,15 +33,21 @@ jumps = [
     ((0.45687170535326038,0.34780396997928614), (0.005859375,0.005859375)),
     ]
 
-class GuiProgressReporter(ConsoleProgressReporter):
+class GuiProgressReporter:
+    """ A progress reporter tied into the GUI.
+    """
+    def __init__(self, aptview):
+        self.aptview = aptview
+        
     def begin(self):
         wx.BeginBusyCursor()
-        ConsoleProgressReporter.begin(self)
         
+    def progress(self, frac_done, info=''):
+        self.aptview.draw_progress()
+
     def end(self):
-        ConsoleProgressReporter.end(self)
         wx.EndBusyCursor()
-        
+
 # Custom events
 AptusColoringChangedEvent, EVT_APTUS_COLORING_CHANGED = wx.lib.newevent.NewEvent()
 AptusComputationChangedEvent, EVT_APTUS_COMPUTATION_CHANGED = wx.lib.newevent.NewEvent()
@@ -132,7 +138,7 @@ class AptusPanel(wx.Panel):
     def on_paint(self, event_unused):
         if not self.bitmap:
             self.bitmap = self.draw_bitmap()
-        
+
         dc = wx.AutoBufferedPaintDC(self)
         dc.DrawBitmap(self.bitmap, 0, 0, False)
         self.on_paint_extras(dc)
@@ -142,14 +148,32 @@ class AptusPanel(wx.Panel):
     
     # Output methods
     
+    def make_progress_reporter(self):
+        # Construct a progress reporter that suits us.  Write to the console,
+        # and keep the GUI updated, but only every ten seconds.
+        prorep = AggregateProgressReporter()
+        prorep.add(ConsoleProgressReporter())
+        prorep.add(GuiProgressReporter(self))
+        return IntervalProgressReporter(10, prorep)
+    
+    def bitmap_from_compute(self):
+        pix = self.m.color_mandel()
+        bitmap = wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix)
+        return bitmap
+
     def draw_bitmap(self):
         """ Return a bitmap with the image to display in the window.
         """
-        self.m.progress = GuiProgressReporter()
+        self.m.progress = self.make_progress_reporter()
         self.m.compute_pixels()
-        pix = self.m.color_mandel()
-        return wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix)
+        self.Refresh()
+        return self.bitmap_from_compute()
 
+    def draw_progress(self):
+        self.bitmap = self.bitmap_from_compute()
+        self.Refresh()
+        self.Update()
+        
     def set_view(self):
         self.bitmap = None
         self.m.size = self.GetClientSize()
