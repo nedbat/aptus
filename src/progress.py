@@ -25,24 +25,66 @@ class NullProgressReporter:
         """
         pass
     
+
+class IntervalProgressReporter:
+    """ A progress reporter decorator that only calls its wrapped reporter
+        every N seconds.
+    """
+    def __init__(self, nsec, reporter):
+        self.nsec = nsec
+        self.reporter = reporter
+        
+    def begin(self):
+        self.latest = time.time()
+        self.reporter.begin()
+        
+    def progress(self, frac_done, info=''):
+        now = time.time()
+        if now - self.latest > self.nsec:
+            self.reporter.progress(frac_done, info)
+            self.latest = now
+            
+    def end(self):
+        self.reporter.end()
+
+
+class AggregateProgressReporter:
+    """ Collect a number of progress reporters into a single unified front.
+    """
+    def __init__(self):
+        self.kids = []
+        
+    def add(self, reporter):
+        self.kids.append(reporter)
+    
+    def begin(self):
+        for kid in self.kids:
+            kid.begin()
+            
+    def progress(self, frac_done, info=''):
+        for kid in self.kids:
+            kid.progress(frac_done, info)
+    
+    def end(self):
+        for kid in self.kids:
+            kid.end()
+
+
 class ConsoleProgressReporter:
-    """ A progress reporter that writes lines to the console every ten seconds.
+    """ A progress reporter that writes lines to the console.
     """
     def begin(self):
         self.start = time.time()
-        self.latest = self.start
 
     def progress(self, frac_done, info=''):
         now = time.time()
-        if now - self.latest > 10:
-            so_far = int(now - self.start)
-            to_go = int(so_far / frac_done * (1-frac_done))
-            if info:
-                info = '  ' + info
-            print "%5.2f%%: %11s done, %11s to go, eta %10s%s" % (
-                frac_done*100, duration(so_far), duration(to_go), future(to_go), info
-                )
-            self.latest = now
+        so_far = int(now - self.start)
+        to_go = int(so_far / frac_done * (1-frac_done))
+        if info:
+            info = '  ' + info
+        print "%5.2f%%: %11s done, %11s to go, eta %10s%s" % (
+            frac_done*100, duration(so_far), duration(to_go), future(to_go), info
+            )
     
     def end(self):
         total = time.time() - self.start
