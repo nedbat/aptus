@@ -357,17 +357,21 @@ static PyObject *
 mandelbrot_array(AptEngine *self, PyObject *args)
 {
     // Arguments to the function.
-    PyArrayObject *arr;
+    PyArrayObject *counts;
+    // status is an array of the status of the pixels.
+    //  0: hasn't been computed yet.
+    //  1: computed, but not filled.
+    //  2: computed and filled.
+    PyArrayObject *status;
     PyObject * progress;
     
     // Malloc'ed buffers.
     typedef struct { int x, y; } pt;
-    u1int * status = NULL;
     pt * points = NULL;
     
     int ok = 0;
     
-    if (!PyArg_ParseTuple(args, "O!O", &PyArray_Type, &arr, &progress)) {
+    if (!PyArg_ParseTuple(args, "O!O!O", &PyArray_Type, &counts, &PyArray_Type, &status, &progress)) {
         goto done;
     }
     
@@ -377,21 +381,10 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     }
 
     // Allocate structures
-    int w = PyArray_DIM(arr, 1);
-    int h = PyArray_DIM(arr, 0);
+    int w = PyArray_DIM(counts, 1);
+    int h = PyArray_DIM(counts, 0);
     int num_pixels = 0;
     
-    // status is an array of the status of the pixels.
-    //  0: hasn't been computed yet.
-    //  1: computed, but not filled.
-    //  2: computed and filled.
-    status = (u1int *) malloc(w*h);
-    if (status == NULL) {
-        PyErr_SetString(PyExc_MemoryError, "couldn't allocate status");
-        goto done;
-    }
-    memset(status, 0, w*h);
-
     // points is an array of points on a boundary.
     int ptsalloced = 10000;
     points = malloc(sizeof(pt)*ptsalloced);
@@ -400,8 +393,8 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     char info[100];
     char uinfo[100];
     
-#define STATUS(x,y) status[(y)*w+(x)]
-#define COUNTS(x,y) *(npy_uint32 *)PyArray_GETPTR2(arr, (y), (x))
+#define STATUS(x,y) *(npy_uint8 *)PyArray_GETPTR2(status, (y), (x))
+#define COUNTS(x,y) *(npy_uint32 *)PyArray_GETPTR2(counts, (y), (x))
 #define DIR_DOWN    0
 #define DIR_LEFT    1
 #define DIR_UP      2
@@ -577,9 +570,6 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     ok = 1;
     
 done:
-    if (status != NULL) {
-        free(status);
-    }
     if (points != NULL) {
         free(points);
     }
