@@ -39,7 +39,7 @@ x Optimize boundary.py so we can use it for high iterations
     uses it to skip the bailout check until reaching the miniter.
 + Go through the bitblting python code to see if we can skip some of the steps.
 + A custom coloring endpoint in the engine to replace the multiple numpy operations.
-- When dragging the image, only re-calc the parts that have been exposed.
++ When dragging the image, only re-calc the parts that have been exposed.
 - When dragging the image, keep parts scrolled off-screen, in case they come back.
 - When resizing the window, do similar pixel-retention as when dragging.
 

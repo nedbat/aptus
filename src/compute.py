@@ -37,9 +37,30 @@ class AptusCompute:
         self.julia = False
         self.juliaxy = 0.0, 0.0
         self.outfile = 'Aptus.png'
-        
-    def create_mandel(self):
+
         self.eng = AptEngine()
+        self.counts = self.status = None
+        self.pixels_computed = False
+        self.clear_old_geometry()
+        
+    def prepare_for_geometry_change(self):
+        """ Call this before any of the geometry settings change, to possibly
+            optimize the next computation.
+        """
+        self.old_ssize = self.ssize
+        self.old_pixsize = self.pixsize
+        self.old_xy0 = self.eng.xy0
+        self.old_angle = self.angle
+        self.old_iter_limit = self.iter_limit
+        
+    def clear_old_geometry(self):
+        self.old_ssize = (0,0)
+        self.old_pixsize = 0
+        self.old_xy0 = (0,0)
+        self.old_angle = 0
+        self.old_iter_limit = 0
+    
+    def create_mandel(self):
         
         # ssize is the dimensions of the sample array, in samples across and down.
         self.ssize = self.size[0]*self.supersample, self.size[1]*self.supersample
@@ -64,8 +85,7 @@ class AptusCompute:
         self.eng.iter_limit = self.iter_limit
         self.eng.trace_boundary = 1
         self.progress = NullProgressReporter()
-        self.counts = None
-
+    
         # If bailout was never specified, then default differently based on
         # continuous or discrete coloring.
         if self.bailout:
@@ -81,6 +101,44 @@ class AptusCompute:
             self.eng.juliaxy = self.juliaxy
             self.eng.trace_boundary = 0
 
+        # Create new workspaces for the compute engine.
+        old_counts, old_status = self.counts, self.status
+        self.counts = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint32)
+        self.status = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint8)
+
+        # Figure out if we can keep any of our old counts or not.
+        # For now, don't try to do this if old and new are different sizes.
+        if (old_counts is not None and old_status is not None and
+            old_counts.shape == self.counts.shape and old_status.shape == self.status.shape and
+            self.pixsize == self.old_pixsize and
+            self.angle == self.old_angle and
+            self.iter_limit == self.old_iter_limit):
+            # All the params are compatible, see how much we shifted.
+            dx, dy = self.pixel_from_coords(*self.old_xy0)
+            dx = int(round(dx))
+            dy = int(round(dy))
+            
+            # Figure out what rectangle is still valid.
+            nc = self.ssize[0] - abs(dx)
+            nr = self.ssize[1] - abs(dy)
+            
+            if nc > 0 and nr > 0:
+                # Some rows and columns are shared between old and new.
+                if dx >= 0:
+                    oldx, newx = 0, dx
+                else:
+                    oldx, newx = -dx, 0
+                if dy >= 0:
+                    oldy, newy = 0, dy
+                else:
+                    oldy, newy = -dy, 0
+                # Copy the common rectangles.
+                self.counts[newy:newy+nr,newx:newx+nc] = old_counts[oldy:oldy+nr,oldx:oldx+nc]
+                self.status[newy:newy+nr,newx:newx+nc] = old_status[oldy:oldy+nr,oldx:oldx+nc]
+        
+        self.pixels_computed = False            
+        self.clear_old_geometry()
+        
     def copy_coloring(self, other):
         """ Copy the coloring attributes from other to self, returning True if
             any of them actually changed.
@@ -138,7 +196,7 @@ class AptusCompute:
         return px, py
 
     def compute_pixels(self):
-        if self.counts is not None:
+        if self.pixels_computed:
             return
 
         print "x, y %r step %r, angle %r, iter_limit %r, size %r" % (
@@ -147,11 +205,12 @@ class AptusCompute:
 
         self.eng.clear_stats()
         self.progress.begin()
-        self.counts = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint32)
-        self.eng.mandelbrot_array(self.counts, self.progress.progress)
+        self.eng.mandelbrot_array(self.counts, self.status, self.progress.progress)
         self.progress.end()
         print self.eng.get_stats()
-
+        self.prepare_for_geometry_change()
+        self.pixels_computed = True
+        
     def write_image(self, im, fpath):
         """ Write the image `im` to the path `fpath`.
         """
