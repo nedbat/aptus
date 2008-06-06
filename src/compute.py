@@ -24,20 +24,25 @@ class AptusCompute:
         self.diam = 3.0, 3.0
         self.size = 600, 600
         self.angle = 0.0
+        
         # computation
         self.iter_limit = 999
         self.bailout = 0
         self.continuous = False
         self.supersample = 1
+        self.computation_attributes = ['iter_limit', 'bailout', 'continuous', 'supersample']
+        
         # coloring
         self.palette = None
         self.palette_phase = 0
         self.palette_scale = 1.0
+        self.coloring_attributes = ['palette', 'palette_phase', 'palette_scale']
+        
         # other
         self.julia = False
         self.juliaxy = 0.0, 0.0
         self.outfile = 'Aptus.png'
-
+        
         self.eng = AptEngine()
         self.counts = self.status = None
         self.pixels_computed = False
@@ -51,15 +56,23 @@ class AptusCompute:
         self.old_pixsize = self.pixsize
         self.old_xy0 = self.eng.xy0
         self.old_angle = self.angle
-        self.old_iter_limit = self.iter_limit
+        for a in self.computation_attributes:
+            setattr(self, 'old_'+a, getattr(self, a))
         
     def clear_old_geometry(self):
         self.old_ssize = (0,0)
         self.old_pixsize = 0
         self.old_xy0 = (0,0)
         self.old_angle = 0
-        self.old_iter_limit = 0
+        for a in self.computation_attributes:
+            setattr(self, 'old_'+a, 0)
     
+    def computation_changed(self):
+        for a in self.computation_attributes:
+            if getattr(self, 'old_'+a) != getattr(self, a):
+                return True
+        return False
+
     def create_mandel(self):
         
         # ssize is the dimensions of the sample array, in samples across and down.
@@ -112,7 +125,7 @@ class AptusCompute:
             old_counts.shape == self.counts.shape and old_status.shape == self.status.shape and
             self.pixsize == self.old_pixsize and
             self.angle == self.old_angle and
-            self.iter_limit == self.old_iter_limit):
+            not self.computation_changed()):
             # All the params are compatible, see how much we shifted.
             dx, dy = self.pixel_from_coords(*self.old_xy0)
             dx = int(round(dx))
@@ -143,13 +156,13 @@ class AptusCompute:
         """ Copy the coloring attributes from other to self, returning True if
             any of them actually changed.
         """
-        return self.copy_attributes(other, ['palette', 'palette_phase', 'palette_scale'])
+        return self.copy_attributes(other, self.coloring_attributes)
 
     def copy_computation(self, other):
         """ Copy the computation attributes from other to self, returning True if
             any of them actually changed.
         """
-        return self.copy_attributes(other, ['iter_limit', 'bailout', 'continuous', 'supersample'])
+        return self.copy_attributes(other, self.computation_attributes)
     
     def copy_attributes(self, other, attrs):
         """ Copy a list of attributes from other to self, returning True if
