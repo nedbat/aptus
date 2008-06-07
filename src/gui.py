@@ -623,10 +623,10 @@ class YouAreHerePanel(AptusPanel):
             dc.SetPen(wx.Pen(wx.Colour(255,255,255), 1, wx.SOLID))
             dc.DrawRectangle(*self.hererect)
         
-class YouAreHereFrame(wx.Frame):
+class YouAreHereFrame(wx.MiniFrame):
     def __init__(self, mainwin):
-        wx.Frame.__init__(self, None, name='You are here', size=(250,250),
-            style=wx.DEFAULT_FRAME_STYLE|wx.FRAME_TOOL_WINDOW)
+        wx.MiniFrame.__init__(self, None, title='You are here', size=(250,250),
+            style=wx.DEFAULT_FRAME_STYLE|wx.TINY_CAPTION_HORIZ)
         self.panel = YouAreHerePanel(self, mainwin)
         
 
