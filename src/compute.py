@@ -115,14 +115,14 @@ class AptusCompute:
             self.eng.trace_boundary = 0
 
         # Create new workspaces for the compute engine.
-        old_counts, old_status = self.counts, self.status
+        old_counts = self.counts
         self.counts = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint32)
         self.status = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint8)
 
         # Figure out if we can keep any of our old counts or not.
         # For now, don't try to do this if old and new are different sizes.
-        if (old_counts is not None and old_status is not None and
-            old_counts.shape == self.counts.shape and old_status.shape == self.status.shape and
+        if (old_counts is not None and
+            old_counts.shape == self.counts.shape and
             self.pixsize == self.old_pixsize and
             self.angle == self.old_angle and
             not self.computation_changed()):
@@ -145,11 +145,12 @@ class AptusCompute:
                     oldy, newy = 0, dy
                 else:
                     oldy, newy = -dy, 0
-                # Copy the common rectangles.
+                # Copy the common rectangles.  Old_counts gets copied to counts,
+                # and status gets the common rectangle filled with 2's.
                 self.counts[newy:newy+nr,newx:newx+nc] = old_counts[oldy:oldy+nr,oldx:oldx+nc]
-                self.status[newy:newy+nr,newx:newx+nc] = old_status[oldy:oldy+nr,oldx:oldx+nc]
-        
-        self.pixels_computed = False            
+                self.status[newy:newy+nr,newx:newx+nc] = 2  # 2 == Fully computed and filled
+                
+        self.pixels_computed = False
         self.clear_old_geometry()
         
     def copy_coloring(self, other):
@@ -223,6 +224,7 @@ class AptusCompute:
         print self.eng.get_stats()
         self.prepare_for_geometry_change()
         self.pixels_computed = True
+        self.status = None  # It's all 2's now, no point in keeping it.
         
     def write_image(self, im, fpath):
         """ Write the image `im` to the path `fpath`.
