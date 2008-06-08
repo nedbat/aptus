@@ -46,9 +46,9 @@ class AptusCompute:
         self.eng = AptEngine()
         self.counts = self.status = None
         self.pixels_computed = False
-        self.clear_old_geometry()
+        self._clear_old_geometry()
         
-    def prepare_for_geometry_change(self):
+    def _record_old_geometry(self):
         """ Call this before any of the geometry settings change, to possibly
             optimize the next computation.
         """
@@ -59,7 +59,7 @@ class AptusCompute:
         for a in self.computation_attributes:
             setattr(self, 'old_'+a, getattr(self, a))
         
-    def clear_old_geometry(self):
+    def _clear_old_geometry(self):
         self.old_ssize = (0,0)
         self.old_pixsize = 0
         self.old_xy0 = (0,0)
@@ -120,9 +120,7 @@ class AptusCompute:
         self.status = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint8)
 
         # Figure out if we can keep any of our old counts or not.
-        # For now, don't try to do this if old and new are different sizes.
         if (old_counts is not None and
-            old_counts.shape == self.counts.shape and
             self.pixsize == self.old_pixsize and
             self.angle == self.old_angle and
             not self.computation_changed()):
@@ -131,9 +129,10 @@ class AptusCompute:
             dx = int(round(dx))
             dy = int(round(dy))
             
-            # Figure out what rectangle is still valid.
-            nc = self.ssize[0] - abs(dx)
-            nr = self.ssize[1] - abs(dy)
+            # Figure out what rectangle is still valid, keep in mind the old
+            # and new rectangles could be different sizes.
+            nc = min(self.counts.shape[1] - abs(dx), old_counts.shape[1])
+            nr = min(self.counts.shape[0] - abs(dy), old_counts.shape[0])
             
             if nc > 0 and nr > 0:
                 # Some rows and columns are shared between old and new.
@@ -145,13 +144,14 @@ class AptusCompute:
                     oldy, newy = 0, dy
                 else:
                     oldy, newy = -dy, 0
+                
                 # Copy the common rectangles.  Old_counts gets copied to counts,
                 # and status gets the common rectangle filled with 2's.
                 self.counts[newy:newy+nr,newx:newx+nc] = old_counts[oldy:oldy+nr,oldx:oldx+nc]
                 self.status[newy:newy+nr,newx:newx+nc] = 2  # 2 == Fully computed and filled
                 
         self.pixels_computed = False
-        self.clear_old_geometry()
+        self._clear_old_geometry()
         
     def copy_coloring(self, other):
         """ Copy the coloring attributes from other to self, returning True if
@@ -222,7 +222,7 @@ class AptusCompute:
         self.eng.mandelbrot_array(self.counts, self.status, self.progress.progress)
         self.progress.end()
         print self.eng.get_stats()
-        self.prepare_for_geometry_change()
+        self._record_old_geometry()
         self.pixels_computed = True
         self.status = None  # It's all 2's now, no point in keeping it.
         
