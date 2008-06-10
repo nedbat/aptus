@@ -676,6 +676,8 @@ clear_stats(AptEngine *self)
     self->stats.miniter = 0;
     self->stats.maxedpoints = 0;
     self->stats.computedpoints = 0;
+    self->stats.boundaries = 0;
+    self->stats.boundariesfilled = 0;
 
     return Py_BuildValue("");
 }
