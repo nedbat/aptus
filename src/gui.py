@@ -626,7 +626,7 @@ class YouAreHerePanel(AptusPanel):
 class YouAreHereFrame(wx.MiniFrame):
     def __init__(self, mainwin):
         wx.MiniFrame.__init__(self, None, title='You are here', size=(250,250),
-            style=wx.DEFAULT_FRAME_STYLE|wx.TINY_CAPTION_HORIZ)
+            style=wx.DEFAULT_MINIFRAME_STYLE|wx.CLOSE_BOX)
         self.panel = YouAreHerePanel(self, mainwin)
         
 
