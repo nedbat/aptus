@@ -107,13 +107,19 @@ class AptusCompute:
             self.eng.bailout = 100.0
         else:
             self.eng.bailout = 2.0
-        if self.continuous:
-            self.eng.cont_levels = self.eng.blend_colors = 256
+        
+        # Continuous is really two different controls in the engine.
+        self.eng.cont_levels = self.eng.blend_colors = 256 if self.continuous else 1
+        
+        # Experimental Julia support.
         self.eng.julia = int(self.julia)
         if self.julia:
             self.eng.juliaxy = self.juliaxy
             self.eng.trace_boundary = 0
-
+        else:
+            self.eng.juliaxy = (0,0)
+            self.eng.trace_boundary = 1
+            
         # Create new workspaces for the compute engine.
         old_counts = self.counts
         self.counts = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint32)
@@ -213,7 +219,7 @@ class AptusCompute:
         if self.pixels_computed:
             return
 
-        print "x, y %r step %r, angle %r, iter_limit %r, size %r" % (
+        print "x, y %r step %r, angle %.1f, iter_limit %r, size %r" % (
             self.eng.xy0, self.pixsize, self.angle, self.eng.iter_limit, self.ssize
             )
 
