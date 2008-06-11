@@ -41,14 +41,14 @@ x Optimize boundary.py so we can use it for high iterations
 + A custom coloring endpoint in the engine to replace the multiple numpy operations.
 + When dragging the image, only re-calc the parts that have been exposed.
 - When dragging the image, keep parts scrolled off-screen, in case they come back.
-- When resizing the window, do similar pixel-retention as when dragging.
++ When resizing the window, do similar pixel-retention as when dragging.
 
 * UI
 
 + Make a window icon.
 - Status bar for progress and stats presentation.
 - GUI progress indicator.
-- Paint partial progress in the window.
++ Paint partial progress in the window.
 - Palette editor.
 + Multiple windows.
 - Back button
