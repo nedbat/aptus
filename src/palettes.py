@@ -82,7 +82,7 @@ class Palette:
         """ Create a textual description of the palette, for later reconstitution
             with from_spec().
         """
-        s = self._spec
+        s = self._spec[:]
         s.append(['adjust', self.adjusts])
         return s
     
