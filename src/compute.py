@@ -188,7 +188,10 @@ class AptusCompute:
     
     def color_mandel(self):
         pix = numpy.zeros((self.counts.shape[0], self.counts.shape[1], 3), dtype=numpy.uint8)
-        self.eng.apply_palette(self.counts, self.palette.color_bytes(), self.palette_phase, self.palette_scale, self.palette.incolor, pix)
+        self.eng.apply_palette(
+            self.counts, self.palette.color_bytes(), self.palette_phase, self.palette_scale,
+            self.palette.incolor, pix
+            )
         return pix
     
     def coords_from_pixel(self, x, y):
