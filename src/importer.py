@@ -30,6 +30,5 @@ def importer(name):
         try:
             from aptus.engine import AptEngine
         except:
-            print "*** Warning: using slow engine ***"
-            from slow_engine import AptEngine
+            raise Exception("There is no Python implementation of the compute engine!")
         return AptEngine

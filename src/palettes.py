@@ -3,7 +3,7 @@
     Copyright 2007-2008, Ned Batchelder
 """
 
-#from aptus import data_file
+from aptus import data_file
 import colorsys
 
 # Pure data-munging functions
@@ -194,7 +194,7 @@ class Palette:
     def gradient(self, ggr_file, ncolors):
         """ Create the palette from a GIMP .ggr gradient file.
         """
-        from ggr import GimpGradient
+        from aptus.ggr import GimpGradient
         ggr = GimpGradient()
         try:
             ggr.read(ggr_file)
@@ -266,10 +266,10 @@ all_palettes = [
     Palette().rgb_colors([(255,255,255), (0,0,0), (0,0,0), (0,0,0)]),
     Palette().rgb_colors([(255,255,255)]),
     Palette().spectrum(2, h=120, l=(50,200), s=125).stretch(128, hsl=True),
-    #Palette().gradient(data_file('palettes/bluefly.ggr'), 50),
-    #Palette().gradient(data_file('palettes/ib18.ggr'), 50),
-    #Palette().gradient(data_file('palettes/redblue.ggr'), 50),
-    #Palette().gradient(data_file('palettes/DEM_screen.ggr'), 50),
+    Palette().gradient(data_file('palettes/bluefly.ggr'), 50),
+    Palette().gradient(data_file('palettes/ib18.ggr'), 50),
+    Palette().gradient(data_file('palettes/redblue.ggr'), 50),
+    Palette().gradient(data_file('palettes/DEM_screen.ggr'), 50),
     ]
 
 # A simple viewer to see the palettes.

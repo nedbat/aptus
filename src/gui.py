@@ -42,7 +42,7 @@ class GuiProgressReporter:
     def begin(self):
         wx.BeginBusyCursor()
         
-    def progress(self, frac_done, info=''):
+    def progress(self, frac_done_unused, info_unused=''):
         self.aptview.draw_progress()
 
     def end(self):
