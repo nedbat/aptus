@@ -675,13 +675,16 @@ class AptusMainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.cmd_help, id=id_help)
         self.Bind(wx.EVT_MENU, self.cmd_show_youarehere, id=id_show_youarehere)
         
-    def Show(self):
+    def Show(self, show=True):
         # Override Show so we can set the view properly.
-        self.SetClientSize(self.panel.m.size)
-        self.panel.set_view()
-        wx.Frame.Show(self)
-        self.panel.SetFocus()
-        
+        if show:
+            self.SetClientSize(self.panel.m.size)
+            self.panel.set_view()
+            wx.Frame.Show(self, True)
+            self.panel.SetFocus()
+        else:
+            wx.Frame.Show(self, False)
+
     def message(self, msg):
         dlg = wx.MessageDialog(self, msg, 'Aptus', wx.OK | wx.ICON_WARNING)
         dlg.ShowModal()
