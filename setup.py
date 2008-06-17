@@ -45,7 +45,8 @@ setup(
     
     # The data
     packages = [
-        'aptus'
+        'aptus',
+        'aptus.gui',
         ],
 
     package_dir = {
