@@ -2,28 +2,31 @@
 
 def importer(name):
     if name == 'wx':
+        url = "http://wxpython.org/"
         try:
             import wx
-        except:
-            raise Exception("Need wxPython, from http://wxpython.org/")
+        except ImportError:
+            raise Exception("Need wxPython, from " + url)
         if not hasattr(wx, 'BitmapFromBuffer'):
-            raise Exception("Need wxPython 2.8 or greater, from http://wxpython.org/")
+            raise Exception("Need wxPython 2.8 or greater, from " + url)
         return wx
     
     elif name == 'numpy':
+        url = "http://numpy.scipy.org/"
         try:
             import numpy
-        except:
-            raise Exception("Need numpy, from http://numpy.scipy.org/")
+        except ImportError:
+            raise Exception("Need numpy, from " + url)
         return numpy
     
     elif name == 'Image':
+        url = "http://pythonware.com/products/pil/"
         try:
             import Image
-        except:
-            raise Exception("Need PIL, from http://pythonware.com/products/pil/")
+        except ImportError:
+            raise Exception("Need PIL, from " + url)
         if not hasattr(Image, 'fromarray'):
-            raise Exception("Need PIL 1.1.6 or greater, from http://pythonware.com/products/pil/")
+            raise Exception("Need PIL 1.1.6 or greater, from " + url)
         return Image
 
     elif name == 'AptEngine':
