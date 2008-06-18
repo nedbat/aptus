@@ -2,7 +2,7 @@
 """
 
 from aptus.importer import importer
-from aptus.gui import AptusPanel
+from aptus.gui.computepanel import ComputePanel
 from aptus.gui.ids import *
 
 wx = importer("wx")
@@ -12,12 +12,12 @@ from wx.lib.scrolledpanel import ScrolledPanel
 import math
 
 
-class YouAreHerePanel(AptusPanel):
-    """ A panel slaved to another AptusPanel to show where the master panel is
+class YouAreHerePanel(ComputePanel):
+    """ A panel slaved to another ComputePanel to show where the master panel is
         on the Set.
     """
     def __init__(self, parent, mainwin, size=wx.DefaultSize):
-        AptusPanel.__init__(self, parent, size=size)
+        ComputePanel.__init__(self, parent, size=size)
         self.mainwin = mainwin
         self.hererect = None
         
@@ -43,11 +43,11 @@ class YouAreHerePanel(AptusPanel):
     def on_size(self, event):
         # Need to recalc our rectangle.
         self.hererect = None
-        AptusPanel.on_size(self, event)
+        ComputePanel.on_size(self, event)
 
     def on_idle(self, event):
-        # Let the AptusPanel resize.
-        AptusPanel.on_idle(self, event)
+        # Let the ComputePanel resize.
+        ComputePanel.on_idle(self, event)
         # Then we can recalc our rectangle.
         if not self.hererect:
             self.calc_rectangle()
