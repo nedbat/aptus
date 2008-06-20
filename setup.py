@@ -57,6 +57,7 @@ setup(
         'aptus': [
             '*.ico',
             '*.png',
+            'palettes/*.ggr',
             ]
         },
     
