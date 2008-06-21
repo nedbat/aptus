@@ -1,4 +1,6 @@
-// The Aptus Engine C extension for computing Mandelbrot fractals (hopefully quickly).
+// The Aptus Engine C extension for computing Mandelbrot fractals.
+// copyright 2007-2008, Ned Batchelder
+// http://nedbatchelder.com/code/aptus
 
 #include "Python.h"
 #include "numpy/arrayobject.h"
@@ -23,10 +25,10 @@ typedef npy_uint64 u8int;
 
 typedef struct {
     PyObject_HEAD
-    aptcomplex xy0;         // upper-left point (a pair of floats)
-    aptcomplex xydx;        // delta per pixel in x direction (a pair of floats)
-    aptcomplex xydy;        // delta per pixel in y direction (a pair of floats)
-    aptcomplex juliaxy;     // julia xy point.
+    aptcomplex ri0;         // upper-left point (a pair of floats)
+    aptcomplex ridx;        // delta per pixel in x direction (a pair of floats)
+    aptcomplex ridy;        // delta per pixel in y direction (a pair of floats)
+    aptcomplex rijulia;     // julia point.
     
     int iter_limit;         // limit on iteration count.
     aptfloat bailout;       // escape radius.
@@ -66,14 +68,14 @@ AptEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 
     self = (AptEngine *)type->tp_alloc(type, 0);
     if (self != NULL) {
-        self->xy0.r = 0.0;
-        self->xy0.i = 0.0;
-        self->xydx.r = 0.001;
-        self->xydx.i = 0.0;
-        self->xydy.r = 0.0;
-        self->xydy.i = 0.001;
-        self->juliaxy.r = 0.0;
-        self->juliaxy.i = 0.0;
+        self->ri0.r = 0.0;
+        self->ri0.i = 0.0;
+        self->ridx.r = 0.001;
+        self->ridx.i = 0.0;
+        self->ridy.r = 0.0;
+        self->ridy.i = 0.001;
+        self->rijulia.r = 0.0;
+        self->rijulia.i = 0.0;
         self->iter_limit = 999;
         self->bailout = 2.0;
         self->check_for_cycles = 1;
@@ -92,72 +94,72 @@ AptEngine_init(AptEngine *self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
-// xy0 property methods
+// ri0 property methods
 
 static PyObject *
-AptEngine_get_xy0(AptEngine *self, void *closure)
+AptEngine_get_ri0(AptEngine *self, void *closure)
 {
-    return Py_BuildValue("dd", self->xy0.r, self->xy0.i);
+    return Py_BuildValue("dd", self->ri0.r, self->ri0.i);
 }
 
 static int
-AptEngine_set_xy0(AptEngine *self, PyObject *value, void *closure)
+AptEngine_set_ri0(AptEngine *self, PyObject *value, void *closure)
 {
     if (value == NULL) {
-        PyErr_SetString(PyExc_TypeError, "Cannot delete the xy0 attribute");
+        PyErr_SetString(PyExc_TypeError, "Cannot delete the ri0 attribute");
         return -1;
     }
   
-    if (!PyArg_ParseTuple(value, "dd", &self->xy0.r, &self->xy0.i)) {
+    if (!PyArg_ParseTuple(value, "dd", &self->ri0.r, &self->ri0.i)) {
         return -1;
     }
 
     return 0;
 }
 
-// xydxdy property methods
+// ridxdy property methods
 
 static PyObject *
-AptEngine_get_xydxdy(AptEngine *self, void *closure)
+AptEngine_get_ridxdy(AptEngine *self, void *closure)
 {
-    return Py_BuildValue("dddd", self->xydx.r, self->xydx.i, self->xydy.r, self->xydy.i);
+    return Py_BuildValue("dddd", self->ridx.r, self->ridx.i, self->ridy.r, self->ridy.i);
 }
 
 static int
-AptEngine_set_xydxdy(AptEngine *self, PyObject *value, void *closure)
+AptEngine_set_ridxdy(AptEngine *self, PyObject *value, void *closure)
 {
     if (value == NULL) {
-        PyErr_SetString(PyExc_TypeError, "Cannot delete the xydxdy attribute");
+        PyErr_SetString(PyExc_TypeError, "Cannot delete the ridxdy attribute");
         return -1;
     }
   
-    if (!PyArg_ParseTuple(value, "dddd", &self->xydx.r, &self->xydx.i, &self->xydy.r, &self->xydy.i)) {
+    if (!PyArg_ParseTuple(value, "dddd", &self->ridx.r, &self->ridx.i, &self->ridy.r, &self->ridy.i)) {
         return -1;
     }
 
     // Make a crude estimate of an epsilon to use for cycle checking.
-    self->epsilon = (self->xydx.r+self->xydx.i)/2;
+    self->epsilon = (self->ridx.r+self->ridx.i)/2;
     
     return 0;
 }
 
-// juliaxy property methods
+// rijulia property methods
 
 static PyObject *
-AptEngine_get_juliaxy(AptEngine *self, void* closure)
+AptEngine_get_rijulia(AptEngine *self, void* closure)
 {
-    return Py_BuildValue("dd", self->juliaxy.r, self->juliaxy.i);
+    return Py_BuildValue("dd", self->rijulia.r, self->rijulia.i);
 }
 
 static int
-AptEngine_set_juliaxy(AptEngine *self, PyObject *value, void *closure)
+AptEngine_set_rijulia(AptEngine *self, PyObject *value, void *closure)
 {
     if (value == NULL) {
-        PyErr_SetString(PyExc_TypeError, "Cannot delete the juliaxy attribute");
+        PyErr_SetString(PyExc_TypeError, "Cannot delete the rijulia attribute");
         return -1;
     }
   
-    if (!PyArg_ParseTuple(value, "dd", &self->juliaxy.r, &self->juliaxy.i)) {
+    if (!PyArg_ParseTuple(value, "dd", &self->rijulia.r, &self->rijulia.i)) {
         return -1;
     }
 
@@ -193,14 +195,14 @@ compute_count(AptEngine * self, int xi, int yi)
     aptcomplex z2;
 
     if (self->julia) {
-        c.r = self->juliaxy.r;
-        c.i = self->juliaxy.i;
-        z.r = self->xy0.r + xi*self->xydx.r + yi*self->xydy.r;
-        z.i = self->xy0.i + xi*self->xydx.i + yi*self->xydy.i;
+        c.r = self->rijulia.r;
+        c.i = self->rijulia.i;
+        z.r = self->ri0.r + xi*self->ridx.r + yi*self->ridy.r;
+        z.i = self->ri0.i + xi*self->ridx.i + yi*self->ridy.i;
     }
     else {
-        c.r = self->xy0.r + xi*self->xydx.r + yi*self->xydy.r;
-        c.i = self->xy0.i + xi*self->xydx.i + yi*self->xydy.i;
+        c.r = self->ri0.r + xi*self->ridx.r + yi*self->ridy.r;
+        c.i = self->ri0.i + xi*self->ridx.i + yi*self->ridy.i;
         z.r = 0.0;
         z.i = 0.0;
     }
@@ -739,9 +741,9 @@ AptEngine_members[] = {
 
 static PyGetSetDef
 AptEngine_getsetters[] = {
-    { "xy0", (getter)AptEngine_get_xy0, (setter)AptEngine_set_xy0, "Upper-left corner coordinates", NULL },
-    { "xydxdy", (getter)AptEngine_get_xydxdy, (setter)AptEngine_set_xydxdy, "Pixel offsets", NULL },
-    { "juliaxy", (getter)AptEngine_get_juliaxy, (setter)AptEngine_set_juliaxy, "Julia point", NULL },
+    { "ri0", (getter)AptEngine_get_ri0, (setter)AptEngine_set_ri0, "Upper-left corner coordinates", NULL },
+    { "ridxdy", (getter)AptEngine_get_ridxdy, (setter)AptEngine_set_ridxdy, "Pixel offsets", NULL },
+    { "rijulia", (getter)AptEngine_get_rijulia, (setter)AptEngine_set_rijulia, "Julia point", NULL },
     { NULL }
 };
 

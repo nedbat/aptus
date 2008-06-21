@@ -17,6 +17,10 @@ import copy, math
 class AptusCompute:
     """ The Mandelbrot compute class.  It wraps the AptEngine to provide pythonic
         convenience.
+        
+        There are two coordinate systems at work here: the ri plane is the
+        fractal plane, real and imaginary floats.  The xy plane are screen coordinates,
+        in pixels, usually integers.
     """
     def __init__(self):
         # geometry
@@ -40,7 +44,7 @@ class AptusCompute:
         
         # other
         self.julia = False
-        self.juliaxy = 0.0, 0.0
+        self.rijulia = 0.0, 0.0
         self.outfile = 'Aptus.png'
         
         self.eng = AptEngine()
@@ -54,7 +58,7 @@ class AptusCompute:
         """
         self.old_ssize = self.ssize
         self.old_pixsize = self.pixsize
-        self.old_xy0 = self.eng.xy0
+        self.old_ri0 = self.eng.ri0
         self.old_angle = self.angle
         for a in self.computation_attributes:
             setattr(self, 'old_'+a, getattr(self, a))
@@ -62,7 +66,7 @@ class AptusCompute:
     def _clear_old_geometry(self):
         self.old_ssize = (0,0)
         self.old_pixsize = 0
-        self.old_xy0 = (0,0)
+        self.old_ri0 = (0,0)
         self.old_angle = 0
         for a in self.computation_attributes:
             setattr(self, 'old_'+a, 0)
@@ -87,12 +91,12 @@ class AptusCompute:
 
         # The upper-left corner is computed from the center, minus the radii,
         # plus half a pixel, so that we're sampling the center of the pixel.
-        self.eng.xydxdy = (dx, dy, dy, -dx)
+        self.eng.ridxdy = (dx, dy, dy, -dx)
         halfsizew = self.ssize[0]/2.0 - 0.5
         halfsizeh = self.ssize[1]/2.0 - 0.5
-        self.eng.xy0 = (
-            self.center[0] - halfsizew * self.eng.xydxdy[0] - halfsizeh * self.eng.xydxdy[2],
-            self.center[1] - halfsizew * self.eng.xydxdy[1] - halfsizeh * self.eng.xydxdy[3]
+        self.eng.ri0 = (
+            self.center[0] - halfsizew * self.eng.ridxdy[0] - halfsizeh * self.eng.ridxdy[2],
+            self.center[1] - halfsizew * self.eng.ridxdy[1] - halfsizeh * self.eng.ridxdy[3]
             )
  
         self.eng.iter_limit = self.iter_limit
@@ -114,10 +118,10 @@ class AptusCompute:
         # Experimental Julia support.
         self.eng.julia = int(self.julia)
         if self.julia:
-            self.eng.juliaxy = self.juliaxy
+            self.eng.rijulia = self.rijulia
             self.eng.trace_boundary = 0
         else:
-            self.eng.juliaxy = (0,0)
+            self.eng.rijulia = (0,0)
             self.eng.trace_boundary = 1
             
         # Create new workspaces for the compute engine.
@@ -131,7 +135,7 @@ class AptusCompute:
             self.angle == self.old_angle and
             not self.computation_changed()):
             # All the params are compatible, see how much we shifted.
-            dx, dy = self.pixel_from_coords(*self.old_xy0)
+            dx, dy = self.pixel_from_coords(*self.old_ri0)
             dx = int(round(dx))
             dy = int(round(dy))
             
@@ -203,27 +207,26 @@ class AptusCompute:
         # math comes out right.
         x = float(x) - 0.5
         y = float(y) - 0.5
-        return (
-            self.eng.xy0[0] + self.eng.xydxdy[0]*x + self.eng.xydxdy[2]*y,
-            self.eng.xy0[1] + self.eng.xydxdy[1]*x + self.eng.xydxdy[3]*y
-            )
+        r = self.eng.ri0[0] + self.eng.ridxdy[0]*x + self.eng.ridxdy[2]*y
+        i = self.eng.ri0[1] + self.eng.ridxdy[1]*x + self.eng.ridxdy[3]*y
+        return r, i
 
-    def pixel_from_coords(self, mx, my):
-        """ Get the pixel coords containing the real coords.
+    def pixel_from_coords(self, r, i):
+        """ Get the pixel coords containing the fractal coordinates.
         """
-        d0, d1, d2, d3 = self.eng.xydxdy
-        xy00, xy01 = self.eng.xy0
+        d0, d1, d2, d3 = self.eng.ridxdy
+        ri00, ri01 = self.eng.ri0
         # Thanks, Maxima!
-        px = (d2*(my-xy01)+d3*xy00-d3*mx)/(d1*d2-d0*d3)
-        py = -(d0*(my-xy01)+d1*xy00-d1*mx)/(d1*d2-d0*d3)
-        return px, py
+        x = (d2*(i-ri01)+d3*ri00-d3*r)/(d1*d2-d0*d3)
+        y = -(d0*(i-ri01)+d1*ri00-d1*r)/(d1*d2-d0*d3)
+        return x, y
 
     def compute_pixels(self):
         if self.pixels_computed:
             return
 
         print "x, y %r step %r, angle %.1f, iter_limit %r, size %r" % (
-            self.eng.xy0, self.pixsize, self.angle, self.eng.iter_limit, self.ssize
+            self.eng.ri0, self.pixsize, self.angle, self.eng.iter_limit, self.ssize
             )
 
         self.eng.clear_stats()
