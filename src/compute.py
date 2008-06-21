@@ -225,7 +225,7 @@ class AptusCompute:
         if self.pixels_computed:
             return
 
-        print "x, y %r step %r, angle %.1f, iter_limit %r, size %r" % (
+        print "ri %r step %r, angle %.1f, iter_limit %r, size %r" % (
             self.eng.ri0, self.pixsize, self.angle, self.eng.iter_limit, self.ssize
             )
 
