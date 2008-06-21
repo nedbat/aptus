@@ -84,8 +84,8 @@ class AptusViewPanel(ComputePanel):
 
     def set_cursor(self):
         # If we aren't taking input, then we shouldn't change the cursor.
-        if not self.IsEnabled():
-            return 
+        if not self.GetTopLevelParent().IsActive():
+            return
         # Set the proper cursor:
         if self.rubberbanding:
             self.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
