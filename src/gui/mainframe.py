@@ -120,4 +120,4 @@ class AptusMainFrame(wx.Frame):
     def cmd_show_palettes(self, event_unused):
         from aptus.gui import palettespanel
         from aptus.palettes import all_palettes
-        palettespanel.PalettesFrame(all_palettes).Show()
+        palettespanel.PalettesFrame(all_palettes, self.panel).Show()

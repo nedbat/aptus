@@ -41,6 +41,7 @@ class AptusViewPanel(ComputePanel):
         self.Bind(wx.EVT_MENU, self.cmd_jump, id=id_jump)
         self.Bind(wx.EVT_MENU, self.cmd_redraw, id=id_redraw)
         self.Bind(wx.EVT_MENU, self.cmd_change_palette, id=id_change_palette)
+        self.Bind(wx.EVT_MENU, self.cmd_set_palette, id=id_set_palette)
         self.Bind(wx.EVT_MENU, self.cmd_cycle_palette, id=id_cycle_palette)
         self.Bind(wx.EVT_MENU, self.cmd_scale_palette, id=id_scale_palette)
         self.Bind(wx.EVT_MENU, self.cmd_adjust_palette, id=id_adjust_palette)
@@ -302,6 +303,14 @@ class AptusViewPanel(ComputePanel):
 
         dlg.Destroy()
 
+    def palette_changed(self):
+        """ Use the self.palette_index to set a new palette.
+        """
+        self.m.palette = all_palettes[self.palette_index]
+        self.m.palette_phase = 0
+        self.m.palette_scale = 1.0
+        self.coloring_changed()
+
     # Commands
     
     def cmd_set_angle(self, event_unused):
@@ -342,11 +351,12 @@ class AptusViewPanel(ComputePanel):
         delta = event.GetClientData()
         self.palette_index += delta
         self.palette_index %= len(all_palettes)
-        self.m.palette = all_palettes[self.palette_index]
-        self.m.palette_phase = 0
-        self.m.palette_scale = 1.0
-        self.coloring_changed()
-    
+        self.palette_changed()
+        
+    def cmd_set_palette(self, event):
+        self.palette_index = event.GetClientData()
+        self.palette_changed()
+        
     def cmd_adjust_palette(self, event):
         self.m.palette.adjust(**event.GetClientData())
         self.coloring_changed()
