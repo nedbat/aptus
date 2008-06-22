@@ -22,16 +22,30 @@ class PaletteWin(wx.Window):
     def on_paint(self, event_unused):
         dc = wx.PaintDC(self)
         cw, ch = self.GetClientSize()
+
+        # Background.
+        if self.selected:
+            color = wx.Colour(128, 128, 128)
+        else:
+            color = wx.Colour(255, 255, 255)
+            
+        dc.SetPen(wx.Pen(color, 1))
+        dc.SetBrush(wx.Brush(color, wx.SOLID))
+        dc.DrawRectangle(0, 0, cw, ch)
+
+        # Palette
         ncolors = len(self.palette.colors)
-        width = float(cw)/ncolors
+        width = float(cw-6)/ncolors
         for c in range(0, ncolors):
             dc.SetPen(wx.Pen(wx.Colour(*self.palette.colors[c]), 1))
             dc.SetBrush(wx.Brush(wx.Colour(*self.palette.colors[c]), wx.SOLID))
-            dc.DrawRectangle(int(c*width), 0, int(width+1), ch)
-        if self.selected:
-            dc.SetPen(wx.Pen(wx.Colour(255, 255, 255), 2))
-            dc.SetBrush(wx.TRANSPARENT_BRUSH)
-            dc.DrawRectangle(1, 1, cw-1, ch-1)
+            dc.DrawRectangle(int(c*width)+3, 3, int(width+1), ch-6)
+
+        # Black outline
+        dc.SetPen(wx.BLACK_PEN)
+        dc.SetBrush(wx.TRANSPARENT_BRUSH)
+        dc.DrawRectangle(2, 2, cw-4, ch-4)
+
 
     def on_left_up(self, event_unused):
         self.viewwin.fire_command(id_set_palette, self.ipal)
