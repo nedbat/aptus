@@ -2,16 +2,21 @@
 """
 
 from aptus.importer import importer
+from aptus.gui.ids import *
+
 wx = importer("wx")
 from wx.lib.scrolledpanel import ScrolledPanel
 
 class PaletteWin(wx.Window):
-    def __init__(self, parent, palette, size=wx.DefaultSize):
+    def __init__(self, parent, palette, ipal, viewwin, size=wx.DefaultSize):
         wx.Window.__init__(self, parent, size=size)
         self.palette = palette
-
-        self.Bind(wx.EVT_PAINT, self.on_paint)
+        self.ipal = ipal
+        self.viewwin = viewwin
         
+        self.Bind(wx.EVT_PAINT, self.on_paint)
+        self.Bind(wx.EVT_LEFT_UP, self.on_left_up)
+
     def on_paint(self, event_unused):
         dc = wx.PaintDC(self)
         cw, ch = self.GetClientSize()
@@ -21,17 +26,21 @@ class PaletteWin(wx.Window):
             dc.SetPen(wx.Pen(wx.Colour(*self.palette.colors[c]), 1))
             dc.SetBrush(wx.Brush(wx.Colour(*self.palette.colors[c]), wx.SOLID))
             dc.DrawRectangle(int(c*width), 0, int(width+1), ch)
-        
+
+    def on_left_up(self, event_unused):
+        self.viewwin.fire_command(id_set_palette, self.ipal)
+
 class PalettesPanel(ScrolledPanel):
-    def __init__(self, parent, palettes, size=wx.DefaultSize):
+    def __init__(self, parent, palettes, viewwin, size=wx.DefaultSize):
         ScrolledPanel.__init__(self, parent, size=size)
         
+        self.viewwin = viewwin
         self.palettes = palettes
         self.pal_height = 30
         
         self.sizer = wx.FlexGridSizer(len(self.palettes), 1)
-        for pal in self.palettes:
-            self.a_palette = PaletteWin(self, pal, size=(200, self.pal_height))
+        for i, pal in enumerate(self.palettes):
+            self.a_palette = PaletteWin(self, pal, i, viewwin, size=(200, self.pal_height))
             self.sizer.Add(self.a_palette, wx.EXPAND)
 
         self.sizer.AddGrowableCol(0)
@@ -52,7 +61,7 @@ class PalettesPanel(ScrolledPanel):
 
 
 class PalettesFrame(wx.MiniFrame):
-    def __init__(self, palettes):
+    def __init__(self, palettes, viewwin):
         wx.MiniFrame.__init__(self, None, title='Palettes', size=(250, 350),
             style=wx.DEFAULT_FRAME_STYLE)
-        self.panel = PalettesPanel(self, palettes)
+        self.panel = PalettesPanel(self, palettes, viewwin)
