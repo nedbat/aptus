@@ -103,11 +103,11 @@ class ComputePanel(wx.Panel):
     
     def make_progress_reporter(self):
         # Construct a progress reporter that suits us.  Write to the console,
-        # and keep the GUI updated, but only every ten seconds.
+        # and keep the GUI updated, but only once a second.
         prorep = AggregateProgressReporter()
         prorep.add(ConsoleProgressReporter())
         prorep.add(GuiProgressReporter(self))
-        return IntervalProgressReporter(10, prorep)
+        return IntervalProgressReporter(1, prorep)
     
     def bitmap_from_compute(self):
         pix = self.m.color_mandel()
