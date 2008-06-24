@@ -3,6 +3,7 @@
 
 from aptus.importer import importer
 from aptus.gui.ids import *
+from aptus.gui.misc import AptusToolFrame
 
 wx = importer("wx")
 from wx.lib.scrolledpanel import ScrolledPanel
@@ -107,10 +108,9 @@ class PalettesPanel(ScrolledPanel):
             self.Refresh()
 
             
-class PalettesFrame(wx.MiniFrame):
+class PalettesFrame(AptusToolFrame):
     """ The top level frame for the palettes list.
     """
     def __init__(self, palettes, viewwin):
-        wx.MiniFrame.__init__(self, None, title='Palettes', size=(250, 350),
-            style=wx.DEFAULT_FRAME_STYLE)
+        AptusToolFrame.__init__(self, viewwin, title='Palettes', size=(250, 350))
         self.panel = PalettesPanel(self, palettes, viewwin)
