@@ -4,6 +4,7 @@
 from aptus.importer import importer
 from aptus.gui.computepanel import ComputePanel
 from aptus.gui.ids import *
+from aptus.gui.misc import AptusToolFrame
 
 wx = importer("wx")
 from wx.lib.evtmgr import eventManager
@@ -97,11 +98,11 @@ class YouAreHerePanel(ComputePanel):
             dc.SetBrush(wx.TRANSPARENT_BRUSH)
             dc.SetPen(wx.Pen(wx.Colour(255,255,255), 1, wx.SOLID))
             dc.DrawRectangle(*self.hererect)
-        
-class YouAreHereFrame(wx.MiniFrame):
+
+
+class YouAreHereFrame(AptusToolFrame):
     def __init__(self, mainwin):
-        wx.MiniFrame.__init__(self, None, title='You are here', size=(250,250),
-            style=wx.DEFAULT_MINIFRAME_STYLE|wx.CLOSE_BOX)
+        AptusToolFrame.__init__(self, mainwin, title='You are here', size=(250,250))
         self.panel = YouAreHerePanel(self, mainwin)
         
 
