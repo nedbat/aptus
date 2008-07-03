@@ -10,7 +10,7 @@ wx = importer('wx')
 
 # A pre-set list of places to visit, with the j command.
 JUMPS = [
-    ((-0.5,0.0), (3.0,3.0)),
+    ((-0.6,0.0), (3.0,3.0)),
     ((-1.8605294939875601,-1.0475516319329809e-005), (2.288818359375e-005,2.288818359375e-005)),
     ((-1.8605327731370924,-1.2700557708795141e-005), (1.7881393432617188e-007,1.7881393432617188e-007)),
     ((0.45687170535326038,0.34780396997928614), (0.005859375,0.005859375)),
@@ -176,11 +176,9 @@ class AptusViewPanel(ComputePanel):
         if self.rubberbanding:
             # Set a new view that encloses the rectangle.
             px, py = self.pt_down
-            ulx, uly = self.m.coords_from_pixel(px, py)
-            lrx, lry = self.m.coords_from_pixel(mx, my)
-            self.m.center = ((ulx+lrx)/2, (uly+lry)/2)
-            self.m.diam = (abs(self.m.pixsize*(px-mx)), abs(self.m.pixsize*(py-my)))
-            self.geometry_changed()
+            ulr, uli = self.m.coords_from_pixel(px, py)
+            lrr, lri = self.m.coords_from_pixel(mx, my)
+            self.set_geometry(corners=(ulr, uli, lrr, lri))
         elif self.panning:
             self.finish_panning(mx, my)
         elif self.pt_down:

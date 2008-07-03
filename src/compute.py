@@ -24,7 +24,7 @@ class AptusCompute:
     """
     def __init__(self):
         # geometry
-        self.center = -0.5, 0.0
+        self.center = -0.6, 0.0
         self.diam = 3.0, 3.0
         self.size = 600, 600
         self.angle = 0.0

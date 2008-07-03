@@ -13,15 +13,19 @@ from wx.lib.scrolledpanel import ScrolledPanel
 import math
 
 
-class YouAreHerePanel(ComputePanel):
+MIN_RECT = 20
+
+class YouAreHereWin(ComputePanel):
     """ A panel slaved to another ComputePanel to show where the master panel is
         on the Set.
     """
-    def __init__(self, parent, mainwin, size=wx.DefaultSize):
+    def __init__(self, parent, mainwin, center, diam, size=wx.DefaultSize):
         ComputePanel.__init__(self, parent, size=size)
         self.mainwin = mainwin
+        self.rectwin = mainwin
         self.hererect = None
-        
+        self.diam = diam
+
         self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_IDLE, self.on_idle)
@@ -31,20 +35,20 @@ class YouAreHerePanel(ComputePanel):
         
         eventManager.Register(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.mainwin)
         eventManager.Register(self.on_computation_changed, EVT_APTUS_COMPUTATION_CHANGED, self.mainwin)
-        eventManager.Register(self.on_geometry_changed, EVT_APTUS_GEOMETRY_CHANGED, self.mainwin)
+        #eventManager.Register(self.on_geometry_changed, EVT_APTUS_GEOMETRY_CHANGED, self.mainwin)
 
-        self.set_view()
+        self.set_geometry(center=center, diam=diam)
         self.on_coloring_changed(None)
         self.on_computation_changed(None)
         self.on_geometry_changed(None)
-        
+
         self.dragging = False
         self.drag_pt = None
 
     def on_destroy(self, event_unused):
         eventManager.DeregisterListener(self.on_coloring_changed)
         eventManager.DeregisterListener(self.on_computation_changed)
-        eventManager.DeregisterListener(self.on_geometry_changed)
+        #eventManager.DeregisterListener(self.on_geometry_changed)
 
     def on_size(self, event):
         # Need to recalc our rectangle.
@@ -68,14 +72,14 @@ class YouAreHerePanel(ComputePanel):
         # Reposition the main window.
         if self.dragging:
             # Dragging the rect: recenter on its center.
-            mx = self.hererect.x + self.hererect.width/2
-            my = self.hererect.y + self.hererect.height/2
+            ulr, uli = self.m.coords_from_pixel(*self.hererect.TopLeft)
+            lrr, lri = self.m.coords_from_pixel(*self.hererect.BottomRight)
+            self.mainwin.set_geometry(corners=(ulr, uli, lrr, lri))
+            self.dragging = False
         else:
             # Clicking outside the rect: recenter there.
             mx, my = event.GetPosition()
-
-        self.mainwin.recenter(self.m.coords_from_pixel(mx, my))
-        self.dragging = False
+            self.mainwin.set_geometry(center=self.m.coords_from_pixel(mx, my), diam=self.diam)
 
     def on_motion(self, event):
         self.set_cursor(event)
@@ -111,21 +115,21 @@ class YouAreHerePanel(ComputePanel):
 
     def calc_rectangle(self):
         # Compute the master rectangle in our coords.
-        ux, uy = self.m.pixel_from_coords(*self.mainwin.m.coords_from_pixel(0,0))
-        lx, ly = self.m.pixel_from_coords(*self.mainwin.m.coords_from_pixel(*self.mainwin.m.size))
-        ux = int(math.floor(ux))
-        uy = int(math.floor(uy))
-        lx = int(math.ceil(lx))+1
-        ly = int(math.ceil(ly))+1
-        w, h = lx-ux, ly-uy
+        ulx, uly = self.m.pixel_from_coords(*self.rectwin.m.coords_from_pixel(0,0))
+        lrx, lry = self.m.pixel_from_coords(*self.rectwin.m.coords_from_pixel(*self.rectwin.m.size))
+        ulx = int(math.floor(ulx))
+        uly = int(math.floor(uly))
+        lrx = int(math.ceil(lrx))+1
+        lry = int(math.ceil(lry))+1
+        w, h = lrx-ulx, lry-uly
         # Never draw the box smaller than 3 pixels
         if w < 3:
             w = 3
-            ux -= 1     # Scooch back to adjust to the wider window.
+            ulx -= 1     # Scooch back to adjust to the wider window.
         if h < 3:
             h = 3
-            uy -= 1
-        self.hererect = wx.Rect(ux, uy, w, h)
+            uly -= 1
+        self.hererect = wx.Rect(ulx, uly, w, h)
         self.Refresh()
         
     def on_paint_extras(self, dc):
@@ -136,25 +140,69 @@ class YouAreHerePanel(ComputePanel):
             dc.DrawRectangle(*self.hererect)
 
 
+class YouAreHereStack(ScrolledPanel):
+    """ A scrolled panel with a stack of YouAreHere windows, each at a successive
+        magnification.
+    """
+    def __init__(self, parent, viewwin, size=wx.DefaultSize):
+        ScrolledPanel.__init__(self, parent, size=size)
+
+        self.winsize = 250
+        self.minrect = MIN_RECT
+        self.stepfactor = float(self.winsize)/self.minrect
+        
+        self.viewwin = viewwin
+        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        
+        eventManager.Register(self.on_geometry_changed, EVT_APTUS_GEOMETRY_CHANGED, self.viewwin)
+
+        self.on_geometry_changed()
+
+    def on_geometry_changed(self, event_unused=None):
+        diam = 3.0
+        
+        # How many YouAreHereWin's will we need?
+        targetdiam = self.viewwin.m.diam[0]
+        num_wins = int(math.ceil((math.log(diam)-math.log(targetdiam))/math.log(self.stepfactor)))
+        num_wins = num_wins or 1
+        
+        cur_wins = list(self.sizer.Children)
+        last = None
+        for i in range(num_wins):
+            if i == 0:
+                # Don't recenter the topmost YouAreHere.
+                center = None
+            else:
+                center = self.viewwin.m.center
+            if i < len(cur_wins):
+                # Re-using an existing window in the stack.
+                win = cur_wins[i].Window
+                win.set_geometry(center=center, diam=(diam,diam))
+            else:
+                # Going deeper: have to make a new window.
+                win = YouAreHereWin(self, self.viewwin, center=center, diam=(diam,diam), size=(self.winsize, self.winsize))
+                self.sizer.Add(win)
+            if last:
+                last.rectwin = win
+                last.calc_rectangle()
+            last = win
+            diam /= self.stepfactor
+
+        # The last window needs to draw a rectangle for the view window.
+        last.rectwin = self.viewwin
+        
+        # Remove windows we no longer need.
+        for child in cur_wins[num_wins:]:
+            self.sizer.Remove(child.Window)
+            child.Window.Destroy()
+
+        self.SetSizer(self.sizer)
+        self.SetAutoLayout(1)
+        self.SetupScrolling()
+
+
 class YouAreHereFrame(AptusToolFrame):
     def __init__(self, mainwin):
-        AptusToolFrame.__init__(self, mainwin, title='You are here', size=(250,250))
-        self.panel = YouAreHerePanel(self, mainwin)
-        
-
-class FancyYouAreHereFrame(wx.Frame):
-    def __init__(self, mainwin):
-        wx.Frame.__init__(self, None, name='You are here', size=(250,250),
-            style=wx.DEFAULT_FRAME_STYLE|wx.FRAME_TOOL_WINDOW)
-
-        scrolledpanel = ScrolledPanel(self, -1, size=(140, 300),
-                                 style = wx.TAB_TRAVERSAL|wx.SUNKEN_BORDER, name="panel1")
-
-        box = wx.BoxSizer(wx.VERTICAL)
-        box.Add(YouAreHerePanel(scrolledpanel, mainwin, size=(250,250)))
-        box.Add(YouAreHerePanel(scrolledpanel, mainwin, size=(250,250)))
-        box.Add(YouAreHerePanel(scrolledpanel, mainwin, size=(250,250)))
-        
-        scrolledpanel.SetSizer(box)
-        scrolledpanel.SetAutoLayout(1)
-        scrolledpanel.SetupScrolling()
+        AptusToolFrame.__init__(self, mainwin, title='You are here', size=(250,550))
+        #self.panel = YouAreHereWin(self, mainwin)
+        self.stack = YouAreHereStack(self, mainwin)

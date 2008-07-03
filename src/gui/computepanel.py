@@ -42,10 +42,23 @@ class ComputePanel(wx.Panel):
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_IDLE, self.on_idle)
 
-    def recenter(self, center):
-        """ Change the panel to display a new point on the Set.
+    def set_geometry(self, center=None, diam=None, corners=None):
+        """ Change the panel to display a new place in the Set.
+            `center` is the ri coords of the new center, `diam` is the r and i
+            size of the view, `corners` is a 4-tuple (ulr, uli, lrr, lri) of the
+            four corners of the view.  Only specify a subset of these.
         """
-        self.m.center = center
+        if corners:
+            ulr, uli, lrr, lri = corners
+            self.m.center = ((ulr+lrr)/2, (uli+lri)/2)
+            ulx, uly = self.m.pixel_from_coords(ulr, uli)
+            lrx, lry = self.m.pixel_from_coords(lrr, lri)
+            self.m.diam = (abs(self.m.pixsize*(lrx-ulx)), abs(self.m.pixsize*(lry-uly)))
+        if center:
+            self.m.center = center
+        if diam:
+            self.m.diam = diam
+            
         self.geometry_changed()
 
     # GUI helpers
@@ -97,6 +110,9 @@ class ComputePanel(wx.Panel):
         self.on_paint_extras(dc)
         
     def on_paint_extras(self, dc):
+        """ An overridable method so that derived classes can paint extra stuff
+            on top of the fractal.
+        """
         pass
     
     # Output methods
