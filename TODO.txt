@@ -55,6 +55,7 @@ x Optimize boundary.py so we can use it for high iterations
     - with a list of places you've been (with thumbnails).
 + Draggable rectangle in addition to click-to-zoom.
 - Open command to load aptus state files.
+-   and palette files
 - Mac: app icon  (if 'wxMac' in wx.PlatformInfo:)
 - Custom bookmarks (like the J key).
 + Help
@@ -72,7 +73,7 @@ x Optimize boundary.py so we can use it for high iterations
 + Rotation (simply store the pixel offsets as dx and dy computed from angle).
 + Continuous coloring (http://linas.org/art-gallery/escape/smooth.html)
 + A palette specification, so the complete specs for a pic can be stored.
-- Try to reduce flicker during palette changing (http://wiki.wxpython.org/index.cgi/DoubleBufferedDrawing)
++ Try to reduce flicker during palette changing (http://wiki.wxpython.org/index.cgi/DoubleBufferedDrawing)
     When cycling colors, display flashes. (wxWindow::IsDoubleBuffered)
 - Add an extra segment to non-cyclic ggr palettes.
 - Mirroring non-cyclic palettes.
@@ -90,6 +91,7 @@ x Optimize boundary.py so we can use it for high iterations
 + Command line invocation (refactor a bunch of stuff)
 - Multi-precision floats
 - Interruptable rendering: write partial counts (and all other state) to a file and restart.
+- Save counts in a file so a long compute can then be re-colored easily.
 
 * Knowledge
 
@@ -99,7 +101,7 @@ x Optimize boundary.py so we can use it for high iterations
 - Switchable coloring: standard, cycle count, etc.
 + Some way of embedding the mandelbrot parameters into the final .PNG, so it can be recreated.
 + A You-Are-Here mini panel showing the general location you are viewing
-    (maybe more than one step's worth).
++   (maybe more than one step's worth).
 
 * Safety
 
