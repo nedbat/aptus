@@ -242,10 +242,10 @@ class AptusViewPanel(ComputePanel):
             self.fire_command(id_redraw)
         elif keycode == ord('S'):
             self.fire_command(id_save)
-        elif keycode == ord('0'):
-            self.fire_command(id_reset_palette)
         elif keycode == ord('P'):
             self.fire_command(id_show_palettes)
+        elif keycode == ord('0'):       # zero
+            self.fire_command(id_reset_palette)
         elif keycode in [ord(','), ord('<')]:
             if shift:
                 self.fire_command(id_change_palette, -1)
