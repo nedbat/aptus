@@ -180,7 +180,10 @@ class YouAreHereStack(ScrolledPanel):
                 win.set_geometry(center=center, diam=(diam,diam))
             else:
                 # Going deeper: have to make a new window.
-                win = YouAreHereWin(self, self.viewwin, center=center, diam=(diam,diam), size=(self.winsize, self.winsize))
+                win = YouAreHereWin(
+                        self, self.viewwin, center=center,
+                        diam=(diam,diam), size=(self.winsize, self.winsize)
+                        )
                 self.sizer.Add(win)
             if last:
                 last.rectwin = win
