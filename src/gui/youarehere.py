@@ -153,6 +153,9 @@ class YouAreHereStack(ScrolledPanel):
         
         self.viewwin = viewwin
         self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.SetSizer(self.sizer)
+        self.SetAutoLayout(1)
+        self.SetupScrolling()
         
         eventManager.Register(self.on_geometry_changed, EVT_APTUS_GEOMETRY_CHANGED, self.viewwin)
 
@@ -193,15 +196,12 @@ class YouAreHereStack(ScrolledPanel):
 
         # The last window needs to draw a rectangle for the view window.
         last.rectwin = self.viewwin
-        
+        last.calc_rectangle()
+
         # Remove windows we no longer need.
         for child in cur_wins[num_wins:]:
             self.sizer.Remove(child.Window)
             child.Window.Destroy()
-
-        self.SetSizer(self.sizer)
-        self.SetAutoLayout(1)
-        self.SetupScrolling()
 
 
 class YouAreHereFrame(AptusToolFrame):
