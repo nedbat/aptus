@@ -47,8 +47,14 @@ class AptusCompute:
         self.rijulia = 0.0, 0.0
         self.outfile = 'Aptus.png'
         
+        # The C extension for doing the heavy lifting.
         self.eng = AptEngine()
-        self.counts = self.status = None
+        # counts is a numpy array of 32bit ints: the iteration counts at each pixel.
+        self.counts = None
+        # status is a numpy array of 8bit ints that tracks the boundary trace
+        # status of each pixel: 0 for not computed, 1 for computed but not traced,
+        # 2 for traced.
+        self.status = None
         self.pixels_computed = False
         self._clear_old_geometry()
         
