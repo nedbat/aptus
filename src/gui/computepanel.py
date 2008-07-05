@@ -135,6 +135,7 @@ class ComputePanel(wx.Panel):
         """
         self.m.progress = self.make_progress_reporter()
         self.m.compute_pixels()
+        wx.CallAfter(self.fire_event, AptusRecomputedEvent)
         self.Refresh()
         return self.bitmap_from_compute()
 
