@@ -38,6 +38,7 @@ class AptusMainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.cmd_help, id=id_help)
         self.Bind(wx.EVT_MENU, self.cmd_show_youarehere, id=id_show_youarehere)
         self.Bind(wx.EVT_MENU, self.cmd_show_palettes, id=id_show_palettes)
+        self.Bind(wx.EVT_MENU, self.cmd_show_stats, id=id_show_stats)
         
     def Show(self, show=True):
         # Override Show so we can set the view properly.
@@ -121,3 +122,7 @@ class AptusMainFrame(wx.Frame):
         from aptus.gui import palettespanel
         from aptus.palettes import all_palettes
         palettespanel.PalettesFrame(all_palettes, self.panel).Show()
+
+    def cmd_show_stats(self, event_unused):
+        from aptus.gui import statspanel
+        statspanel.StatsFrame(self.panel).Show()
