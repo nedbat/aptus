@@ -17,12 +17,17 @@ MIN_RECT = 20
 
 class YouAreHereWin(ComputePanel):
     """ A panel slaved to another ComputePanel to show where the master panel is
-        on the Set.
+        on the Set.  These are designed to be stacked in a YouAreHereStack to show
+        successive magnifications.
+        
+        Two windows are referenced: the main view window (so that we can change
+        the view), and the window our rectangle represents.  This can be either
+        the next YouAreHereWin in the stack, or the main view window in the case
+        of the last window in the stack.
     """
     def __init__(self, parent, mainwin, center, diam, size=wx.DefaultSize):
         ComputePanel.__init__(self, parent, size=size)
         self.mainwin = mainwin
-        self.rectwin = mainwin
         self.hererect = None
         self.diam = diam
 
@@ -35,8 +40,9 @@ class YouAreHereWin(ComputePanel):
         
         eventManager.Register(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.mainwin)
         eventManager.Register(self.on_computation_changed, EVT_APTUS_COMPUTATION_CHANGED, self.mainwin)
-        #eventManager.Register(self.on_geometry_changed, EVT_APTUS_GEOMETRY_CHANGED, self.mainwin)
 
+        self.set_ref_window(mainwin)
+        
         self.set_geometry(center=center, diam=diam)
         self.on_coloring_changed(None)
         self.on_computation_changed(None)
@@ -45,10 +51,22 @@ class YouAreHereWin(ComputePanel):
         self.dragging = False
         self.drag_pt = None
 
+    def set_ref_window(self, refwin):
+        """ Set the other window that our rectangle models.
+        """
+        # Deregister the old geometry listener
+        eventManager.DeregisterListener(self.on_geometry_changed)
+
+        self.rectwin = refwin
+        
+        # Register the new listener and calc the rectangle.
+        eventManager.Register(self.on_geometry_changed, EVT_APTUS_GEOMETRY_CHANGED, self.rectwin)
+        self.calc_rectangle()
+        
     def on_destroy(self, event_unused):
         eventManager.DeregisterListener(self.on_coloring_changed)
         eventManager.DeregisterListener(self.on_computation_changed)
-        #eventManager.DeregisterListener(self.on_geometry_changed)
+        eventManager.DeregisterListener(self.on_geometry_changed)
 
     def on_size(self, event):
         # Need to recalc our rectangle.
@@ -71,10 +89,18 @@ class YouAreHereWin(ComputePanel):
     def on_left_up(self, event):
         # Reposition the main window.
         if self.dragging:
-            # Dragging the rect: recenter on its center.
-            ulr, uli = self.m.coords_from_pixel(*self.hererect.TopLeft)
-            lrr, lri = self.m.coords_from_pixel(*self.hererect.BottomRight)
-            self.mainwin.set_geometry(corners=(ulr, uli, lrr, lri))
+            if self.mainwin == self.rectwin:
+                # We already show the actual view, so just recenter on the center
+                # of the rectangle.
+                mx = self.hererect.x + self.hererect.width/2
+                my = self.hererect.y + self.hererect.height/2
+                self.mainwin.set_geometry(center=self.m.coords_from_pixel(mx, my))
+            else:
+                # Dragging the rect: set the view to invlude the four corners of
+                # the rectangle.
+                ulr, uli = self.m.coords_from_pixel(*self.hererect.TopLeft)
+                lrr, lri = self.m.coords_from_pixel(*self.hererect.BottomRight)
+                self.mainwin.set_geometry(corners=(ulr, uli, lrr, lri))
             self.dragging = False
         else:
             # Clicking outside the rect: recenter there.
@@ -141,7 +167,7 @@ class YouAreHereWin(ComputePanel):
 
 
 class YouAreHereStack(ScrolledPanel):
-    """ A scrolled panel with a stack of YouAreHere windows, each at a successive
+    """ A scrolled panel with a stack of YouAreHereWin's, each at a successive
         magnification.
     """
     def __init__(self, parent, viewwin, size=wx.DefaultSize):
@@ -152,7 +178,7 @@ class YouAreHereStack(ScrolledPanel):
         self.stepfactor = float(self.winsize)/self.minrect
         
         self.viewwin = viewwin
-        self.sizer = wx.BoxSizer(wx.VERTICAL)
+        self.sizer = wx.FlexGridSizer(cols=1, vgap=2)
         self.SetSizer(self.sizer)
         self.SetAutoLayout(1)
         self.SetupScrolling()
@@ -189,23 +215,23 @@ class YouAreHereStack(ScrolledPanel):
                         )
                 self.sizer.Add(win)
             if last:
-                last.rectwin = win
-                last.calc_rectangle()
+                last.set_ref_window(win)
             last = win
             diam /= self.stepfactor
 
         # The last window needs to draw a rectangle for the view window.
-        last.rectwin = self.viewwin
-        last.calc_rectangle()
+        last.set_ref_window(self.viewwin)
 
         # Remove windows we no longer need.
         for child in cur_wins[num_wins:]:
             self.sizer.Remove(child.Window)
             child.Window.Destroy()
 
+        self.sizer.Layout()
+        self.SetupScrolling()
+
 
 class YouAreHereFrame(AptusToolFrame):
     def __init__(self, mainwin):
         AptusToolFrame.__init__(self, mainwin, title='You are here', size=(250,550))
-        #self.panel = YouAreHereWin(self, mainwin)
         self.stack = YouAreHereStack(self, mainwin)
