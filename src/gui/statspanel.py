@@ -66,9 +66,9 @@ class StatsPanel(wx.Panel):
         for statname, valwin in self.statwins:
             valwin.SetSize((maxw, -1))
             valwin.SetMinSize((maxw, -1))
-            
+
 
 class StatsFrame(AptusToolFrame):
     def __init__(self, mainwin):
-        AptusToolFrame.__init__(self, mainwin, title='Statistics', size=(250,550))
+        AptusToolFrame.__init__(self, mainwin, title='Statistics', size=(180,180))
         self.panel = StatsPanel(self, mainwin)

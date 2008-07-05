@@ -239,7 +239,7 @@ class AptusCompute:
         self.progress.begin()
         self.eng.mandelbrot_array(self.counts, self.status, self.progress.progress)
         self.progress.end()
-        print self.eng.get_stats()
+        #print self.eng.get_stats()
         self._record_old_geometry()
         self.pixels_computed = True
         self.status = None  # It's all 2's now, no point in keeping it.
