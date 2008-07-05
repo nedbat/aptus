@@ -22,6 +22,7 @@ class StatsPanel(wx.Panel):
         { 'label': 'Max iteration', 'stat': 'maxiter', },
         { 'label': 'Total iterations', 'stat': 'totaliter', },
         { 'label': 'Total cycles', 'stat': 'totalcycles', },
+        { 'label': 'Shortest cycle', 'stat': 'minitercycle', },
         { 'label': 'Longest cycle', 'stat': 'maxitercycle', },
         { 'label': 'Maxed points', 'stat': 'maxedpoints', },
         { 'label': 'Computed points', 'stat': 'computedpoints', },
