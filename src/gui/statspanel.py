@@ -38,14 +38,16 @@ class StatsPanel(wx.Panel):
         self.viewwin = viewwin
         self.statwins = []
         
-        sizer = wx.FlexGridSizer(cols=2, vgap=1, hgap=3)
+        grid = wx.FlexGridSizer(cols=2, vgap=1, hgap=3)
         for statd in self.statmap:
             label = wx.StaticText(self, -1, statd['label'] + ':')
             value = wx.StaticText(self, -1, style=wx.ALIGN_RIGHT)
-            sizer.Add(label)
-            sizer.Add(value)
+            grid.Add(label)
+            grid.Add(value)
             self.statwins.append((statd['stat'], value))
         
+        sizer = wx.BoxSizer()
+        sizer.Add(grid, flag=wx.TOP|wx.RIGHT|wx.BOTTOM|wx.LEFT, border=3)
         self.SetSizer(sizer)
         sizer.Fit(self)
         eventManager.Register(self.set_values, EVT_APTUS_RECOMPUTED, self.viewwin)
