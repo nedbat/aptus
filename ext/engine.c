@@ -43,6 +43,7 @@ typedef struct {
         int     maxiter;        // Max iteration that isn't in the set.
         u8int   totaliter;      // Total number of iterations.
         u4int   totalcycles;    // Number of cycles detected.
+        u4int   minitercycle;   // Min iteration that was a cycle.
         u4int   maxitercycle;   // Max iteration that was finally a cycle.
         int     miniter;        // Minimum iteration count.
         u4int   maxedpoints;    // Number of points that exceeded the maxiter.
@@ -242,7 +243,6 @@ compute_count(AptEngine * self, int xi, int yi)
             break;
         }
         ITER2;
-        count++;
 
         if (self->check_for_cycles) {
             // Check for cycles
@@ -251,6 +251,9 @@ compute_count(AptEngine * self, int xi, int yi)
                 self->stats.totalcycles++;
                 if (count > self->stats.maxitercycle) {
                     self->stats.maxitercycle = count;
+                }
+                if (self->stats.minitercycle == 0 || count < self->stats.minitercycle) {
+                    self->stats.minitercycle = count;
                 }
                 // A cycle means we're inside the set (count of 0).
                 count = 0;
@@ -267,6 +270,8 @@ compute_count(AptEngine * self, int xi, int yi)
                 }
             }
         }
+
+        count++;
     }
 
     // Counts above the iteration limit are colored as if they were in the set.
@@ -674,6 +679,7 @@ clear_stats(AptEngine *self)
     self->stats.maxiter = 0;
     self->stats.totaliter = 0;
     self->stats.totalcycles = 0;
+    self->stats.minitercycle = 0;
     self->stats.maxitercycle = 0;
     self->stats.miniter = 0;
     self->stats.maxedpoints = 0;
@@ -691,10 +697,11 @@ static char get_stats_doc[] = "Get the statistics as a dictionary";
 static PyObject *
 get_stats(AptEngine *self, PyObject *args)
 {
-    return Py_BuildValue("{sisKsIsIsisIsIsIsI}",
+    return Py_BuildValue("{sisKsIsIsIsisIsIsIsI}",
         "maxiter", self->stats.maxiter,
         "totaliter", self->stats.totaliter,
         "totalcycles", self->stats.totalcycles,
+        "minitercycle", self->stats.minitercycle,
         "maxitercycle", self->stats.maxitercycle,
         "miniter", self->stats.miniter,
         "maxedpoints", self->stats.maxedpoints,
