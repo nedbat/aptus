@@ -91,6 +91,7 @@ class AptusOptions:
 
         else:
             raise Exception("Don't know how to read options from %s" % fname)
+
     
 class AptusState:
     """ A serialization class for the state of an Aptus rendering.
@@ -152,9 +153,10 @@ class XaosState:
     def handle_maxiter(self, op_unused, maxiter):
         self.maxiter = int(maxiter)
         
-    def handle_view(self, op_unused, cx, cy, rx, ry):
-        self.center = self.read_float(cx), self.read_float(cy)
-        self.diam = self.read_float(rx), self.read_float(ry)
+    def handle_view(self, op_unused, cr, ci, rr, ri):
+        # Xaos writes i coordinates inverted.
+        self.center = self.read_float(cr), -self.read_float(ci)
+        self.diam = self.read_float(rr), self.read_float(ri)
         
     def handle_shiftpalette(self, op_unused, phase):
         self.palette_phase = int(phase)
@@ -171,6 +173,7 @@ class XaosState:
                 return float(fstr)
             except:
                 fstr = fstr[:-1]
+
 
 class XetState:
     """ The state of a .xet file from http://hbar.servebeer.com/art/mandelbrot/index-1.html
