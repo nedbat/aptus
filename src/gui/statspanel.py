@@ -3,16 +3,15 @@
 
 from aptus.importer import importer
 from aptus.gui.ids import *
-from aptus.gui.misc import AptusToolFrame
+from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
 
 wx = importer("wx")
-from wx.lib.evtmgr import eventManager
 
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
 
-class StatsPanel(wx.Panel):
+class StatsPanel(wx.Panel, ListeningWindowMixin):
     """ A panel displaying the statistics from a view window.  It listens for
         recomputations, and updates automatically.
     """
@@ -35,6 +34,8 @@ class StatsPanel(wx.Panel):
             the window to track.
         """
         wx.Panel.__init__(self, parent)
+        ListeningWindowMixin.__init__(self)
+        
         self.viewwin = viewwin
         self.statwins = []
         
@@ -50,7 +51,8 @@ class StatsPanel(wx.Panel):
         sizer.Add(grid, flag=wx.TOP|wx.RIGHT|wx.BOTTOM|wx.LEFT, border=3)
         self.SetSizer(sizer)
         sizer.Fit(self)
-        eventManager.Register(self.set_values, EVT_APTUS_RECOMPUTED, self.viewwin)
+        
+        self.register_listener(self.set_values, EVT_APTUS_RECOMPUTED, self.viewwin)
 
         # Need to call set_values after the window appears, so that the widths of
         # the text controls can be set properly.  Else, it all appears left-aligned.
