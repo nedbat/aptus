@@ -35,4 +35,6 @@ class ListeningWindowMixin:
 
     def deregister_listener(self, fn):
         eventManager.DeregisterListener(fn)
-        self.listeners.remove(fn)
+        
+        if fn in self.listeners:
+            self.listeners.remove(fn)
