@@ -3,11 +3,10 @@
 
 from aptus.importer import importer
 from aptus.gui.ids import *
-from aptus.gui.misc import AptusToolFrame
+from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
 
 wx = importer("wx")
 from wx.lib.scrolledpanel import ScrolledPanel
-from wx.lib.evtmgr import eventManager
 
 class PaletteWin(wx.Window):
     """ A window for displaying a single palette.  Handles click events to
@@ -65,11 +64,12 @@ class PaletteWin(wx.Window):
         self.viewwin.fire_command(id_set_palette, self.ipal)
 
 
-class PalettesPanel(ScrolledPanel):
+class PalettesPanel(ScrolledPanel, ListeningWindowMixin):
     """ A panel displaying a number of palettes.
     """
     def __init__(self, parent, palettes, viewwin, size=wx.DefaultSize):
         ScrolledPanel.__init__(self, parent, size=size)
+        ListeningWindowMixin.__init__(self)
         
         self.viewwin = viewwin
         self.palettes = palettes
@@ -89,14 +89,9 @@ class PalettesPanel(ScrolledPanel):
         self.SetAutoLayout(True)
         self.SetupScrolling()
 
-        self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
-
-        eventManager.Register(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.viewwin)
+        self.register_listener(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.viewwin)
         self.on_coloring_changed(None)
         
-    def on_destroy(self, event_unused):
-        eventManager.DeregisterListener(self.on_coloring_changed)
-
     def on_coloring_changed(self, event_unused):
         # When the view window's coloring changes, see if the palette changed.
         if self.viewwin.palette_index != self.selected:

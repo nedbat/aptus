@@ -4,7 +4,7 @@
 from aptus.importer import importer
 from aptus.gui.computepanel import ComputePanel
 from aptus.gui.ids import *
-from aptus.gui.misc import AptusToolFrame
+from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
 
 wx = importer("wx")
 from wx.lib.evtmgr import eventManager
@@ -15,7 +15,7 @@ import math
 
 MIN_RECT = 20
 
-class YouAreHereWin(ComputePanel):
+class YouAreHereWin(ComputePanel, ListeningWindowMixin):
     """ A panel slaved to another ComputePanel to show where the master panel is
         on the Set.  These are designed to be stacked in a YouAreHereStack to show
         successive magnifications.
@@ -27,19 +27,20 @@ class YouAreHereWin(ComputePanel):
     """
     def __init__(self, parent, mainwin, center, diam, size=wx.DefaultSize):
         ComputePanel.__init__(self, parent, size=size)
+        ListeningWindowMixin.__init__(self)
+        
         self.mainwin = mainwin
         self.hererect = None
         self.diam = diam
 
-        self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_IDLE, self.on_idle)
         self.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
         self.Bind(wx.EVT_LEFT_UP, self.on_left_up)
         self.Bind(wx.EVT_MOTION, self.on_motion)
         
-        eventManager.Register(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.mainwin)
-        eventManager.Register(self.on_computation_changed, EVT_APTUS_COMPUTATION_CHANGED, self.mainwin)
+        self.register_listener(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.mainwin)
+        self.register_listener(self.on_computation_changed, EVT_APTUS_COMPUTATION_CHANGED, self.mainwin)
 
         self.set_ref_window(mainwin)
         
@@ -55,19 +56,14 @@ class YouAreHereWin(ComputePanel):
         """ Set the other window that our rectangle models.
         """
         # Deregister the old geometry listener
-        eventManager.DeregisterListener(self.on_geometry_changed)
+        self.deregister_listener(self.on_geometry_changed)
 
         self.rectwin = refwin
         
         # Register the new listener and calc the rectangle.
-        eventManager.Register(self.on_geometry_changed, EVT_APTUS_GEOMETRY_CHANGED, self.rectwin)
+        self.register_listener(self.on_geometry_changed, EVT_APTUS_GEOMETRY_CHANGED, self.rectwin)
         self.calc_rectangle()
         
-    def on_destroy(self, event_unused):
-        eventManager.DeregisterListener(self.on_coloring_changed)
-        eventManager.DeregisterListener(self.on_computation_changed)
-        eventManager.DeregisterListener(self.on_geometry_changed)
-
     def on_size(self, event):
         # Need to recalc our rectangle.
         self.hererect = None
