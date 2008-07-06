@@ -330,6 +330,7 @@ class AptusViewPanel(ComputePanel):
         self.computation_changed()
 
     def cmd_redraw(self, event_unused):
+        self.m.clear_results()
         self.set_view()
         
     def cmd_jump(self, event_unused):

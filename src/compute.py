@@ -168,7 +168,12 @@ class AptusCompute:
                 
         self.pixels_computed = False
         self._clear_old_geometry()
-        
+    
+    def clear_results(self):
+        """ Discard any results held.
+        """
+        self.counts = None
+
     def copy_coloring(self, other):
         """ Copy the coloring attributes from other to self, returning True if
             any of them actually changed.
