@@ -39,6 +39,11 @@ class AptusMainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.cmd_show_youarehere, id=id_show_youarehere)
         self.Bind(wx.EVT_MENU, self.cmd_show_palettes, id=id_show_palettes)
         self.Bind(wx.EVT_MENU, self.cmd_show_stats, id=id_show_stats)
+
+        # Auxilliary frames.
+        self.youarehere_tool = None
+        self.palettes_tool = None
+        self.stats_tool = None
         
     def Show(self, show=True):
         # Override Show so we can set the view properly.
@@ -115,14 +120,32 @@ class AptusMainFrame(wx.Frame):
         dlg.ShowModal()
 
     def cmd_show_youarehere(self, event_unused):
-        from aptus.gui import youarehere 
-        youarehere.YouAreHereFrame(self.panel).Show()
+        """ Toggle the presence of the YouAreHere tool.
+        """
+        if self.youarehere_tool:
+            self.youarehere_tool.Destroy()
+        else:
+            from aptus.gui import youarehere
+            self.youarehere_tool = youarehere.YouAreHereFrame(self.panel)
+            self.youarehere_tool.Show()
 
     def cmd_show_palettes(self, event_unused):
-        from aptus.gui import palettespanel
-        from aptus.palettes import all_palettes
-        palettespanel.PalettesFrame(all_palettes, self.panel).Show()
+        """ Toggle the presence of the Palettes tool.
+        """
+        if self.palettes_tool:
+            self.palettes_tool.Destroy()
+        else:
+            from aptus.gui import palettespanel
+            from aptus.palettes import all_palettes
+            self.palettes_tool = palettespanel.PalettesFrame(all_palettes, self.panel)
+            self.palettes_tool.Show()
 
     def cmd_show_stats(self, event_unused):
-        from aptus.gui import statspanel
-        statspanel.StatsFrame(self.panel).Show()
+        """ Toggle the presence of the Stats tool.
+        """
+        if self.stats_tool:
+            self.stats_tool.Destroy()
+        else:
+            from aptus.gui import statspanel
+            self.stats_tool = statspanel.StatsFrame(self.panel)
+            self.stats_tool.Show()
