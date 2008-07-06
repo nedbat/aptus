@@ -7,7 +7,6 @@ from aptus.gui.ids import *
 from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
 
 wx = importer("wx")
-from wx.lib.evtmgr import eventManager
 from wx.lib.scrolledpanel import ScrolledPanel
 
 import math
@@ -162,13 +161,14 @@ class YouAreHereWin(ComputePanel, ListeningWindowMixin):
             dc.DrawRectangle(*self.hererect)
 
 
-class YouAreHereStack(ScrolledPanel):
+class YouAreHereStack(ScrolledPanel, ListeningWindowMixin):
     """ A scrolled panel with a stack of YouAreHereWin's, each at a successive
         magnification.
     """
     def __init__(self, parent, viewwin, size=wx.DefaultSize):
         ScrolledPanel.__init__(self, parent, size=size)
-
+        ListeningWindowMixin.__init__(self)
+        
         self.winsize = 250
         self.minrect = MIN_RECT
         self.stepfactor = float(self.winsize)/self.minrect
@@ -179,7 +179,7 @@ class YouAreHereStack(ScrolledPanel):
         self.SetAutoLayout(1)
         self.SetupScrolling()
         
-        eventManager.Register(self.on_geometry_changed, EVT_APTUS_GEOMETRY_CHANGED, self.viewwin)
+        self.register_listener(self.on_geometry_changed, EVT_APTUS_GEOMETRY_CHANGED, self.viewwin)
 
         self.on_geometry_changed()
 
