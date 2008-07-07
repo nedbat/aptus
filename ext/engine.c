@@ -112,13 +112,13 @@ AptEngine_init(AptEngine *self, PyObject *args, PyObject *kwds)
 // ri0 property methods
 
 static PyObject *
-AptEngine_get_ri0(AptEngine *self, void *closure)
+get_ri0(AptEngine *self, void *closure)
 {
     return Py_BuildValue("dd", self->ri0.r, self->ri0.i);
 }
 
 static int
-AptEngine_set_ri0(AptEngine *self, PyObject *value, void *closure)
+set_ri0(AptEngine *self, PyObject *value, void *closure)
 {
     if (value == NULL) {
         PyErr_SetString(PyExc_TypeError, "Cannot delete the ri0 attribute");
@@ -135,13 +135,13 @@ AptEngine_set_ri0(AptEngine *self, PyObject *value, void *closure)
 // ridxdy property methods
 
 static PyObject *
-AptEngine_get_ridxdy(AptEngine *self, void *closure)
+get_ridxdy(AptEngine *self, void *closure)
 {
     return Py_BuildValue("dddd", self->ridx.r, self->ridx.i, self->ridy.r, self->ridy.i);
 }
 
 static int
-AptEngine_set_ridxdy(AptEngine *self, PyObject *value, void *closure)
+set_ridxdy(AptEngine *self, PyObject *value, void *closure)
 {
     if (value == NULL) {
         PyErr_SetString(PyExc_TypeError, "Cannot delete the ridxdy attribute");
@@ -161,13 +161,13 @@ AptEngine_set_ridxdy(AptEngine *self, PyObject *value, void *closure)
 // rijulia property methods
 
 static PyObject *
-AptEngine_get_rijulia(AptEngine *self, void *closure)
+get_rijulia(AptEngine *self, void *closure)
 {
     return Py_BuildValue("dd", self->rijulia.r, self->rijulia.i);
 }
 
 static int
-AptEngine_set_rijulia(AptEngine *self, PyObject *value, void *closure)
+set_rijulia(AptEngine *self, PyObject *value, void *closure)
 {
     if (value == NULL) {
         PyErr_SetString(PyExc_TypeError, "Cannot delete the rijulia attribute");
@@ -184,7 +184,7 @@ AptEngine_set_rijulia(AptEngine *self, PyObject *value, void *closure)
 // cycle_params property methods
 
 static PyObject *
-AptEngine_get_cycle_params(AptEngine *self, void *closure)
+get_cycle_params(AptEngine *self, void *closure)
 {
     return Py_BuildValue("iiii",
         self->cycle_params.initial_period,
@@ -195,7 +195,7 @@ AptEngine_get_cycle_params(AptEngine *self, void *closure)
 }
 
 static int
-AptEngine_set_cycle_params(AptEngine *self, PyObject *value, void *closure)
+set_cycle_params(AptEngine *self, PyObject *value, void *closure)
 {
     if (value == NULL) {
         PyErr_SetString(PyExc_TypeError, "Cannot delete the rijulia attribute");
@@ -217,7 +217,7 @@ AptEngine_set_cycle_params(AptEngine *self, PyObject *value, void *closure)
 
 // Are two floating point numbers equal?
 inline int
-fequal(AptEngine * self, aptfloat a, aptfloat b)
+fequal(AptEngine *self, aptfloat a, aptfloat b)
 {
     return fabs(a - b) < self->epsilon;
 }
@@ -228,7 +228,7 @@ fequal(AptEngine * self, aptfloat a, aptfloat b)
 // in the current array.
 
 static int
-compute_count(AptEngine * self, int xi, int yi)
+compute_count(AptEngine *self, int xi, int yi)
 {
     int count = 0;
 
@@ -367,7 +367,7 @@ mandelbrot_point(AptEngine *self, PyObject *args)
 // Helper: call_progress
 
 static int
-call_progress(AptEngine * self, PyObject * progress, double frac_complete, char * info)
+call_progress(AptEngine *self, PyObject *progress, double frac_complete, char *info)
 {
     int ok = 1;
     PyObject * arglist = Py_BuildValue("(ds)", frac_complete, info);
@@ -383,7 +383,7 @@ call_progress(AptEngine * self, PyObject * progress, double frac_complete, char 
 // Helper: display a really big number in a portable way
 
 static char *
-human_u8int(u8int big, char * buf)
+human_u8int(u8int big, char *buf)
 {
     float little = big;
     if (big < 10000000) {   // 10 million
@@ -740,7 +740,7 @@ clear_stats(AptEngine *self)
 static char get_stats_doc[] = "Get the statistics as a dictionary";
 
 static PyObject *
-get_stats(AptEngine *self, PyObject *args)
+get_stats(AptEngine *self)
 {
     return Py_BuildValue("{sisKsIsIsIsisIsIsIsI}",
         "maxiter", self->stats.maxiter,
@@ -782,21 +782,21 @@ type_check(PyObject *self, PyObject *args)
 
 static PyMemberDef
 AptEngine_members[] = {
-    { "iter_limit", T_INT, offsetof(AptEngine, iter_limit), 0, "Limit on iterations" },
-    { "bailout", T_DOUBLE, offsetof(AptEngine, bailout), 0, "Radius of the escape circle" },
-    { "cont_levels", T_DOUBLE, offsetof(AptEngine, cont_levels), 0, "Number of fractional levels to compute" },
-    { "blend_colors", T_INT, offsetof(AptEngine, blend_colors), 0, "How many levels of color to blend" },
-    { "trace_boundary", T_INT, offsetof(AptEngine, trace_boundary), 0, "Control whether boundaries are traced" },
-    { "julia", T_INT, offsetof(AptEngine, julia), 0, "Compute Julia set?" },
+    { "iter_limit",     T_INT,      offsetof(AptEngine, iter_limit),        0, "Limit on iterations" },
+    { "bailout",        T_DOUBLE,   offsetof(AptEngine, bailout),           0, "Radius of the escape circle" },
+    { "cont_levels",    T_DOUBLE,   offsetof(AptEngine, cont_levels),       0, "Number of fractional levels to compute" },
+    { "blend_colors",   T_INT,      offsetof(AptEngine, blend_colors),      0, "How many levels of color to blend" },
+    { "trace_boundary", T_INT,      offsetof(AptEngine, trace_boundary),    0, "Control whether boundaries are traced" },
+    { "julia",          T_INT,      offsetof(AptEngine, julia),             0, "Compute Julia set?" },
     { NULL }
 };
 
 static PyGetSetDef
 AptEngine_getsetters[] = {
-    { "ri0", (getter)AptEngine_get_ri0, (setter)AptEngine_set_ri0, "Upper-left corner coordinates", NULL },
-    { "ridxdy", (getter)AptEngine_get_ridxdy, (setter)AptEngine_set_ridxdy, "Pixel offsets", NULL },
-    { "rijulia", (getter)AptEngine_get_rijulia, (setter)AptEngine_set_rijulia, "Julia point", NULL },
-    { "cycle_params", (getter)AptEngine_get_cycle_params, (setter)AptEngine_set_cycle_params, "Cycle detection parameters", NULL },
+    { "ri0",            (getter)get_ri0,            (setter)set_ri0,            "Upper-left corner coordinates", NULL },
+    { "ridxdy",         (getter)get_ridxdy,         (setter)set_ridxdy,         "Pixel offsets", NULL },
+    { "rijulia",        (getter)get_rijulia,        (setter)set_rijulia,        "Julia point", NULL },
+    { "cycle_params",   (getter)get_cycle_params,   (setter)set_cycle_params,   "Cycle detection parameters", NULL },
     { NULL }
 };
 
@@ -806,7 +806,7 @@ AptEngine_methods[] = {
     { "mandelbrot_array",   (PyCFunction) mandelbrot_array,   METH_VARARGS, mandelbrot_array_doc },
     { "apply_palette",      (PyCFunction) apply_palette,      METH_VARARGS, apply_palette_doc },
     { "clear_stats",        (PyCFunction) clear_stats,        METH_NOARGS,  clear_stats_doc },
-    { "get_stats",          (PyCFunction) get_stats,          METH_VARARGS, get_stats_doc },
+    { "get_stats",          (PyCFunction) get_stats,          METH_NOARGS,  get_stats_doc },
     { NULL }
 };
 
@@ -857,7 +857,7 @@ AptEngineType = {
 // Module definition
 
 static PyMethodDef
-aptus_engine_methods[] = {
+AptEngine_classmethods[] = {
     { "type_check", type_check, METH_VARARGS, type_check_doc },
     { NULL, NULL }
 };
@@ -873,7 +873,7 @@ initengine(void)
         return;
     }
 
-    m = Py_InitModule3("aptus.engine", aptus_engine_methods, "Fast Aptus Mandelbrot engine.");
+    m = Py_InitModule3("aptus.engine", AptEngine_classmethods, "Fast Aptus Mandelbrot engine.");
 
     if (m == NULL) {
         return;
