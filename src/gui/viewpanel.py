@@ -331,6 +331,10 @@ class AptusViewPanel(ComputePanel):
 
     def cmd_redraw(self, event_unused):
         self.m.clear_results()
+        #cp = list(self.m.eng.cycle_params)
+        #cp[1] += 1
+        #self.m.eng.cycle_params = tuple(cp)
+        #print cp
         self.set_view()
         
     def cmd_jump(self, event_unused):
