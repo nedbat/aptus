@@ -668,41 +668,63 @@ apply_palette(AptEngine *self, PyObject *args)
         Py_CLEAR(pint);
     }
     
+    // A one-element cache of count and color.
+    npy_uint8 *plastpix = NULL;
+    npy_uint32 lastc = (*(npy_uint32 *)PyArray_GETPTR2(counts, 0, 0))+1;    // Something different than the first value.
+    
     // Walk the arrays
     int h = PyArray_DIM(counts, 0);
     int w = PyArray_DIM(counts, 1);
+    int count_stride = PyArray_STRIDE(counts, 1);
+    int pix_stride = PyArray_STRIDE(pix, 1);
     int x, y;
     for (y = 0; y < h; y++) {
+        // The count for this pixel.
+        void *pcount = PyArray_GETPTR2(counts, y, 0);
+        // The pointer to the pixel's RGB bytes.
+        npy_uint8 *ppix = (npy_uint8 *)PyArray_GETPTR3(pix, y, 0, 0);
+
         for (x = 0; x < w; x++) {
-            // The count for this pixel.
-            npy_uint32 c = *(npy_uint32 *)PyArray_GETPTR2(counts, y, x);
-            // The pointer to the pixel's RGB bytes.
-            npy_uint8 *ppix = (npy_uint8 *)PyArray_GETPTR3(pix, y, x, 0);
-            if (c > 0) {
-                // The pixel is outside the set, color it with the palette.
-                if (self->blend_colors == 1) {
-                    // Not blending colors, each count is a literal palette
-                    // index.
-                    int cindex = (c + phase) % ncolors;
-                    memcpy(ppix, (colbytes + cindex*3), 3);
-                }
-                else {
-                    double cf = c * scale / self->blend_colors;
-                    int cbase = cf;
-                    float cfrac = cf - cbase;
-                    int c1index = (cbase + phase) % ncolors;
-                    int c2index = (cbase + 1 + phase) % ncolors;
-                    for (i = 0; i < 3; i++) {
-                        float col1 = colbytes[c1index*3+i];
-                        float col2 = colbytes[c2index*3+i];
-                        ppix[i] = (int)(col1 + (col2-col1)*cfrac);
-                    }
-                }
+            npy_uint32 c = *(npy_uint32*)pcount;
+            if (c == lastc) {
+                // A hit on the one-element cache. Copy the old value.
+                memcpy(ppix, plastpix, 3);
             }
             else {
-                // The pixel is in the set, color it with the incolor.
-                memcpy(ppix, incolbytes, 3);
+                if (c > 0) {
+                    // The pixel is outside the set, color it with the palette.
+                    if (self->blend_colors == 1) {
+                        // Not blending colors, each count is a literal palette
+                        // index.
+                        int cindex = (c + phase) % ncolors;
+                        memcpy(ppix, (colbytes + cindex*3), 3);
+                    }
+                    else {
+                        double cf = c * scale / self->blend_colors;
+                        int cbase = cf;
+                        float cfrac = cf - cbase;
+                        int c1index = (cbase + phase) % ncolors;
+                        int c2index = (cbase + 1 + phase) % ncolors;
+                        for (i = 0; i < 3; i++) {
+                            float col1 = colbytes[c1index*3+i];
+                            float col2 = colbytes[c2index*3+i];
+                            ppix[i] = (int)(col1 + (col2-col1)*cfrac);
+                        }
+                    }
+                }
+                else {
+                    // The pixel is in the set, color it with the incolor.
+                    memcpy(ppix, incolbytes, 3);
+                }
+                
+                // Save this value in our one-element cache.
+                lastc = c;
+                plastpix = ppix;
             }
+            
+            // Advance to the next pixel.
+            pcount += count_stride;
+            ppix += pix_stride;
         }
     }
 
