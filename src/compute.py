@@ -49,12 +49,16 @@ class AptusCompute:
         
         # The C extension for doing the heavy lifting.
         self.eng = AptEngine()
+        
         # counts is a numpy array of 32bit ints: the iteration counts at each pixel.
         self.counts = None
         # status is a numpy array of 8bit ints that tracks the boundary trace
         # status of each pixel: 0 for not computed, 1 for computed but not traced,
         # 2 for traced.
         self.status = None
+        # An array for the output pixels.
+        self.pix = None
+        
         self.pixels_computed = False
         self._clear_old_geometry()
         
@@ -202,12 +206,13 @@ class AptusCompute:
         return changed
     
     def color_mandel(self):
-        pix = numpy.zeros((self.counts.shape[0], self.counts.shape[1], 3), dtype=numpy.uint8)
+        if (self.pix is None) or (self.pix.shape != self.counts.shape):
+            self.pix = numpy.zeros((self.counts.shape[0], self.counts.shape[1], 3), dtype=numpy.uint8)
         self.eng.apply_palette(
             self.counts, self.palette.color_bytes(), self.palette_phase, self.palette_scale,
-            self.palette.incolor, pix
+            self.palette.incolor, self.pix
             )
-        return pix
+        return self.pix
     
     def coords_from_pixel(self, x, y):
         """ Get the coords of a pixel in the grid. Note that x and y can be
