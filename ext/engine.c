@@ -38,7 +38,16 @@ typedef struct {
     int blend_colors;       // how many levels of color should we blend?
     int trace_boundary;     // should we use boundary tracing?
     int julia;              // are we doing julia or mandelbrot?
+
+    // Parameters controlling the cycle detection.
+    struct {
+        int     initial_period; // save every nth z value as a cycle check.
+        int     tries;          // use each period value this many times before choosing a new period.
+        int     factor;         // to get a new period, multiply by this,
+        int     delta;          //  .. and add this.
+    } cycle_params;
     
+    // Statistics about the computation.
     struct {
         int     maxiter;        // Max iteration that isn't in the set.
         u8int   totaliter;      // Total number of iterations.
@@ -57,7 +66,7 @@ typedef struct {
 // Class methods
 
 static void
-AptEngine_dealloc(AptEngine * self)
+AptEngine_dealloc(AptEngine *self)
 {
     self->ob_type->tp_free((PyObject*)self);
 }
@@ -84,6 +93,11 @@ AptEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         self->cont_levels = 1.0;
         self->blend_colors = 1;
         self->julia = 0;
+
+        self->cycle_params.initial_period = 43;
+        self->cycle_params.tries = 10;
+        self->cycle_params.factor = 2;
+        self->cycle_params.delta = -1;
     }
 
     return (PyObject *)self;
@@ -147,7 +161,7 @@ AptEngine_set_ridxdy(AptEngine *self, PyObject *value, void *closure)
 // rijulia property methods
 
 static PyObject *
-AptEngine_get_rijulia(AptEngine *self, void* closure)
+AptEngine_get_rijulia(AptEngine *self, void *closure)
 {
     return Py_BuildValue("dd", self->rijulia.r, self->rijulia.i);
 }
@@ -167,6 +181,40 @@ AptEngine_set_rijulia(AptEngine *self, PyObject *value, void *closure)
     return 0;
 }
 
+// cycle_params property methods
+
+static PyObject *
+AptEngine_get_cycle_params(AptEngine *self, void *closure)
+{
+    return Py_BuildValue("iiii",
+        self->cycle_params.initial_period,
+        self->cycle_params.tries,
+        self->cycle_params.factor,
+        self->cycle_params.delta
+        );
+}
+
+static int
+AptEngine_set_cycle_params(AptEngine *self, PyObject *value, void *closure)
+{
+    if (value == NULL) {
+        PyErr_SetString(PyExc_TypeError, "Cannot delete the rijulia attribute");
+        return -1;
+    }
+  
+    if (!PyArg_ParseTuple(value, "iiii",
+        &self->cycle_params.initial_period,
+        &self->cycle_params.tries,
+        &self->cycle_params.factor,
+        &self->cycle_params.delta
+        ))
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
 // Are two floating point numbers equal?
 inline int
 fequal(AptEngine * self, aptfloat a, aptfloat b)
@@ -178,9 +226,6 @@ fequal(AptEngine * self, aptfloat a, aptfloat b)
 //
 // Given an integer coordinate xi,yi, return the iteration count for that point
 // in the current array.
-
-#define INITIAL_CYCLE_PERIOD 7
-#define CYCLE_TRIES 10
 
 static int
 compute_count(AptEngine * self, int xi, int yi)
@@ -211,8 +256,8 @@ compute_count(AptEngine * self, int xi, int yi)
     // Cycle checking bookkeeping variables.
     aptcomplex cycle_check = z;
 
-    int cycle_period = INITIAL_CYCLE_PERIOD;
-    int cycle_tries = CYCLE_TRIES;
+    int cycle_period = self->cycle_params.initial_period;
+    int cycle_tries = self->cycle_params.tries;
     int cycle_countdown = cycle_period;
 
     aptfloat bail2 = self->bailout * self->bailout;
@@ -265,8 +310,8 @@ compute_count(AptEngine * self, int xi, int yi)
                 cycle_check = z;
                 cycle_countdown = cycle_period;
                 if (--cycle_tries == 0) {
-                    cycle_period = 2*cycle_period-1;
-                    cycle_tries = CYCLE_TRIES;
+                    cycle_period = self->cycle_params.factor*cycle_period-self->cycle_params.delta;
+                    cycle_tries = self->cycle_params.tries;
                 }
             }
         }
@@ -631,7 +676,7 @@ apply_palette(AptEngine *self, PyObject *args)
         for (x = 0; x < w; x++) {
             // The count for this pixel.
             npy_uint32 c = *(npy_uint32 *)PyArray_GETPTR2(counts, y, x);
-            // The pointer to the pixels RGB bytes.
+            // The pointer to the pixel's RGB bytes.
             npy_uint8 *ppix = (npy_uint8 *)PyArray_GETPTR3(pix, y, x, 0);
             if (c > 0) {
                 // The pixel is outside the set, color it with the palette.
@@ -751,6 +796,7 @@ AptEngine_getsetters[] = {
     { "ri0", (getter)AptEngine_get_ri0, (setter)AptEngine_set_ri0, "Upper-left corner coordinates", NULL },
     { "ridxdy", (getter)AptEngine_get_ridxdy, (setter)AptEngine_set_ridxdy, "Pixel offsets", NULL },
     { "rijulia", (getter)AptEngine_get_rijulia, (setter)AptEngine_set_rijulia, "Julia point", NULL },
+    { "cycle_params", (getter)AptEngine_get_cycle_params, (setter)AptEngine_set_cycle_params, "Cycle detection parameters", NULL },
     { NULL }
 };
 
