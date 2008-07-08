@@ -4,6 +4,7 @@
 from aptus.importer import importer
 from aptus.gui.ids import *
 from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
+from aptus.gui.dictpanel import DictPanel
 
 wx = importer("wx")
 
@@ -11,65 +12,41 @@ import locale
 locale.setlocale(locale.LC_ALL, "")
 
 
-class StatsPanel(wx.Panel, ListeningWindowMixin):
+class StatsPanel(DictPanel, ListeningWindowMixin):
     """ A panel displaying the statistics from a view window.  It listens for
         recomputations, and updates automatically.
     """
     
     statmap = [
-        { 'label': 'Min iteration', 'stat': 'miniter', },
-        { 'label': 'Max iteration', 'stat': 'maxiter', },
-        { 'label': 'Total iterations', 'stat': 'totaliter', },
-        { 'label': 'Total cycles', 'stat': 'totalcycles', },
-        { 'label': 'Shortest cycle', 'stat': 'minitercycle', },
-        { 'label': 'Longest cycle', 'stat': 'maxitercycle', },
-        { 'label': 'Maxed points', 'stat': 'maxedpoints', },
-        { 'label': 'Computed points', 'stat': 'computedpoints', },
-        { 'label': 'Boundaries traced', 'stat': 'boundaries', },
-        { 'label': 'Boundaries filled', 'stat': 'boundariesfilled', },
+        { 'label': 'Min iteration', 'key': 'miniter', },
+        { 'label': 'Max iteration', 'key': 'maxiter', },
+        { 'label': 'Total iterations', 'key': 'totaliter', },
+        { 'label': 'Total cycles', 'key': 'totalcycles', },
+        { 'label': 'Shortest cycle', 'key': 'minitercycle', },
+        { 'label': 'Longest cycle', 'key': 'maxitercycle', },
+        { 'label': 'Maxed points', 'key': 'maxedpoints', },
+        { 'label': 'Computed points', 'key': 'computedpoints', },
+        { 'label': 'Boundaries traced', 'key': 'boundaries', },
+        { 'label': 'Boundaries filled', 'key': 'boundariesfilled', },
         ]
         
     def __init__(self, parent, viewwin):
         """ Create a StatsPanel, with `parent` as its parent, and `viewwin` as
             the window to track.
         """
-        wx.Panel.__init__(self, parent)
+        DictPanel.__init__(self, parent, self.statmap)
         ListeningWindowMixin.__init__(self)
         
         self.viewwin = viewwin
-        self.statwins = []
-        
-        grid = wx.FlexGridSizer(cols=2, vgap=1, hgap=3)
-        for statd in self.statmap:
-            label = wx.StaticText(self, -1, statd['label'] + ':')
-            value = wx.StaticText(self, -1, style=wx.ALIGN_RIGHT)
-            grid.Add(label)
-            grid.Add(value)
-            self.statwins.append((statd['stat'], value))
-        
-        sizer = wx.BoxSizer()
-        sizer.Add(grid, flag=wx.TOP|wx.RIGHT|wx.BOTTOM|wx.LEFT, border=3)
-        self.SetSizer(sizer)
-        sizer.Fit(self)
-        
-        self.register_listener(self.set_values, EVT_APTUS_RECOMPUTED, self.viewwin)
+        self.register_listener(self.on_recomputed, EVT_APTUS_RECOMPUTED, self.viewwin)
 
-        # Need to call set_values after the window appears, so that the widths of
+        # Need to call on_recomputed after the window appears, so that the widths of
         # the text controls can be set properly.  Else, it all appears left-aligned.
-        wx.CallAfter(self.set_values)
+        wx.CallAfter(self.on_recomputed)
         
-    def set_values(self, event_unused=None):
+    def on_recomputed(self, event_unused=None):
         stats = self.viewwin.m.eng.get_stats()
-        maxw = 50
-        for statname, valwin in self.statwins:
-            s = locale.format("%d", stats[statname], True)
-            valwin.SetLabel(s)
-            w = valwin.GetSizeTuple()[0]
-            maxw = max(maxw, w)
-
-        for statname, valwin in self.statwins:
-            valwin.SetSize((maxw, -1))
-            valwin.SetMinSize((maxw, -1))
+        self.update(stats)
 
 
 class StatsFrame(AptusToolFrame):
