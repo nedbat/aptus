@@ -23,7 +23,10 @@
     wrong with the half-pixel offset.
 + If the file-save picker says "PNG", and the filename is "foo.aptus", it should
     save as a .aptus file.
-    
+- In continuous mode, there's a stark ring of radius 8 or so.
+- Somehow I managed to zoom in then zoom out, and ended up outside the legal
+    radius and the set disappeared.
+
 * Speed
 
 - Multi-threaded to use more than one core.
@@ -33,6 +36,8 @@
 - Take some more optimizations from Xaos: http://www.delorie.com/gnu/docs/xaos/xaos_29.html
     - Do iterations in batches of 8 to avoid the bailout comparison.
 - Take advantage of symmetry across the x-axis.
+- Adaptively choose a number of continuous levels (other than 256) based on the
+    actual steps in the palette, etc.
 x Optimize boundary.py so we can use it for high iterations
 + Boundary checking in C
 - Fracint computes the miniter by running the edges (where the min must be), then
@@ -102,6 +107,7 @@ x Optimize boundary.py so we can use it for high iterations
 + Some way of embedding the mandelbrot parameters into the final .PNG, so it can be recreated.
 + A You-Are-Here mini panel showing the general location you are viewing
 +   (maybe more than one step's worth).
+- A point-info panel: current position, iteration count, color, palette entry, etc.
 
 * Safety
 
