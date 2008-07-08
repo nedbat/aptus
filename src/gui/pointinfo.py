@@ -41,6 +41,7 @@ class PointInfoPanel(DictPanel, ListeningWindowMixin):
         mx, my = event.GetPosition()
         info = self.viewwin.get_point_info((mx, my))
         self.update(info)
+        event.Skip()    # Need to let the main window handle the event too.
 
 
 class PointInfoFrame(AptusToolFrame):
