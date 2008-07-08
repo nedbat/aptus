@@ -150,7 +150,7 @@ class AptusViewPanel(ComputePanel):
             return
         
         mx, my = event.GetPosition()
-        
+
         if self.panning:
             if self.pt_pan != (mx, my):
                 # We've moved the image: redraw it.
@@ -239,12 +239,14 @@ class AptusViewPanel(ComputePanel):
             self.fire_command(id_show_youarehere)
         elif keycode == ord('N'):
             self.fire_command(id_new)
+        elif keycode == ord('P'):
+            self.fire_command(id_show_palettes)
+        elif keycode == ord('Q'):
+            self.fire_command(id_show_pointinfo)
         elif keycode == ord('R'):
             self.fire_command(id_redraw)
         elif keycode == ord('S'):
             self.fire_command(id_save)
-        elif keycode == ord('P'):
-            self.fire_command(id_show_palettes)
         elif keycode == ord('V'):
             self.fire_command(id_show_stats)
             

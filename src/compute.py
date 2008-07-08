@@ -214,6 +214,25 @@ class AptusCompute:
             )
         return self.pix
     
+    def compute_pixels(self):
+        if self.pixels_computed:
+            return
+
+        print "ri %r step %r, angle %.1f, iter_limit %r, size %r" % (
+            self.eng.ri0, self.pixsize, self.angle, self.eng.iter_limit, self.ssize
+            )
+
+        self.eng.clear_stats()
+        self.progress.begin()
+        self.eng.mandelbrot_array(self.counts, self.status, self.progress.progress)
+        self.progress.end()
+        #print self.eng.get_stats()
+        self._record_old_geometry()
+        self.pixels_computed = True
+        self.status = None  # It's all 2's now, no point in keeping it.
+        
+    # Information methods
+    
     def coords_from_pixel(self, x, y):
         """ Get the coords of a pixel in the grid. Note that x and y can be
             fractional.
@@ -237,23 +256,8 @@ class AptusCompute:
         y = -(d0*(i-ri01)+d1*ri00-d1*r)/(d1*d2-d0*d3)
         return x, y
 
-    def compute_pixels(self):
-        if self.pixels_computed:
-            return
-
-        print "ri %r step %r, angle %.1f, iter_limit %r, size %r" % (
-            self.eng.ri0, self.pixsize, self.angle, self.eng.iter_limit, self.ssize
-            )
-
-        self.eng.clear_stats()
-        self.progress.begin()
-        self.eng.mandelbrot_array(self.counts, self.status, self.progress.progress)
-        self.progress.end()
-        #print self.eng.get_stats()
-        self._record_old_geometry()
-        self.pixels_computed = True
-        self.status = None  # It's all 2's now, no point in keeping it.
-        
+    # Output-writing methods
+    
     def write_image(self, im, fpath):
         """ Write the image `im` to the path `fpath`.
         """

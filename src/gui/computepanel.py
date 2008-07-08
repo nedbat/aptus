@@ -114,7 +114,37 @@ class ComputePanel(wx.Panel):
             on top of the fractal.
         """
         pass
+
+    # Information methods
     
+    def get_stats(self):
+        """ Return a dictionary full of statistics about the latest computation.
+        """
+        return self.m.eng.get_stats()
+
+    def get_point_info(self, pt):
+        """ Return a dictionary of information about the specified point (in pixels).
+        """
+        x, y = pt
+        r, i = self.m.coords_from_pixel(x, y)
+
+        if self.m.pix is not None:
+            rgb = self.m.pix[y, x]
+            color = "#%02x%02x%02x" % (rgb[0], rgb[1], rgb[2])
+        else:
+            color = None
+        
+        count = self.m.counts[y, x]
+        if self.m.eng.cont_levels != 1:
+            count /= self.m.eng.cont_levels
+        
+        return {
+            'x': x, 'y': y,
+            'r': r, 'i': i,
+            'count': count,
+            'color': color,
+            }
+                
     # Output methods
     
     def make_progress_reporter(self):
