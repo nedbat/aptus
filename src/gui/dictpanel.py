@@ -46,6 +46,6 @@ class DictPanel(wx.Panel):
             w = valwin.GetSizeTuple()[0]
             maxw = max(maxw, w)
 
-        for statname, valwin in self.keywins:
+        for _, valwin in self.keywins:
             valwin.SetSize((maxw, -1))
             valwin.SetMinSize((maxw, -1))
