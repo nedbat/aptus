@@ -107,7 +107,7 @@ x Optimize boundary.py so we can use it for high iterations
 + Some way of embedding the mandelbrot parameters into the final .PNG, so it can be recreated.
 + A You-Are-Here mini panel showing the general location you are viewing
 +   (maybe more than one step's worth).
-- A point-info panel: current position, iteration count, color, palette entry, etc.
++ A point-info panel: current position, iteration count, color, palette entry, etc.
 
 * Safety
 

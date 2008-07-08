@@ -45,7 +45,7 @@ class StatsPanel(DictPanel, ListeningWindowMixin):
         wx.CallAfter(self.on_recomputed)
         
     def on_recomputed(self, event_unused=None):
-        stats = self.viewwin.m.eng.get_stats()
+        stats = self.viewwin.get_stats()
         self.update(stats)
 
 

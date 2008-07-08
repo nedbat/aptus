@@ -36,7 +36,12 @@ class DictPanel(wx.Panel):
         maxw = 50
         for key, valwin in self.keywins:
             val = d[key]
-            s = locale.format("%d", val, True)
+            if isinstance(val, (int, long)):
+                s = locale.format("%d", val, True)
+            elif isinstance(val, float):
+                s = "%.08f" % val
+            else:
+                s = str(val)
             valwin.SetLabel(s)
             w = valwin.GetSizeTuple()[0]
             maxw = max(maxw, w)

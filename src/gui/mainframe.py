@@ -39,11 +39,13 @@ class AptusMainFrame(wx.Frame):
         self.Bind(wx.EVT_MENU, self.cmd_show_youarehere, id=id_show_youarehere)
         self.Bind(wx.EVT_MENU, self.cmd_show_palettes, id=id_show_palettes)
         self.Bind(wx.EVT_MENU, self.cmd_show_stats, id=id_show_stats)
+        self.Bind(wx.EVT_MENU, self.cmd_show_pointinfo, id=id_show_pointinfo)
 
         # Auxilliary frames.
         self.youarehere_tool = None
         self.palettes_tool = None
         self.stats_tool = None
+        self.pointinfo_tool = None
         
     def Show(self, show=True):
         # Override Show so we can set the view properly.
@@ -149,3 +151,13 @@ class AptusMainFrame(wx.Frame):
             from aptus.gui import statspanel
             self.stats_tool = statspanel.StatsFrame(self.panel)
             self.stats_tool.Show()
+
+    def cmd_show_pointinfo(self, event_unused):
+        """ Toggle the presence of the PointInfo tool.
+        """
+        if self.pointinfo_tool:
+            self.pointinfo_tool.Destroy()
+        else:
+            from aptus.gui import pointinfo
+            self.pointinfo_tool = pointinfo.PointInfoFrame(self.panel)
+            self.pointinfo_tool.Show()
