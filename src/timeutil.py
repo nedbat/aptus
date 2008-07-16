@@ -6,15 +6,10 @@ import time
 def duration(s):
     """ Make a nice string representation of a number of seconds.
     """
-    w = d = h = m = 0
-    if s >= 60:
-        m, s = divmod(s, 60)
-    if m >= 60:
-        h, m = divmod(m, 60)
-    if h >= 24:
-        d, h = divmod(h, 24)
-    if d >= 7:
-        w, d = divmod(d, 7)
+    m, s = divmod(s, 60)
+    h, m = divmod(m, 60)
+    d, h = divmod(h, 24)
+    w, d = divmod(d, 7)
     dur = []
     if w:
         dur.append("%dw" % w)
