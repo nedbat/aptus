@@ -6,15 +6,41 @@ wx = importer("wx")
 from wx.lib.evtmgr import eventManager
 
 
+class AptusToolableFrameMixin:
+    """ A mixin to add to a frame.  Tool windows can be attached to this, and
+        will behave nicely (minimizing, etc).
+    """
+    def __init__(self):
+        self.toolwins = []
+        self.Bind(wx.EVT_ICONIZE, self.on_iconize)
+        
+    def add_toolwin(self, toolwin):
+        self.toolwins.append(toolwin)
+
+    def remove_toolwin(self, toolwin):
+        self.toolwins.remove(toolwin)
+
+    def on_iconize(self, event):
+        bshow = not event.Iconized()
+        for toolwin in self.toolwins:
+            toolwin.Show(bshow)
+
+
 class AptusToolFrame(wx.MiniFrame):
     """ A frame for tool windows.
     """
     # This handles getting the styles right for miniframes.
-    def __init__(self, parent_unused, title='', size=wx.DefaultSize):
-        # If I pass parent into MiniFrame, the focus gets messed up, and keys don't work anymore!?
+    def __init__(self, mainframe, title='', size=wx.DefaultSize):
+        # If I pass mainframe into MiniFrame, the focus gets messed up, and keys don't work anymore!?
         wx.MiniFrame.__init__(self, None, title=title, size=size,
             style=wx.DEFAULT_FRAME_STYLE
             )
+        self.mainframe = mainframe
+        self.mainframe.add_toolwin(self)
+        self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
+    
+    def on_destroy(self, event_unused):
+        self.mainframe.remove_toolwin(self)
 
 
 class ListeningWindowMixin:

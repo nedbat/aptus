@@ -55,6 +55,6 @@ class PointInfoPanel(DictPanel, ListeningWindowMixin):
 
 
 class PointInfoFrame(AptusToolFrame):
-    def __init__(self, mainwin):
-        AptusToolFrame.__init__(self, mainwin, title='Point info', size=(180,180))
-        self.panel = PointInfoPanel(self, mainwin)
+    def __init__(self, mainframe, viewwin):
+        AptusToolFrame.__init__(self, mainframe, title='Point info', size=(180,180))
+        self.panel = PointInfoPanel(self, viewwin)

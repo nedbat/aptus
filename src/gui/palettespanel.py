@@ -106,6 +106,6 @@ class PalettesPanel(ScrolledPanel, ListeningWindowMixin):
 class PalettesFrame(AptusToolFrame):
     """ The top level frame for the palettes list.
     """
-    def __init__(self, palettes, viewwin):
-        AptusToolFrame.__init__(self, viewwin, title='Palettes', size=(250, 350))
+    def __init__(self, mainframe, palettes, viewwin):
+        AptusToolFrame.__init__(self, mainframe, title='Palettes', size=(250, 350))
         self.panel = PalettesPanel(self, palettes, viewwin)
