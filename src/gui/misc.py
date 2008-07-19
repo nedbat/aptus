@@ -13,7 +13,8 @@ class AptusToolableFrameMixin:
     def __init__(self):
         self.toolwins = []
         self.Bind(wx.EVT_ICONIZE, self.on_iconize)
-        
+        self.Bind(wx.EVT_CLOSE, self.on_close)
+
     def add_toolwin(self, toolwin):
         self.toolwins.append(toolwin)
 
@@ -24,6 +25,12 @@ class AptusToolableFrameMixin:
         bshow = not event.Iconized()
         for toolwin in self.toolwins:
             toolwin.Show(bshow)
+        event.Skip()
+
+    def on_close(self, event):
+        for toolwin in self.toolwins:
+            toolwin.Close()
+        event.Skip()
 
 
 class AptusToolFrame(wx.MiniFrame):
@@ -33,7 +40,7 @@ class AptusToolFrame(wx.MiniFrame):
     def __init__(self, mainframe, title='', size=wx.DefaultSize):
         # If I pass mainframe into MiniFrame, the focus gets messed up, and keys don't work anymore!?
         wx.MiniFrame.__init__(self, None, title=title, size=size,
-            style=wx.DEFAULT_FRAME_STYLE
+            style=wx.DEFAULT_MINIFRAME_STYLE|wx.CLOSE_BOX
             )
         self.mainframe = mainframe
         self.mainframe.add_toolwin(self)

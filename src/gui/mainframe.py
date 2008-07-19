@@ -8,6 +8,7 @@ from aptus.gui.viewpanel import AptusViewPanel
 from aptus.gui.misc import AptusToolableFrameMixin
 
 wx = importer("wx")
+import wx.aui
 
 import os, os.path
 
@@ -16,7 +17,6 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
     """ The main window frame of the Aptus app.
     """
     def __init__(self, args=None):
-        global wx # the aui import below confuses the compiler?
         wx.Frame.__init__(self, None, -1, 'Aptus')
         AptusToolableFrameMixin.__init__(self)
 
@@ -30,7 +30,6 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
 
         if 0:
             # Experimental AUI support
-            import wx.aui
             self.auimgr = wx.aui.AuiManager()
             self.auimgr.SetManagedWindow(self)
     
@@ -149,7 +148,7 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
             self.youarehere_tool.Destroy()
         else:
             from aptus.gui import youarehere
-            self.youarehere_tool = youarehere.YouAreHereFrame(self.panel)
+            self.youarehere_tool = youarehere.YouAreHereFrame(self, self.panel)
             self.youarehere_tool.Show()
 
     def cmd_show_palettes(self, event_unused):

@@ -228,6 +228,6 @@ class YouAreHereStack(ScrolledPanel, ListeningWindowMixin):
 
 
 class YouAreHereFrame(AptusToolFrame):
-    def __init__(self, mainwin):
-        AptusToolFrame.__init__(self, mainwin, title='You are here', size=(250,550))
-        self.stack = YouAreHereStack(self, mainwin)
+    def __init__(self, mainframe, viewwin):
+        AptusToolFrame.__init__(self, mainframe, title='You are here', size=(250,550))
+        self.stack = YouAreHereStack(self, viewwin)
