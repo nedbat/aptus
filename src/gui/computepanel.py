@@ -123,8 +123,13 @@ class ComputePanel(wx.Panel):
         return self.m.eng.get_stats()
 
     def get_point_info(self, pt):
-        """ Return a dictionary of information about the specified point (in pixels).
+        """ Return a dictionary of information about the specified point (in client pixels).
+            If the point is outside the window, None is returned.
         """
+        client_rect = self.GetRect()
+        if not client_rect.Contains(pt):
+            return None
+        
         x, y = pt
         r, i = self.m.coords_from_pixel(x, y)
 
@@ -138,13 +143,15 @@ class ComputePanel(wx.Panel):
         if self.m.eng.cont_levels != 1:
             count /= self.m.eng.cont_levels
         
-        return {
+        point_info = {
             'x': x, 'y': y,
             'r': r, 'i': i,
             'count': count,
             'color': color,
             }
-                
+        
+        return point_info
+    
     # Output methods
     
     def make_progress_reporter(self):
