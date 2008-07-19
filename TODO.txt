@@ -23,7 +23,7 @@
     wrong with the half-pixel offset.
 + If the file-save picker says "PNG", and the filename is "foo.aptus", it should
     save as a .aptus file.
-- In continuous mode, there's a stark ring of radius 8 or so.
++ In continuous mode, there's a stark ring of radius 8 or so.
 - Somehow I managed to zoom in then zoom out, and ended up outside the legal
     radius and the set disappeared.
 

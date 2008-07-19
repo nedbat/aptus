@@ -338,6 +338,10 @@ compute_count(AptEngine *self, int xi, int yi)
         // The 2 here is the power of the iteration, not the bailout.
         double delta = log(log(sqrt(z2.r + z2.i)))/log(2);
         double fcount = count + 3 - delta;
+        if (fcount < 1) {
+            // Way outside the set, continuous mode acts weird.  Cut it off at 1.
+            fcount = 1;
+        }
         count = fcount * self->cont_levels;
     }
     
