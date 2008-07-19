@@ -5,17 +5,20 @@ from aptus.options import AptusOptions
 
 from aptus.gui.ids import *
 from aptus.gui.viewpanel import AptusViewPanel
+from aptus.gui.misc import AptusToolableFrameMixin
 
 wx = importer("wx")
 
 import os, os.path
 
 
-class AptusMainFrame(wx.Frame):
+class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
     """ The main window frame of the Aptus app.
     """
     def __init__(self, args=None):
+        global wx # the aui import below confuses the compiler?
         wx.Frame.__init__(self, None, -1, 'Aptus')
+        AptusToolableFrameMixin.__init__(self)
 
         # Make the panel
         self.panel = AptusViewPanel(self)
@@ -24,7 +27,25 @@ class AptusMainFrame(wx.Frame):
             opts = AptusOptions(self.panel.m)
             opts.read_args(args)
         self.panel.supersample = 1
-        
+
+        if 0:
+            # Experimental AUI support
+            import wx.aui
+            self.auimgr = wx.aui.AuiManager()
+            self.auimgr.SetManagedWindow(self)
+    
+            self.auimgr.AddPane(self.panel, wx.aui.AuiPaneInfo().Name("grid_content").
+                              PaneBorder(False).CenterPane())
+            
+            from aptus.gui import pointinfo
+            self.pointinfo_tool = pointinfo.PointInfoPanel(self, self.panel)
+    
+            self.auimgr.AddPane(self.pointinfo_tool, wx.aui.AuiPaneInfo().
+                              Name("pointinfo").Caption("Point info").
+                              Right().Layer(1).Position(1).CloseButton(True))
+                          
+            self.auimgr.Update()
+
         # Set the window icon
         ib = wx.IconBundle()
         ib.AddIconFromFile(data_file("icon48.png"), wx.BITMAP_TYPE_ANY)
@@ -139,7 +160,7 @@ class AptusMainFrame(wx.Frame):
         else:
             from aptus.gui import palettespanel
             from aptus.palettes import all_palettes
-            self.palettes_tool = palettespanel.PalettesFrame(all_palettes, self.panel)
+            self.palettes_tool = palettespanel.PalettesFrame(self, all_palettes, self.panel)
             self.palettes_tool.Show()
 
     def cmd_show_stats(self, event_unused):
@@ -149,7 +170,7 @@ class AptusMainFrame(wx.Frame):
             self.stats_tool.Destroy()
         else:
             from aptus.gui import statspanel
-            self.stats_tool = statspanel.StatsFrame(self.panel)
+            self.stats_tool = statspanel.StatsFrame(self, self.panel)
             self.stats_tool.Show()
 
     def cmd_show_pointinfo(self, event_unused):
@@ -159,5 +180,5 @@ class AptusMainFrame(wx.Frame):
             self.pointinfo_tool.Destroy()
         else:
             from aptus.gui import pointinfo
-            self.pointinfo_tool = pointinfo.PointInfoFrame(self.panel)
+            self.pointinfo_tool = pointinfo.PointInfoFrame(self, self.panel)
             self.pointinfo_tool.Show()
