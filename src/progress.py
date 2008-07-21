@@ -69,6 +69,9 @@ class AggregateProgressReporter:
         for kid in self.kids:
             kid.end()
 
+# Cheap way to measure and average a number of runs.
+nruns = 0
+totaltotal = 0
 
 class ConsoleProgressReporter:
     """ A progress reporter that writes lines to the console.
@@ -88,4 +91,8 @@ class ConsoleProgressReporter:
     
     def end(self):
         total = time.time() - self.start
-        print "Total: %s (%.2fs)" % (duration(total), total)
+        global totaltotal, nruns
+        totaltotal += total
+        nruns += 1
+        print "Total: %s (%.4fs)" % (duration(total), total)
+        #print "Running average: %.6fs over %d runs" % (totaltotal/nruns, nruns)
