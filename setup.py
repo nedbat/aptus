@@ -66,6 +66,9 @@ setup(
             "aptus.engine",
             sources=["ext/engine.c"],
             include_dirs=[numpy.get_include()],
+            # Most examples on the web seem to imply that O3 will be automatic,
+            # but for me it wasn't, and I want all the speed I can get...
+            extra_compile_args=['-O3'],
             ),
         ],
     
