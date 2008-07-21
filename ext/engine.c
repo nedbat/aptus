@@ -21,6 +21,13 @@ typedef npy_uint8 u1int;
 typedef npy_uint32 u4int;
 typedef npy_uint64 u8int;
 
+// Macros lifted from Linux kernel.  Use likely(cond) in an if to indicate that
+// condition is most likely true, and unlikely(cond) to indicate unlikely to be
+// true.  The compiler will arrange the generated code so the straight-line path
+// is the likely case.  This helps the CPU pipeline run best.
+#define likely(x)       __builtin_expect((x),1)
+#define unlikely(x)     __builtin_expect((x),0)
+
 // The Engine type.
 
 typedef struct {
@@ -275,29 +282,29 @@ compute_count(AptEngine *self, int xi, int yi)
     self->stats.totaliter++;
 
     // Loop over the iterations.
-    while (count <= self->iter_limit) {
+    while (likely(count <= self->iter_limit)) {
         ITER1;
-        if (z2.r + z2.i > bail2) {
+        if (unlikely(z2.r + z2.i > bail2)) {
             // The point has escaped the bailout.  Update the stats and bail out.
-            if (count > self->stats.maxiter) {
+            if (unlikely(count > self->stats.maxiter)) {
                 self->stats.maxiter = count;
             }
-            if (self->stats.miniter == 0 || count < self->stats.miniter) {
+            if (unlikely(self->stats.miniter == 0 || count < self->stats.miniter)) {
                 self->stats.miniter = count;
             }
             break;
         }
         ITER2;
 
-        if (self->check_for_cycles) {
+        if (likely(self->check_for_cycles)) {
             // Check for cycles
-            if (fequal(self, z.r, cycle_check.r) && fequal(self, z.i, cycle_check.i)) {
+            if (unlikely(fequal(self, z.r, cycle_check.r) && fequal(self, z.i, cycle_check.i))) {
                 // We're in a cycle! Update stats, and end the iterations.
                 self->stats.totalcycles++;
-                if (count > self->stats.maxitercycle) {
+                if (unlikely(count > self->stats.maxitercycle)) {
                     self->stats.maxitercycle = count;
                 }
-                if (self->stats.minitercycle == 0 || count < self->stats.minitercycle) {
+                if (unlikely(self->stats.minitercycle == 0 || count < self->stats.minitercycle)) {
                     self->stats.minitercycle = count;
                 }
                 // A cycle means we're inside the set (count of 0).
@@ -320,7 +327,7 @@ compute_count(AptEngine *self, int xi, int yi)
     }
 
     // Counts above the iteration limit are colored as if they were in the set.
-    if (count > self->iter_limit) {
+    if (unlikely(count > self->iter_limit)) {
         self->stats.maxedpoints++;
         count = 0;
     }
@@ -338,7 +345,7 @@ compute_count(AptEngine *self, int xi, int yi)
         // The 2 here is the power of the iteration, not the bailout.
         double delta = log(log(sqrt(z2.r + z2.i)))/log(2);
         double fcount = count + 3 - delta;
-        if (fcount < 1) {
+        if (unlikely(fcount < 1)) {
             // Way outside the set, continuous mode acts weird.  Cut it off at 1.
             fcount = 1;
         }
@@ -446,8 +453,11 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     points = malloc(sizeof(pt)*ptsalloced);
     int ptsstored = 0;
     
+    // Progress reporting stuff.
     char info[100];
     char uinfo[100];
+    u8int last_progress = 0;    // the totaliter the last time we called the progress function.
+    const int MIN_PROGRESS = 1000000;  // Don't call progress unless we've done this many iters.
     
 #define STATUS(x,y) *(npy_uint8 *)PyArray_GETPTR2(status, (y), (x))
 #define COUNTS(x,y) *(npy_uint32 *)PyArray_GETPTR2(counts, (y), (x))
@@ -489,14 +499,14 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                 // Walk the boundary
                 for (;;) {
                     // Eventually, we reach our starting point. Stop.
-                    if (!start && curx == origx && cury == origy && curdir == DIR_DOWN) {
+                    if (unlikely(!start && curx == origx && cury == origy && curdir == DIR_DOWN)) {
                         break;
                     }
                     
                     // Move to the next position. If we're off the field, turn left.
                     switch (curdir) {
                     case DIR_DOWN:
-                        if (cury >= h-1) {
+                        if (unlikely(cury >= h-1)) {
                             curdir = DIR_RIGHT;
                             continue;
                         }
@@ -504,7 +514,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                         break;
 
                     case DIR_LEFT:
-                        if (curx <= 0) {
+                        if (unlikely(curx <= 0)) {
                             curdir = DIR_DOWN;
                             continue;
                         }
@@ -512,7 +522,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                         break;
                     
                     case DIR_UP:
-                        if (cury <= 0) {
+                        if (unlikely(cury <= 0)) {
                             curdir = DIR_LEFT;
                             continue;
                         }
@@ -520,7 +530,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                         break;
                     
                     case DIR_RIGHT:
-                        if (curx >= w-1) {
+                        if (unlikely(curx >= w-1)) {
                             curdir = DIR_UP;
                             continue;
                         }
@@ -545,7 +555,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                         STATUS(curx, cury) = 2;
                         // Append the point to the points list, growing dynamically
                         // if we have to.
-                        if (ptsstored == ptsalloced) {
+                        if (unlikely(ptsstored == ptsalloced)) {
                             pt * newpoints = malloc(sizeof(pt)*ptsalloced*2);
                             if (newpoints == NULL) {
                                 PyErr_SetString(PyExc_MemoryError, "couldn't allocate points");
@@ -606,9 +616,12 @@ mandelbrot_array(AptEngine *self, PyObject *args)
 
                         // If this was a large boundary, call the progress function.
                         if (ptsstored > w) {
-                            sprintf(info, "trace %d * %d, totaliter %s", c, ptsstored, human_u8int(self->stats.totaliter, uinfo));
-                            if (!call_progress(self, progress, ((double)num_pixels)/(w*h), info)) {
-                                goto done;
+                            if (self->stats.totaliter - last_progress > MIN_PROGRESS) {
+                                sprintf(info, "trace %d * %d, totaliter %s", c, ptsstored, human_u8int(self->stats.totaliter, uinfo));
+                                if (!call_progress(self, progress, ((double)num_pixels)/(w*h), info)) {
+                                    goto done;
+                                }
+                                last_progress = self->stats.totaliter;
                             }
                         }
                     }
@@ -616,9 +629,13 @@ mandelbrot_array(AptEngine *self, PyObject *args)
             } // end if needs trace
         } // end for xi
 
-        sprintf(info, "scan %d, totaliter %s", yi+1, human_u8int(self->stats.totaliter, uinfo));
-        if (!call_progress(self, progress, ((double)num_pixels)/(w*h), info)) {
-            goto done;
+        // At the end of the scan line, call progress if we've made enough progress
+        if (self->stats.totaliter - last_progress > MIN_PROGRESS) {
+            sprintf(info, "scan %d, totaliter %s", yi+1, human_u8int(self->stats.totaliter, uinfo));
+            if (!call_progress(self, progress, ((double)num_pixels)/(w*h), info)) {
+                goto done;
+            }
+            last_progress = self->stats.totaliter;
         }
     } // end for yi
     
