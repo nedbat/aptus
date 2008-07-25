@@ -39,7 +39,7 @@ class DictPanel(wx.Panel):
             if isinstance(val, (int, long)):
                 s = locale.format("%d", val, True)
             elif isinstance(val, float):
-                s = "%.08f" % val
+                s = "%.10e" % val
             else:
                 s = str(val)
             valwin.SetLabel(s)
