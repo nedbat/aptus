@@ -587,7 +587,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                 // If we saved enough boundary points, then we flood fill. The
                 // points are orthogonally connected, so we need at least eight
                 // to enclose a fillable point.
-                if (ptsstored >= 8) {
+                if (unlikely(ptsstored >= 8)) {
                     // Flood fill the region. The points list has all the boundary
                     // points, so we only need to fill left from each of those.
                     int num_filled = 0;
