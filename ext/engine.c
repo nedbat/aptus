@@ -71,6 +71,7 @@ typedef struct {
         u4int   computedpoints; // Number of points that were actually computed.
         u4int   boundaries;     // Number of boundaries traced.
         u4int   boundariesfilled; // Number of boundaries filled.
+        u4int   longestboundary; // Most points in a traced boundary.
     } stats;
 
 } AptEngine;
@@ -588,6 +589,9 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                 } // end for boundary points
                 
                 self->stats.boundaries++;
+                if (ptsstored > self->stats.longestboundary) {
+                    self->stats.longestboundary = ptsstored;
+                }
                 
                 // If we saved enough boundary points, then we flood fill. The
                 // points are orthogonally connected, so we need at least eight
@@ -779,6 +783,7 @@ clear_stats(AptEngine *self)
     self->stats.computedpoints = 0;
     self->stats.boundaries = 0;
     self->stats.boundariesfilled = 0;
+    self->stats.longestboundary = 0;
 
     return Py_BuildValue("");
 }
@@ -790,7 +795,7 @@ static char get_stats_doc[] = "Get the statistics as a dictionary";
 static PyObject *
 get_stats(AptEngine *self)
 {
-    return Py_BuildValue("{sisKsIsIsIsisIsIsIsI}",
+    return Py_BuildValue("{sisKsIsIsIsisIsIsIsIsI}",
         "maxiter", self->stats.maxiter,
         "totaliter", self->stats.totaliter,
         "totalcycles", self->stats.totalcycles,
@@ -800,7 +805,8 @@ get_stats(AptEngine *self)
         "maxedpoints", self->stats.maxedpoints,
         "computedpoints", self->stats.computedpoints,
         "boundaries", self->stats.boundaries,
-        "boundariesfilled", self->stats.boundariesfilled
+        "boundariesfilled", self->stats.boundariesfilled,
+        "longestboundary", self->stats.longestboundary
         );
 }
 
