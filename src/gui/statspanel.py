@@ -28,6 +28,7 @@ class StatsPanel(DictPanel, ListeningWindowMixin):
         { 'label': 'Computed points', 'key': 'computedpoints', },
         { 'label': 'Boundaries traced', 'key': 'boundaries', },
         { 'label': 'Boundaries filled', 'key': 'boundariesfilled', },
+        { 'label': 'Longest boundary', 'key': 'longestboundary', },
         ]
         
     def __init__(self, parent, viewwin):
