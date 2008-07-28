@@ -160,7 +160,8 @@ class ComputePanel(wx.Panel):
         # Construct a progress reporter that suits us.  Write to the console,
         # and keep the GUI updated, but only once a second.
         prorep = AggregateProgressReporter()
-        prorep.add(ConsoleProgressReporter())
+        if not self.m.quiet:
+            prorep.add(ConsoleProgressReporter())
         prorep.add(GuiProgressReporter(self))
         return IntervalProgressReporter(1, prorep)
     

@@ -46,7 +46,8 @@ class AptusCompute:
         
         # other
         self.outfile = 'Aptus.png'
-        
+        self.quiet = False
+
         # The C extension for doing the heavy lifting.
         self.eng = AptEngine()
         
@@ -218,10 +219,11 @@ class AptusCompute:
         if self.pixels_computed:
             return
 
-        print "ri %r step %r, angle %.1f, iter_limit %r, size %r" % (
-            self.eng.ri0, self.pixsize, self.angle, self.eng.iter_limit, self.ssize
-            )
-        print "center %r, diam %r" % (self.center, self.diam)
+        if not self.quiet:
+            print "ri %r step %r, angle %.1f, iter_limit %r, size %r" % (
+                self.eng.ri0, self.pixsize, self.angle, self.eng.iter_limit, self.ssize
+                )
+            print "center %r, diam %r" % (self.center, self.diam)
         self.eng.clear_stats()
         self.progress.begin()
         self.eng.mandelbrot_array(self.counts, self.status, self.progress.progress)
