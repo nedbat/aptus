@@ -211,7 +211,7 @@ static int
 set_cycle_params(AptEngine *self, PyObject *value, void *closure)
 {
     if (value == NULL) {
-        PyErr_SetString(PyExc_TypeError, "Cannot delete the rijulia attribute");
+        PyErr_SetString(PyExc_TypeError, "Cannot delete the cycle_params attribute");
         return -1;
     }
   
