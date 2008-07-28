@@ -60,13 +60,15 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
         self.Bind(wx.EVT_MENU, self.cmd_show_palettes, id=id_show_palettes)
         self.Bind(wx.EVT_MENU, self.cmd_show_stats, id=id_show_stats)
         self.Bind(wx.EVT_MENU, self.cmd_show_pointinfo, id=id_show_pointinfo)
+        self.Bind(wx.EVT_MENU, self.cmd_show_julia, id=id_show_julia)
 
         # Auxilliary frames.
         self.youarehere_tool = None
         self.palettes_tool = None
         self.stats_tool = None
         self.pointinfo_tool = None
-        
+        self.julia_tool = None
+
     def Show(self, show=True):
         # Override Show so we can set the view properly.
         if show:
@@ -181,3 +183,13 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
             from aptus.gui import pointinfo
             self.pointinfo_tool = pointinfo.PointInfoFrame(self, self.panel)
             self.pointinfo_tool.Show()
+
+    def cmd_show_julia(self, event_unused):
+        """ Toggle the presence of the Julia tool.
+        """
+        if self.julia_tool:
+            self.julia_tool.Destroy()
+        else:
+            from aptus.gui import juliapanel
+            self.julia_tool = juliapanel.JuliaFrame(self, self.panel)
+            self.julia_tool.Show()
