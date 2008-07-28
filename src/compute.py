@@ -34,7 +34,9 @@ class AptusCompute:
         self.bailout = 0
         self.continuous = False
         self.supersample = 1
-        self.computation_attributes = ['iter_limit', 'bailout', 'continuous', 'supersample']
+        self.julia = False
+        self.rijulia = 0.0, 0.0
+        self.computation_attributes = ['iter_limit', 'bailout', 'continuous', 'supersample', 'julia', 'rijulia']
         
         # coloring
         self.palette = None
@@ -43,8 +45,6 @@ class AptusCompute:
         self.coloring_attributes = ['palette', 'palette_phase', 'palette_scale']
         
         # other
-        self.julia = False
-        self.rijulia = 0.0, 0.0
         self.outfile = 'Aptus.png'
         
         # The C extension for doing the heavy lifting.
@@ -221,12 +221,11 @@ class AptusCompute:
         print "ri %r step %r, angle %.1f, iter_limit %r, size %r" % (
             self.eng.ri0, self.pixsize, self.angle, self.eng.iter_limit, self.ssize
             )
-
+        print "center %r, diam %r" % (self.center, self.diam)
         self.eng.clear_stats()
         self.progress.begin()
         self.eng.mandelbrot_array(self.counts, self.status, self.progress.progress)
         self.progress.end()
-        #print self.eng.get_stats()
         self._record_old_geometry()
         self.pixels_computed = True
         self.status = None  # It's all 2's now, no point in keeping it.
