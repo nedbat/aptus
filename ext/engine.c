@@ -235,6 +235,12 @@ fequal(AptEngine *self, aptfloat a, aptfloat b)
     return fabs(a - b) < self->epsilon;
 }
 
+// An experiment in leaving out statistics and progress reporting.
+// No idea why, but making these empty macros (thereby removing a
+// bunch of code) makes the code *slower*.
+#define STATS_DECL(x)   x
+#define STATS_CODE(x)   x
+
 // compute_count: the heart of the Mandelbrot algorithm.
 //
 // Given an integer coordinate xi,yi, return the iteration count for that point
@@ -285,19 +291,21 @@ compute_count(AptEngine *self, int xi, int yi)
     znew.r = z2.r - z2.i + c.r;             \
     znew.i = 2 * z.i * z.r + c.i;           \
     z = znew;                               \
-    self->stats.totaliter++;
+    STATS_CODE(self->stats.totaliter++;)
 
     // Loop over the iterations.
     while (likely(count <= self->iter_limit)) {
         ITER1;
         if (unlikely(z2.r + z2.i > bail2)) {
             // The point has escaped the bailout.  Update the stats and bail out.
+            STATS_CODE(
             if (unlikely(count > self->stats.maxiter)) {
                 self->stats.maxiter = count;
             }
             if (unlikely(self->stats.miniter == 0 || count < self->stats.miniter)) {
                 self->stats.miniter = count;
             }
+            )
             break;
         }
         ITER2;
@@ -306,6 +314,7 @@ compute_count(AptEngine *self, int xi, int yi)
             // Check for cycles
             if (unlikely(fequal(self, z.r, cycle_check.r) && fequal(self, z.i, cycle_check.i))) {
                 // We're in a cycle! Update stats, and end the iterations.
+                STATS_CODE(
                 self->stats.totalcycles++;
                 if (unlikely(count > self->stats.maxitercycle)) {
                     self->stats.maxitercycle = count;
@@ -313,6 +322,7 @@ compute_count(AptEngine *self, int xi, int yi)
                 if (unlikely(self->stats.minitercycle == 0 || count < self->stats.minitercycle)) {
                     self->stats.minitercycle = count;
                 }
+                )
                 // A cycle means we're inside the set (count of 0).
                 count = 0;
                 break;
@@ -334,7 +344,7 @@ compute_count(AptEngine *self, int xi, int yi)
 
     // Counts above the iteration limit are colored as if they were in the set.
     if (unlikely(count > self->iter_limit)) {
-        self->stats.maxedpoints++;
+        STATS_CODE(self->stats.maxedpoints++;)
         count = 0;
     }
     
@@ -358,7 +368,7 @@ compute_count(AptEngine *self, int xi, int yi)
         count = fcount * self->cont_levels;
     }
     
-    self->stats.computedpoints++;
+    STATS_CODE(self->stats.computedpoints++;)
     
     return count;
 }
@@ -382,7 +392,7 @@ mandelbrot_point(AptEngine *self, PyObject *args)
 }
 
 // Helper: call_progress
-
+STATS_DECL(
 static int
 call_progress(AptEngine *self, PyObject *progress, double frac_complete, char *info)
 {
@@ -396,6 +406,7 @@ call_progress(AptEngine *self, PyObject *progress, double frac_complete, char *i
     Py_XDECREF(result);
     return ok;
 }
+)
 
 // Helper: display a really big number in a portable way
 
@@ -458,13 +469,15 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     int ptsalloced = 10000;
     points = malloc(sizeof(pt)*ptsalloced);
     int ptsstored = 0;
-    
+
+    STATS_DECL(    
     // Progress reporting stuff.
     char info[100];
     char uinfo[100];
     u8int last_progress = 0;    // the totaliter the last time we called the progress function.
     const int MIN_PROGRESS = 1000000;  // Don't call progress unless we've done this many iters.
-    
+    )
+
 #define STATUS(x,y) *(npy_uint8 *)PyArray_GETPTR2(status, (y), (x))
 #define COUNTS(x,y) *(npy_uint32 *)PyArray_GETPTR2(counts, (y), (x))
 #define DIR_DOWN    0
@@ -588,10 +601,12 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                     start = 0;
                 } // end for boundary points
                 
+                STATS_CODE(
                 self->stats.boundaries++;
                 if (ptsstored > self->stats.longestboundary) {
                     self->stats.longestboundary = ptsstored;
                 }
+                )
                 
                 // If we saved enough boundary points, then we flood fill. The
                 // points are orthogonally connected, so we need at least eight
@@ -619,7 +634,8 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                             STATUS(ptx, pty) = 2;
                         }
                     } // end for points to fill
-                    
+                
+                    STATS_CODE(    
                     if (num_filled > 0) {
                         self->stats.boundariesfilled++;
 
@@ -634,10 +650,12 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                             }
                         }
                     }
+                    )
                 } // end if points
             } // end if needs trace
         } // end for xi
 
+        STATS_CODE(
         // At the end of the scan line, call progress if we've made enough progress
         if (self->stats.totaliter - last_progress > MIN_PROGRESS) {
             sprintf(info, "scan %d, totaliter %s", yi+1, human_u8int(self->stats.totaliter, uinfo));
@@ -646,6 +664,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
             }
             last_progress = self->stats.totaliter;
         }
+        )
     } // end for yi
     
     // Clean up.
