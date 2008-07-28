@@ -226,13 +226,7 @@ class AptusViewPanel(ComputePanel):
             self.fire_command(id_set_iter_limit)
         elif keycode == ord('J'):
             if shift:
-                if self.m.julia:
-                    self.m.center = self.m.rijulia
-                else:
-                    self.m.rijulia = self.m.center
-                    self.m.center, self.m.diam = (0.0,0.0), (3.0,3.0)
-                self.m.julia = not self.m.julia
-                self.set_view()
+                self.fire_command(id_show_julia)
             else:
                 self.fire_command(id_jump)
         elif keycode == ord('L'):
