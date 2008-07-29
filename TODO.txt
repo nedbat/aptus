@@ -13,6 +13,9 @@
 + Engine extension should be nested in aptus package.
 + Windows kits pre-built.
 
+* V2
+- Decide on re-entrancy, keep things from getting tangled up.
+
 * Bugs
 
 + If client size is queried while minimized, it comes back as zero, and a divide by zero error happens.
