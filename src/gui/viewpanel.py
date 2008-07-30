@@ -1,5 +1,6 @@
 from aptus.importer import importer
 from aptus.palettes import all_palettes
+from aptus.progress import ConsoleProgressReporter, IntervalProgressReporter, AggregateProgressReporter
 
 from aptus.gui.computepanel import ComputePanel
 from aptus.gui.ids import *
@@ -17,11 +18,31 @@ JUMPS = [
     ]
 
 
+class GuiProgressReporter:
+    """ A progress reporter tied into the GUI.
+    """
+    def __init__(self, aptview):
+        self.aptview = aptview
+        
+    def begin(self):
+        wx.BeginBusyCursor()
+        
+    def progress(self, frac_done_unused, info_unused=''):
+        self.aptview.draw_progress()
+        # Yield so that repaints of the screen will happen.
+        wx.SafeYield()
+
+    def end(self):
+        wx.EndBusyCursor()
+
+
 class AptusViewPanel(ComputePanel):
     """ A panel implementing the primary Aptus view and controller.
     """
     def __init__(self, parent):
         ComputePanel.__init__(self, parent)
+
+        self.m.quiet = False
 
         # Bind input events.
         self.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
@@ -109,6 +130,14 @@ class AptusViewPanel(ComputePanel):
         self.m.diam = (self.m.diam[0]*scale, self.m.diam[1]*scale)
         self.geometry_changed()
         
+    def make_progress_reporter(self):
+        # Construct a progress reporter that suits us.  Write to the console,
+        # and keep the GUI updated, but only once a second.
+        prorep = AggregateProgressReporter()
+        prorep.add(ConsoleProgressReporter())
+        prorep.add(GuiProgressReporter(self))
+        return IntervalProgressReporter(1, prorep)
+    
     # Event handlers
     
     def on_idle(self, event):
