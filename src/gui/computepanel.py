@@ -2,30 +2,12 @@ from aptus.compute import AptusCompute
 from aptus.importer import importer
 from aptus.options import AptusState
 from aptus.palettes import all_palettes
-from aptus.progress import ConsoleProgressReporter, IntervalProgressReporter, AggregateProgressReporter
+from aptus.progress import NullProgressReporter
 
 from aptus.gui.ids import *
 
 wx = importer('wx')
 Image = importer('Image')
-
-class GuiProgressReporter:
-    """ A progress reporter tied into the GUI.
-    """
-    def __init__(self, aptview):
-        self.aptview = aptview
-        
-    def begin(self):
-        wx.BeginBusyCursor()
-        
-    def progress(self, frac_done_unused, info_unused=''):
-        self.aptview.draw_progress()
-        # Yield so that repaints of the screen will happen.
-        wx.SafeYield()
-
-    def end(self):
-        wx.EndBusyCursor()
-
 
 class ComputePanel(wx.Panel):
     """ A panel capable of drawing a Mandelbrot.
@@ -35,6 +17,7 @@ class ComputePanel(wx.Panel):
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
 
         self.m = AptusCompute()
+        self.m.quiet = True     # default to quiet.
         
         # AptusCompute default values        
         self.m.palette = all_palettes[0]
@@ -157,14 +140,10 @@ class ComputePanel(wx.Panel):
     # Output methods
     
     def make_progress_reporter(self):
-        # Construct a progress reporter that suits us.  Write to the console,
-        # and keep the GUI updated, but only once a second.
-        prorep = AggregateProgressReporter()
-        if not self.m.quiet:
-            prorep.add(ConsoleProgressReporter())
-        prorep.add(GuiProgressReporter(self))
-        return IntervalProgressReporter(1, prorep)
-    
+        """ Create a progress reporter for use when this panel computes.
+        """
+        return NullProgressReporter()
+
     def bitmap_from_compute(self):
         pix = self.m.color_mandel()
         bitmap = wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix)

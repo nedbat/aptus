@@ -27,7 +27,6 @@ class JuliaPanel(ComputePanel, ListeningWindowMixin):
 
         self.m.center, self.m.diam = (0.0,0.0), (3.0,3.0)
         self.m.julia = 1
-        self.m.quiet = True
 
         self.on_coloring_changed(None)
 
