@@ -15,6 +15,7 @@
 
 * V2
 - Decide on re-entrancy, keep things from getting tangled up.
+- Combine pointinfo and stats panel, and add more info to it.
 
 * Bugs
 
