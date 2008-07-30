@@ -28,6 +28,9 @@ lint:
 	python -x /Python25/Scripts/pylint.bat --rcfile=.pylintrc src
 	python checkeol.py
 
+asm:
+	gcc.exe -mno-cygwin -mdll -O -Wall -Ic:\\Python25\\lib\\site-packages\\numpy\\core\\include -Ic:\\Python25\\include -Ic:\\Python25\\PC -c ext/engine.c -O3 -g -Wa,-alh > engine.lst
+
 WEBHOME = c:/ned/web/stellated/pages/code/aptus
 LOCALHOME = c:/www/code/aptus
 
