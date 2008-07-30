@@ -44,8 +44,10 @@
     actual steps in the palette, etc.
 x Optimize boundary.py so we can use it for high iterations
 + Boundary checking in C
-- Fracint computes the miniter by running the edges (where the min must be), then
++ Fracint computes the miniter by running the edges (where the min must be), then
     uses it to skip the bailout check until reaching the miniter.
+- What does edge-min do to cycle checks?  It prevents us from finding shorter cycles,
+    but does that matter?
 + Go through the bitblting python code to see if we can skip some of the steps.
 + A custom coloring endpoint in the engine to replace the multiple numpy operations.
 + When dragging the image, only re-calc the parts that have been exposed.

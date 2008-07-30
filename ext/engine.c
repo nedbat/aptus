@@ -67,6 +67,7 @@ typedef struct {
         u4int   minitercycle;   // Min iteration that was a cycle.
         u4int   maxitercycle;   // Max iteration that was finally a cycle.
         int     miniter;        // Minimum iteration count.
+        int     miniteredge;    // Minimum iteration count on the edge.
         u4int   maxedpoints;    // Number of points that exceeded the maxiter.
         u4int   computedpoints; // Number of points that were actually computed.
         u4int   boundaries;     // Number of boundaries traced.
@@ -293,7 +294,15 @@ compute_count(AptEngine *self, int xi, int yi)
     z = znew;                               \
     STATS_CODE(self->stats.totaliter++;)
 
-    // Loop over the iterations.
+    // First phase of iterations: quickly iterate up to the minimum iteration
+    // count.
+    register int miniter = self->stats.miniteredge;
+    while (likely(miniter-- > 0)) {
+        ITER1; ITER2;
+    }
+    count = self->stats.miniteredge;
+    
+    // Second phase: iterate more carefully, looking for bailout, cycles, etc.
     while (likely(count <= self->iter_limit)) {
         ITER1;
         if (unlikely(z2.r + z2.i > bail2)) {
@@ -485,11 +494,59 @@ mandelbrot_array(AptEngine *self, PyObject *args)
 #define DIR_UP      2
 #define DIR_RIGHT   3
 
-    // Loop the pixels.
     int xi, yi;
     u1int s;
     int c = 0;
+    
+// A macro to get s and c for a particular point.
+#define CALC_POINT(xi, yi)                          \
+        s = STATUS(xi, yi);                         \
+        if (s == 0) {                               \
+            c = compute_count(self, xi, yi);        \
+            COUNTS(xi, yi) = c;                     \
+            num_pixels++;                           \
+            STATUS(xi, yi) = s = 1;                 \
+        }                                           \
+        else {                                      \
+            c = COUNTS(xi, yi);                     \
+        }
 
+    // Walk the edges of the array to find the minimum iteration count.  If
+    // boundary tracing is allowed, then the minimum iteration count is guaranteed
+    // to exist along one of the edges.  We can quickly find the minimum, and then
+    // use that value in compute_count to quickly iterate to the minimum without
+    // checking the bailout condition.
+    if (self->trace_boundary) {
+        // We can't assign the minimum-in-progress to the stats structure, or
+        // it will affect compute_count while we are looking for the minimum.
+        int miniteredge = self->iter_limit + 1;
+        for (yi = 0; yi < h; yi++) {
+            CALC_POINT(0, yi);
+            if (c != 0 && unlikely(c < miniteredge)) {
+                miniteredge = c;
+            }
+            CALC_POINT(w-1, yi);
+            if (c != 0 && unlikely(c < miniteredge)) {
+                miniteredge = c;
+            }
+        }
+        for (xi = 1; xi < w-1; xi++) {
+            CALC_POINT(xi, 0);
+            if (c != 0 && unlikely(c < miniteredge)) {
+                miniteredge = c;
+            }
+            CALC_POINT(xi, h-1);
+            if (c != 0 && unlikely(c < miniteredge)) {
+                miniteredge = c;
+            }
+        }
+        self->stats.miniteredge = miniteredge;
+    }
+    else {
+        self->stats.miniteredge = 0;
+    }
+
+    // Loop the pixels in the array.
     for (yi = 0; yi < h; yi++) {
         for (xi = 0; xi < w; xi++) {
             // Examine the current pixel.
@@ -522,7 +579,9 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                         break;
                     }
                     
-                    // Move to the next position. If we're off the field, turn left.
+                    // Move to the next position. If we're off the field, turn
+                    // left (same as if the pixel off-field were a different color
+                    // than us).
                     switch (curdir) {
                     case DIR_DOWN:
                         if (unlikely(cury >= h-1)) {
@@ -798,6 +857,7 @@ clear_stats(AptEngine *self)
     self->stats.minitercycle = 0;
     self->stats.maxitercycle = 0;
     self->stats.miniter = 0;
+    self->stats.miniteredge = 0;
     self->stats.maxedpoints = 0;
     self->stats.computedpoints = 0;
     self->stats.boundaries = 0;
@@ -814,13 +874,14 @@ static char get_stats_doc[] = "Get the statistics as a dictionary";
 static PyObject *
 get_stats(AptEngine *self)
 {
-    return Py_BuildValue("{sisKsIsIsIsisIsIsIsIsI}",
+    return Py_BuildValue("{sisKsIsIsIsisisIsIsIsIsI}",
         "maxiter", self->stats.maxiter,
         "totaliter", self->stats.totaliter,
         "totalcycles", self->stats.totalcycles,
         "minitercycle", self->stats.minitercycle,
         "maxitercycle", self->stats.maxitercycle,
         "miniter", self->stats.miniter,
+        "miniteredge", self->stats.miniteredge,
         "maxedpoints", self->stats.maxedpoints,
         "computedpoints", self->stats.computedpoints,
         "boundaries", self->stats.boundaries,
