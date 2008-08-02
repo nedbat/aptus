@@ -44,7 +44,7 @@ typedef struct {
     
     int iter_limit;         // limit on iteration count.
     aptfloat bailout;       // escape radius.
-    int check_for_cycles;   // should we check for cycles?
+    int check_cycles;       // should we check for cycles?
     aptfloat epsilon;       // the epsilon to use when checking for cycles.
     aptfloat cont_levels;   // the number of continuous levels to compute.
     int blend_colors;       // how many levels of color should we blend?
@@ -102,7 +102,7 @@ AptEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
         self->rijulia.i = 0.0;
         self->iter_limit = 999;
         self->bailout = 2.0;
-        self->check_for_cycles = 1;
+        self->check_cycles = 1;
         self->trace_boundary = 1;
         self->cont_levels = 1.0;
         self->blend_colors = 1;
@@ -319,7 +319,7 @@ compute_count(AptEngine *self, int xi, int yi)
         }
         ITER2;
 
-        if (likely(self->check_for_cycles)) {
+        if (likely(self->check_cycles)) {
             // Check for cycles
             if (unlikely(fequal(self, z.r, cycle_check.r) && fequal(self, z.i, cycle_check.i))) {
                 // We're in a cycle! Update stats, and end the iterations.
@@ -904,6 +904,7 @@ static PyMemberDef
 AptEngine_members[] = {
     { "iter_limit",     T_INT,      offsetof(AptEngine, iter_limit),        0, "Limit on iterations" },
     { "bailout",        T_DOUBLE,   offsetof(AptEngine, bailout),           0, "Radius of the escape circle" },
+    { "check_cycles",   T_INT,      offsetof(AptEngine, check_cycles),      0, "Check for cycles?" },
     { "cont_levels",    T_DOUBLE,   offsetof(AptEngine, cont_levels),       0, "Number of fractional levels to compute" },
     { "blend_colors",   T_INT,      offsetof(AptEngine, blend_colors),      0, "How many levels of color to blend" },
     { "trace_boundary", T_INT,      offsetof(AptEngine, trace_boundary),    0, "Control whether boundaries are traced" },

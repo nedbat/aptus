@@ -42,7 +42,12 @@ class JuliaPanel(ComputePanel, ListeningWindowMixin):
         else:
             mx, my = self.viewwin.ScreenToClient(wx.GetMousePosition())
 
-        self.m.rijulia = self.viewwin.m.coords_from_pixel(mx, my)
+        pt_info = self.viewwin.get_point_info((mx, my))
+        if pt_info:
+            self.m.rijulia = pt_info['r'], pt_info['i']
+            self.m.iter_limit = 9999
+        else:
+            self.m.rijulia = 0,0
         self.m.create_mandel()
         self.computation_changed()
         
