@@ -131,9 +131,11 @@ class AptusCompute:
         if self.julia:
             self.eng.rijulia = self.rijulia
             self.eng.trace_boundary = 0
+            self.eng.check_cycles = 0
         else:
-            self.eng.rijulia = (0,0)
+            self.eng.rijulia = (0, 0)
             self.eng.trace_boundary = 1
+            self.eng.check_cycles = 1
             
         # Create new workspaces for the compute engine.
         old_counts = self.counts
