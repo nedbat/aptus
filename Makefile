@@ -1,16 +1,22 @@
 # Makefile for utility work on Aptus
 
+RESFILE = src/gui/resources.py
+
 install: build
 	python setup.py install
 
-build: 
+build: $(RESFILE)
 	python setup.py build 
+
+$(RESFILE): etc/crosshair.gif
+	python /Python25/Scripts/img2py -n Crosshair etc/crosshair.gif $(RESFILE)
 
 clean:
 	-rm -rf build
 	-rm -rf dist
 	-rm -f MANIFEST
 	-rm -f doc/*.png
+	-rm -f $(RESFILE)
 	-rm -f *.pyc */*.pyc */*/*.pyc */*/*/*.pyc
 	-rm -f *.pyo */*.pyo */*/*.pyo */*/*/*.pyo
 	-rm -f *.bak */*.bak */*/*.bak */*/*/*.bak
