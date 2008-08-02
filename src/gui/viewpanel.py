@@ -119,7 +119,13 @@ class AptusViewPanel(ComputePanel):
         elif self.panning:
             self.SetCursor(wx.StockCursor(wx.CURSOR_SIZING))
         elif self.indicating_pt:
-            self.SetCursor(wx.StockCursor(wx.CURSOR_CROSS))
+            import aptus.gui.resources
+            curimg = aptus.gui.resources.getCrosshairImage()
+            curimg.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 7)
+            curimg.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 7)
+            cur = wx.CursorFromImage(curimg)
+            self.SetCursor(cur)
+            #self.SetCursor(wx.StockCursor(wx.CURSOR_CROSS))
         else:
             self.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
 
