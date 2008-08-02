@@ -22,10 +22,10 @@ class AptusCmdApp():
         compute.compute_pixels()
         pix = compute.color_mandel()
         im = Image.fromarray(pix)
-        if m.supersample > 1:
+        if compute.supersample > 1:
             print "Resampling image..."
-            im = im.resize(m.size, Image.ANTIALIAS)
-        compute.write_image(im, m.outfile)
+            im = im.resize(compute.size, Image.ANTIALIAS)
+        compute.write_image(im, compute.outfile)
 
 def main(args):
     AptusCmdApp().main(args)
