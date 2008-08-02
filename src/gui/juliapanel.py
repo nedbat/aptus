@@ -26,7 +26,7 @@ class JuliaPanel(ComputePanel, ListeningWindowMixin):
         self.register_listener(self.draw_julia, EVT_APTUS_INDICATEPOINT, self.viewwin)
 
         self.m.center, self.m.diam = (0.0,0.0), (3.0,3.0)
-        self.m.julia = 1
+        self.m.mode = 'julia'
 
         self.on_coloring_changed(None)
 
