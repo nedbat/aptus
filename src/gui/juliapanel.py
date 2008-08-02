@@ -22,8 +22,8 @@ class JuliaPanel(ComputePanel, ListeningWindowMixin):
         
         self.viewwin = viewwin
         
-        self.bind_to_other(self.viewwin, wx.EVT_MOTION, self.draw_julia)
         self.register_listener(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.viewwin)
+        self.register_listener(self.draw_julia, EVT_APTUS_INDICATEPOINT, self.viewwin)
 
         self.m.center, self.m.diam = (0.0,0.0), (3.0,3.0)
         self.m.julia = 1
@@ -37,15 +37,15 @@ class JuliaPanel(ComputePanel, ListeningWindowMixin):
     def draw_julia(self, event=None):
         # Different events will trigger this, be flexible about how to get the
         # mouse position.
-        if event and hasattr(event, 'GetPosition'):
-            mx, my = event.GetPosition()
+        if event and hasattr(event, 'point'):
+            pt = event.point
         else:
-            mx, my = self.viewwin.ScreenToClient(wx.GetMousePosition())
+            pt = self.viewwin.ScreenToClient(wx.GetMousePosition())
 
-        pt_info = self.viewwin.get_point_info((mx, my))
+        pt_info = self.viewwin.get_point_info(pt)
         if pt_info:
             self.m.rijulia = pt_info['r'], pt_info['i']
-            self.m.iter_limit = 9999
+            self.m.iter_limit = 999
         else:
             self.m.rijulia = 0,0
         self.m.create_mandel()

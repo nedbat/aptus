@@ -85,7 +85,8 @@ HELP_HTML = """\
 <b>left-click</b>: zoom in (+%(ctrl)s: just a little).<br>
 <b>right-click</b>: zoom out (+%(ctrl)s: just a little).<br>
 <b>left-drag</b>: select a new rectangle to display.<br>
-<b>middle-drag</b>: drag the image to a new position.
+<b>middle-drag</b>: drag the image to a new position.<br>
+<b>shift</b>: indicate a point of interest for Julia set and point info.
 </blockquote>
 
 <p>Built with

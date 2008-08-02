@@ -31,7 +31,7 @@
 + In continuous mode, there's a stark ring of radius 8 or so.
 - Somehow I managed to zoom in then zoom out, and ended up outside the legal
     radius and the set disappeared.
-- Dragging in the main window shouldn't change the position in the Julia window.
++ Dragging in the main window shouldn't change the position in the Julia window.
 - When computing only part of the screen, the percentage complete is wrong b/c
     it thinks we have to recompute all the pixels.
 - Dragging the window confuses the boundary tracer now that edgemin is in.

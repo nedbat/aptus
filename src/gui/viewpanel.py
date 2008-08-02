@@ -87,7 +87,11 @@ class AptusViewPanel(ComputePanel):
         self.panning = False
         self.pt_pan = None
         self.pan_locked = False
-
+        
+        # When shift is down, then we're indicating points.
+        self.indicating_pt = False
+        self.indicated_pt = (-1, -1)
+ 
     def finish_panning(self, mx, my):
         if not self.pt_down:
             return
@@ -104,17 +108,38 @@ class AptusViewPanel(ComputePanel):
         dc.SetPen(wx.Pen(wx.WHITE, 1, wx.SOLID))
         dc.DrawRectangle(*rect)
 
-    def set_cursor(self):
+    def set_cursor(self, event_unused):
         # If we aren't taking input, then we shouldn't change the cursor.
         if not self.GetTopLevelParent().IsActive():
             return
+
         # Set the proper cursor:
         if self.rubberbanding:
             self.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
         elif self.panning:
             self.SetCursor(wx.StockCursor(wx.CURSOR_SIZING))
+        elif self.indicating_pt:
+            self.SetCursor(wx.StockCursor(wx.CURSOR_CROSS))
         else:
             self.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+
+    def indicate_point(self, event):
+        """ Use the given event to indicate a point, maybe.
+        """
+        if hasattr(event, 'ShiftDown'):
+            self.indicating_pt = event.ShiftDown()
+        else:
+            self.indicating_pt = wx.GetMouseState().shiftDown
+
+        if self.indicating_pt:
+            if hasattr(event, 'GetPosition'):
+                pt = event.GetPosition()
+            else:
+                ms = wx.GetMouseState()
+                pt = self.ScreenToClient((ms.x, ms.y))
+            if self.GetRect().Contains(pt) and pt != self.indicated_pt:
+                self.indicated_pt = pt
+                self.fire_event(AptusIndicatePointEvent, point=pt)
 
     def dilate_view(self, center, scale):
         """ Change the view by a certain scale factor, keeping the center in the
@@ -141,7 +166,8 @@ class AptusViewPanel(ComputePanel):
     # Event handlers
     
     def on_idle(self, event):
-        self.set_cursor()
+        self.indicate_point(event)
+        self.set_cursor(event)
         ComputePanel.on_idle(self, event)
         
     def on_paint(self, event_unused):
@@ -172,7 +198,8 @@ class AptusViewPanel(ComputePanel):
         self.pan_locked = False
         
     def on_motion(self, event):
-        self.set_cursor()
+        self.indicate_point(event)
+        self.set_cursor(event)
         
         # We do nothing with mouse moves that aren't dragging.
         if not self.pt_down:

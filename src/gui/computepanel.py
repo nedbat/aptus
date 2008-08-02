@@ -56,8 +56,9 @@ class ComputePanel(wx.Panel):
         evt.SetClientData(data)
         wx.PostEvent(self, evt)
     
-    def fire_event(self, evclass):
-        self.GetEventHandler().ProcessEvent(evclass())
+    def fire_event(self, evclass, **kwargs):
+        evt = evclass(**kwargs)
+        self.GetEventHandler().ProcessEvent(evt)
         
     def message(self, msg):
         top = self.GetTopLevelParent()
@@ -111,8 +112,7 @@ class ComputePanel(wx.Panel):
         """ Return a dictionary of information about the specified point (in client pixels).
             If the point is outside the window, None is returned.
         """
-        client_rect = self.GetRect()
-        if not client_rect.Contains(pt):
+        if not self.GetRect().Contains(pt):
             return None
         
         x, y = pt
