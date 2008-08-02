@@ -19,6 +19,8 @@ AptusGeometryChangedEvent, EVT_APTUS_GEOMETRY_CHANGED = wx.lib.newevent.NewEvent
 # A view window just finished recomputing.
 AptusRecomputedEvent, EVT_APTUS_RECOMPUTED = wx.lib.newevent.NewEvent()
 
+# User indicated a new point in a view window, point= is client point coords.
+AptusIndicatePointEvent, EVT_APTUS_INDICATEPOINT = wx.lib.newevent.NewEvent()
 
 ## Command ids
 

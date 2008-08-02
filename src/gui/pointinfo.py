@@ -31,8 +31,8 @@ class PointInfoPanel(DictPanel, ListeningWindowMixin):
         
         self.viewwin = viewwin
         
-        self.bind_to_other(self.viewwin, wx.EVT_MOTION, self.update_info)
         self.register_listener(self.update_info, EVT_APTUS_RECOMPUTED, self.viewwin)
+        self.register_listener(self.update_info, EVT_APTUS_INDICATEPOINT, self.viewwin)
 
         # Need to call update_info after the window appears, so that the widths of
         # the text controls can be set properly.  Else, it all appears left-aligned.
@@ -41,11 +41,11 @@ class PointInfoPanel(DictPanel, ListeningWindowMixin):
     def update_info(self, event=None):
         # Different events will trigger this, be flexible about how to get the
         # mouse position.
-        if event and hasattr(event, 'GetPosition'):
-            mx, my = event.GetPosition()
+        if event and hasattr(event, 'point'):
+            pt = event.point
         else:
-            mx, my = self.viewwin.ScreenToClient(wx.GetMousePosition())
-        info = self.viewwin.get_point_info((mx, my))
+            pt = self.viewwin.ScreenToClient(wx.GetMousePosition())
+        info = self.viewwin.get_point_info(pt)
         if info:
             self.update(info)
 
