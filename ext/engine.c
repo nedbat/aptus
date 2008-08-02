@@ -368,7 +368,8 @@ compute_count(AptEngine *self, int xi, int yi)
         ITER1; ITER2;
 
         // The 2 here is the power of the iteration, not the bailout.
-        double delta = log(log(sqrt(z2.r + z2.i)))/log(2);
+        const double log2 = 0.69314718055994529;
+        double delta = log(log(sqrt(z2.r + z2.i)))/log2;
         double fcount = count + 3 - delta;
         if (unlikely(fcount < 1)) {
             // Way outside the set, continuous mode acts weird.  Cut it off at 1.
@@ -517,30 +518,15 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     // use that value in compute_count to quickly iterate to the minimum without
     // checking the bailout condition.
     if (self->trace_boundary) {
-        // We can't assign the minimum-in-progress to the stats structure, or
-        // it will affect compute_count while we are looking for the minimum.
-        int miniteredge = self->iter_limit + 1;
         for (yi = 0; yi < h; yi++) {
             CALC_POINT(0, yi);
-            if (c != 0 && unlikely(c < miniteredge)) {
-                miniteredge = c;
-            }
             CALC_POINT(w-1, yi);
-            if (c != 0 && unlikely(c < miniteredge)) {
-                miniteredge = c;
-            }
         }
         for (xi = 1; xi < w-1; xi++) {
             CALC_POINT(xi, 0);
-            if (c != 0 && unlikely(c < miniteredge)) {
-                miniteredge = c;
-            }
             CALC_POINT(xi, h-1);
-            if (c != 0 && unlikely(c < miniteredge)) {
-                miniteredge = c;
-            }
         }
-        self->stats.miniteredge = miniteredge;
+        self->stats.miniteredge = self->stats.miniter;
     }
     else {
         self->stats.miniteredge = 0;
