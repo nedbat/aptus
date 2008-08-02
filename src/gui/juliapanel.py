@@ -25,8 +25,8 @@ class JuliaPanel(ComputePanel, ListeningWindowMixin):
         self.register_listener(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.viewwin)
         self.register_listener(self.draw_julia, EVT_APTUS_INDICATEPOINT, self.viewwin)
 
-        self.m.center, self.m.diam = (0.0,0.0), (3.0,3.0)
-        self.m.mode = 'julia'
+        self.compute.center, self.compute.diam = (0.0,0.0), (3.0,3.0)
+        self.compute.mode = 'julia'
 
         self.on_coloring_changed(None)
 
@@ -44,11 +44,11 @@ class JuliaPanel(ComputePanel, ListeningWindowMixin):
 
         pt_info = self.viewwin.get_point_info(pt)
         if pt_info:
-            self.m.rijulia = pt_info['r'], pt_info['i']
-            self.m.iter_limit = 999
+            self.compute.rijulia = pt_info['r'], pt_info['i']
+            self.compute.iter_limit = 999
         else:
-            self.m.rijulia = 0,0
-        self.m.create_mandel()
+            self.compute.rijulia = 0,0
+        self.compute.create_mandel()
         self.computation_changed()
         
         # Need to let the main window handle the event too.
@@ -56,7 +56,7 @@ class JuliaPanel(ComputePanel, ListeningWindowMixin):
             event.Skip()    
 
     def on_coloring_changed(self, event_unused):
-        if self.m.copy_coloring(self.viewwin.m):
+        if self.compute.copy_coloring(self.viewwin.compute):
             self.coloring_changed()
 
 

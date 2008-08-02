@@ -42,7 +42,7 @@ class AptusViewPanel(ComputePanel):
     def __init__(self, parent):
         ComputePanel.__init__(self, parent)
 
-        self.m.quiet = False
+        self.compute.quiet = False
 
         # Bind input events.
         self.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
@@ -95,10 +95,10 @@ class AptusViewPanel(ComputePanel):
     def finish_panning(self, mx, my):
         if not self.pt_down:
             return
-        cx, cy = self.m.size[0]/2.0, self.m.size[1]/2.0
+        cx, cy = self.compute.size[0]/2.0, self.compute.size[1]/2.0
         cx -= mx - self.pt_down[0]
         cy -= my - self.pt_down[1]
-        self.m.center = self.m.coords_from_pixel(cx, cy)
+        self.compute.center = self.compute.coords_from_pixel(cx, cy)
         self.geometry_changed()
         
     def xor_rectangle(self, rect):
@@ -153,12 +153,12 @@ class AptusViewPanel(ComputePanel):
         """
         # Refuse to zoom out so that the whole escape circle is visible: it makes
         # boundary tracing erase the entire thing!
-        if self.m.diam[0] * scale >= 3.9:
+        if self.compute.diam[0] * scale >= 3.9:
             return
-        cx = center[0] + (self.m.size[0]/2 - center[0]) * scale
-        cy = center[1] + (self.m.size[1]/2 - center[1]) * scale
-        self.m.center = self.m.coords_from_pixel(cx, cy)
-        self.m.diam = (self.m.diam[0]*scale, self.m.diam[1]*scale)
+        cx = center[0] + (self.compute.size[0]/2 - center[0]) * scale
+        cy = center[1] + (self.compute.size[1]/2 - center[1]) * scale
+        self.compute.center = self.compute.coords_from_pixel(cx, cy)
+        self.compute.diam = (self.compute.diam[0]*scale, self.compute.diam[1]*scale)
         self.geometry_changed()
         
     def make_progress_reporter(self):
@@ -184,7 +184,7 @@ class AptusViewPanel(ComputePanel):
         if self.panning:
             dc.SetBrush(wx.Brush(wx.Colour(224,224,128), wx.SOLID))
             dc.SetPen(wx.Pen(wx.Colour(224,224,128), 1, wx.SOLID))
-            dc.DrawRectangle(0, 0, self.m.size[0], self.m.size[1])
+            dc.DrawRectangle(0, 0, self.compute.size[0], self.compute.size[1])
             dc.DrawBitmap(self.bitmap, self.pt_pan[0]-self.pt_down[0], self.pt_pan[1]-self.pt_down[1], False)
         else:
             dc.DrawBitmap(self.bitmap, 0, 0, False)
@@ -238,8 +238,8 @@ class AptusViewPanel(ComputePanel):
         if self.rubberbanding:
             # Set a new view that encloses the rectangle.
             px, py = self.pt_down
-            ulr, uli = self.m.coords_from_pixel(px, py)
-            lrr, lri = self.m.coords_from_pixel(mx, my)
+            ulr, uli = self.compute.coords_from_pixel(px, py)
+            lrr, lri = self.compute.coords_from_pixel(mx, my)
             self.set_geometry(corners=(ulr, uli, lrr, lri))
         elif self.panning:
             self.finish_panning(mx, my)
@@ -352,12 +352,12 @@ class AptusViewPanel(ComputePanel):
     # Command helpers
 
     def set_value(self, dtitle, dprompt, attr, caster, when_done):
-        cur_val = getattr(self.m, attr)
+        cur_val = getattr(self.compute, attr)
         dlg = wx.TextEntryDialog(self.GetTopLevelParent(), dtitle, dprompt, str(cur_val))
 
         if dlg.ShowModal() == wx.ID_OK:
             try:
-                setattr(self.m, attr, caster(dlg.GetValue()))
+                setattr(self.compute, attr, caster(dlg.GetValue()))
                 when_done()
             except ValueError, e:
                 self.message("Couldn't set %s: %s" % (attr, e))
@@ -367,9 +367,9 @@ class AptusViewPanel(ComputePanel):
     def palette_changed(self):
         """ Use the self.palette_index to set a new palette.
         """
-        self.m.palette = all_palettes[self.palette_index]
-        self.m.palette_phase = 0
-        self.m.palette_scale = 1.0
+        self.compute.palette = all_palettes[self.palette_index]
+        self.compute.palette_phase = 0
+        self.compute.palette_scale = 1.0
         self.coloring_changed()
 
     # Commands
@@ -384,33 +384,33 @@ class AptusViewPanel(ComputePanel):
         self.set_value('Bailout:', 'Set the radius of the escape circle', 'bailout', float, self.computation_changed)
 
     def cmd_toggle_continuous(self, event_unused):
-        self.m.continuous = not self.m.continuous
+        self.compute.continuous = not self.compute.continuous
         self.computation_changed()
 
     def cmd_redraw(self, event_unused):
-        self.m.clear_results()
-        #cp = list(self.m.eng.cycle_params)
+        self.compute.clear_results()
+        #cp = list(self.compute.eng.cycle_params)
         #cp[1] += 1
-        #self.m.eng.cycle_params = tuple(cp)
+        #self.compute.eng.cycle_params = tuple(cp)
         #print cp
         self.set_view()
         
     def cmd_jump(self, event_unused):
         self.jump_index += 1
         self.jump_index %= len(JUMPS)
-        self.m.center, self.m.diam = JUMPS[self.jump_index]
+        self.compute.center, self.compute.diam = JUMPS[self.jump_index]
         self.geometry_changed()
         
     def cmd_cycle_palette(self, event):
         delta = event.GetClientData()
-        self.m.palette_phase += delta
-        self.m.palette_phase %= len(self.m.palette)
+        self.compute.palette_phase += delta
+        self.compute.palette_phase %= len(self.compute.palette)
         self.coloring_changed()
         
     def cmd_scale_palette(self, event):
         factor = event.GetClientData()
-        if self.m.continuous:
-            self.m.palette_scale *= factor
+        if self.compute.continuous:
+            self.compute.palette_scale *= factor
             self.coloring_changed()
         
     def cmd_change_palette(self, event):
@@ -424,11 +424,11 @@ class AptusViewPanel(ComputePanel):
         self.palette_changed()
         
     def cmd_adjust_palette(self, event):
-        self.m.palette.adjust(**event.GetClientData())
+        self.compute.palette.adjust(**event.GetClientData())
         self.coloring_changed()
 
     def cmd_reset_palette(self, event_unused):
-        self.m.palette_phase = 0
-        self.m.palette_scale = 1.0
-        self.m.palette.reset()
+        self.compute.palette_phase = 0
+        self.compute.palette_scale = 1.0
+        self.compute.palette.reset()
         self.coloring_changed()

@@ -89,18 +89,18 @@ class YouAreHereWin(ComputePanel, ListeningWindowMixin):
                 # of the rectangle.
                 mx = self.hererect.x + self.hererect.width/2
                 my = self.hererect.y + self.hererect.height/2
-                self.mainwin.set_geometry(center=self.m.coords_from_pixel(mx, my))
+                self.mainwin.set_geometry(center=self.compute.coords_from_pixel(mx, my))
             else:
                 # Dragging the rect: set the view to invlude the four corners of
                 # the rectangle.
-                ulr, uli = self.m.coords_from_pixel(*self.hererect.TopLeft)
-                lrr, lri = self.m.coords_from_pixel(*self.hererect.BottomRight)
+                ulr, uli = self.compute.coords_from_pixel(*self.hererect.TopLeft)
+                lrr, lri = self.compute.coords_from_pixel(*self.hererect.BottomRight)
                 self.mainwin.set_geometry(corners=(ulr, uli, lrr, lri))
             self.dragging = False
         else:
             # Clicking outside the rect: recenter there.
             mx, my = event.GetPosition()
-            self.mainwin.set_geometry(center=self.m.coords_from_pixel(mx, my), diam=self.diam)
+            self.mainwin.set_geometry(center=self.compute.coords_from_pixel(mx, my), diam=self.diam)
 
     def on_motion(self, event):
         self.set_cursor(event)
@@ -119,25 +119,25 @@ class YouAreHereWin(ComputePanel, ListeningWindowMixin):
             self.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
 
     def on_coloring_changed(self, event_unused):
-        if self.m.copy_coloring(self.mainwin.m):
+        if self.compute.copy_coloring(self.mainwin.compute):
             self.coloring_changed()
 
     def on_computation_changed(self, event_unused):
-        if self.m.copy_computation(self.mainwin.m):
+        if self.compute.copy_computation(self.mainwin.compute):
             self.computation_changed()
 
     def on_geometry_changed(self, event_unused):
         # When a geometry_changed event comes in, copy the pertinent info from
         # the master window, then compute the window visible in our coordinates
-        if self.m.angle != self.mainwin.m.angle:
-            self.m.angle = self.mainwin.m.angle
+        if self.compute.angle != self.mainwin.compute.angle:
+            self.compute.angle = self.mainwin.compute.angle
             self.geometry_changed()
         self.calc_rectangle()
 
     def calc_rectangle(self):
         # Compute the master rectangle in our coords.
-        ulx, uly = self.m.pixel_from_coords(*self.rectwin.m.coords_from_pixel(0,0))
-        lrx, lry = self.m.pixel_from_coords(*self.rectwin.m.coords_from_pixel(*self.rectwin.m.size))
+        ulx, uly = self.compute.pixel_from_coords(*self.rectwin.compute.coords_from_pixel(0,0))
+        lrx, lry = self.compute.pixel_from_coords(*self.rectwin.compute.coords_from_pixel(*self.rectwin.compute.size))
         ulx = int(math.floor(ulx))
         uly = int(math.floor(uly))
         lrx = int(math.ceil(lrx))+1
@@ -187,7 +187,7 @@ class YouAreHereStack(ScrolledPanel, ListeningWindowMixin):
         diam = 3.0
         
         # How many YouAreHereWin's will we need?
-        targetdiam = self.viewwin.m.diam[0]
+        targetdiam = self.viewwin.compute.diam[0]
         num_wins = int(math.ceil((math.log(diam)-math.log(targetdiam))/math.log(self.stepfactor)))
         num_wins = num_wins or 1
         
@@ -198,7 +198,7 @@ class YouAreHereStack(ScrolledPanel, ListeningWindowMixin):
                 # Don't recenter the topmost YouAreHere.
                 center = None
             else:
-                center = self.viewwin.m.center
+                center = self.viewwin.compute.center
             if i < len(cur_wins):
                 # Re-using an existing window in the stack.
                 win = cur_wins[i].Window
