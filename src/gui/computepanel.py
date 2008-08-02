@@ -16,11 +16,11 @@ class ComputePanel(wx.Panel):
         wx.Panel.__init__(self, parent, style=wx.NO_BORDER+wx.WANTS_CHARS, size=size)
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
 
-        self.m = AptusCompute()
-        self.m.quiet = True     # default to quiet.
+        self.compute = AptusCompute()
+        self.compute.quiet = True     # default to quiet.
         
         # AptusCompute default values        
-        self.m.palette = all_palettes[0]
+        self.compute.palette = all_palettes[0]
 
         # Bind events
         self.Bind(wx.EVT_PAINT, self.on_paint)
@@ -33,16 +33,17 @@ class ComputePanel(wx.Panel):
             size of the view, `corners` is a 4-tuple (ulr, uli, lrr, lri) of the
             four corners of the view.  Only specify a subset of these.
         """
+        compute = self.compute
         if corners:
             ulr, uli, lrr, lri = corners
-            self.m.center = ((ulr+lrr)/2, (uli+lri)/2)
-            ulx, uly = self.m.pixel_from_coords(ulr, uli)
-            lrx, lry = self.m.pixel_from_coords(lrr, lri)
-            self.m.diam = (abs(self.m.pixsize*(lrx-ulx)), abs(self.m.pixsize*(lry-uly)))
+            compute.center = ((ulr+lrr)/2, (uli+lri)/2)
+            ulx, uly = compute.pixel_from_coords(ulr, uli)
+            lrx, lry = compute.pixel_from_coords(lrr, lri)
+            compute.diam = (abs(compute.pixsize*(lrx-ulx)), abs(compute.pixsize*(lry-uly)))
         if center:
-            self.m.center = center
+            compute.center = center
         if diam:
-            self.m.diam = diam
+            compute.diam = diam
             
         self.geometry_changed()
 
@@ -83,7 +84,7 @@ class ComputePanel(wx.Panel):
         self.check_size = True
         
     def on_idle(self, event_unused):
-        if self.check_size and self.GetClientSize() != self.m.size:
+        if self.check_size and self.GetClientSize() != self.compute.size:
             if self.GetClientSize() != (0,0):
                 self.geometry_changed()
 
@@ -106,7 +107,7 @@ class ComputePanel(wx.Panel):
     def get_stats(self):
         """ Return a dictionary full of statistics about the latest computation.
         """
-        return self.m.eng.get_stats()
+        return self.compute.eng.get_stats()
 
     def get_point_info(self, pt):
         """ Return a dictionary of information about the specified point (in client pixels).
@@ -116,17 +117,17 @@ class ComputePanel(wx.Panel):
             return None
         
         x, y = pt
-        r, i = self.m.coords_from_pixel(x, y)
+        r, i = self.compute.coords_from_pixel(x, y)
 
-        if self.m.pix is not None:
-            rgb = self.m.pix[y, x]
+        if self.compute.pix is not None:
+            rgb = self.compute.pix[y, x]
             color = "#%02x%02x%02x" % (rgb[0], rgb[1], rgb[2])
         else:
             color = None
         
-        count = self.m.counts[y, x]
-        if self.m.eng.cont_levels != 1:
-            count /= self.m.eng.cont_levels
+        count = self.compute.counts[y, x]
+        if self.compute.eng.cont_levels != 1:
+            count /= self.compute.eng.cont_levels
         
         point_info = {
             'x': x, 'y': y,
@@ -145,15 +146,15 @@ class ComputePanel(wx.Panel):
         return NullProgressReporter()
 
     def bitmap_from_compute(self):
-        pix = self.m.color_mandel()
+        pix = self.compute.color_mandel()
         bitmap = wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix)
         return bitmap
 
     def draw_bitmap(self):
         """ Return a bitmap with the image to display in the window.
         """
-        self.m.progress = self.make_progress_reporter()
-        self.m.compute_pixels()
+        self.compute.progress = self.make_progress_reporter()
+        self.compute.compute_pixels()
         wx.CallAfter(self.fire_event, AptusRecomputedEvent)
         self.Refresh()
         return self.bitmap_from_compute()
@@ -165,8 +166,8 @@ class ComputePanel(wx.Panel):
         
     def set_view(self):
         self.bitmap = None
-        self.m.size = self.GetClientSize()
-        self.m.create_mandel()
+        self.compute.size = self.GetClientSize()
+        self.compute.create_mandel()
         self.check_size = False
         self.Refresh()
 
@@ -178,10 +179,10 @@ class ComputePanel(wx.Panel):
         image = wx.ImageFromBitmap(self.bitmap)
         im = Image.new('RGB', (image.GetWidth(), image.GetHeight()))
         im.fromstring(image.GetData())
-        self.m.write_image(im, pth)
+        self.compute.write_image(im, pth)
 
     def write_aptus(self, pth):
         """ Write the current Aptus state of the panel to the path `pth`.
         """
-        aptst = AptusState(self.m)
+        aptst = AptusState(self.compute)
         aptst.write(pth)

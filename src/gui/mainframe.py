@@ -24,7 +24,7 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
         self.panel = AptusViewPanel(self)
         
         if args:
-            opts = AptusOptions(self.panel.m)
+            opts = AptusOptions(self.panel.compute)
             opts.read_args(args)
         self.panel.supersample = 1
 
@@ -72,7 +72,7 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
     def Show(self, show=True):
         # Override Show so we can set the view properly.
         if show:
-            self.SetClientSize(self.panel.m.size)
+            self.SetClientSize(self.panel.compute.size)
             self.panel.set_view()
             wx.Frame.Show(self, True)
             self.panel.SetFocus()

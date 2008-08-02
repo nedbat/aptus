@@ -13,19 +13,19 @@ class AptusCmdApp():
     def main(self, args):
         """ The main for the Aptus command-line tool.
         """
-        m = AptusCompute()
-        opts = AptusOptions(m)
+        compute = AptusCompute()
+        opts = AptusOptions(compute)
         opts.read_args(args)
-        m.create_mandel()
+        compute.create_mandel()
         
-        m.progress = IntervalProgressReporter(60, ConsoleProgressReporter())
-        m.compute_pixels()
-        pix = m.color_mandel()
+        compute.progress = IntervalProgressReporter(60, ConsoleProgressReporter())
+        compute.compute_pixels()
+        pix = compute.color_mandel()
         im = Image.fromarray(pix)
         if m.supersample > 1:
             print "Resampling image..."
             im = im.resize(m.size, Image.ANTIALIAS)
-        m.write_image(im, m.outfile)
+        compute.write_image(im, m.outfile)
 
 def main(args):
     AptusCmdApp().main(args)
