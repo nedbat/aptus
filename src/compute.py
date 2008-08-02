@@ -34,9 +34,9 @@ class AptusCompute:
         self.bailout = 0
         self.continuous = False
         self.supersample = 1
-        self.julia = False
+        self.mode = 'mandelbrot'
         self.rijulia = 0.0, 0.0
-        self.computation_attributes = ['iter_limit', 'bailout', 'continuous', 'supersample', 'julia', 'rijulia']
+        self.computation_attributes = ['iter_limit', 'bailout', 'continuous', 'supersample', 'mode', 'rijulia']
         
         # coloring
         self.palette = None
@@ -126,17 +126,20 @@ class AptusCompute:
         # Continuous is really two different controls in the engine.
         self.eng.cont_levels = self.eng.blend_colors = 256 if self.continuous else 1
         
-        # Experimental Julia support.
-        self.eng.julia = int(self.julia)
-        if self.julia:
+        # Different modes require different settings.
+        if self.mode == 'mandelbrot':
+            self.eng.julia = 0
+            self.eng.rijulia = (0, 0)
+            self.eng.trace_boundary = 1
+            self.eng.check_cycles = 1
+        elif self.mode == 'julia':
+            self.eng.julia = 1
             self.eng.rijulia = self.rijulia
             self.eng.trace_boundary = 0
             self.eng.check_cycles = 0
         else:
-            self.eng.rijulia = (0, 0)
-            self.eng.trace_boundary = 1
-            self.eng.check_cycles = 1
-            
+            raise Exception("Unknown mode: %r" % (self.mode,))
+        
         # Create new workspaces for the compute engine.
         old_counts = self.counts
         self.counts = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint32)
