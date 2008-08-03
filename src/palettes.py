@@ -199,7 +199,7 @@ class Palette:
         try:
             ggr.read(ggr_file)
             self.fcolors = [ ggr.color(float(c)/ncolors) for c in range(ncolors) ]
-        except:
+        except IOError:
             self.fcolors = [ (0.0,0.0,0.0), (1.0,0.0,0.0), (1.0,1.0,1.0) ]
         self._colors_from_fcolors()
         self._spec.append(['gradient', {'ggr_file':ggr_file, 'ncolors':ncolors}])

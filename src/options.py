@@ -171,7 +171,7 @@ class XaosState:
         while True:
             try:
                 return float(fstr)
-            except:
+            except ValueError:
                 fstr = fstr[:-1]
 
 
@@ -193,7 +193,7 @@ class XetState:
         for l in f:
             try:
                 name, val = l.split(':')
-            except:
+            except ValueError:
                 continue
             xet[name.strip()] = val.strip()
 

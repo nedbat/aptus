@@ -23,10 +23,10 @@ class GimpGradient:
         if isinstance(f, basestring):
             f = file(f)
         if f.readline().strip() != "GIMP Gradient":
-            raise Exception("Not a GIMP gradient file")
+            raise IOError("Not a GIMP gradient file")
         line = f.readline().strip()
         if not line.startswith("Name: "):
-            raise Exception("Not a GIMP gradient file")
+            raise IOError("Not a GIMP gradient file")
         self.name = line.split(": ", 1)[1]
         nsegs = int(f.readline().strip())
         self.segs = []
