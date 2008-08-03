@@ -17,6 +17,9 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
     """ The main window frame of the Aptus app.
     """
     def __init__(self, args=None):
+        """ Create an Aptus main GUI frame.  `args` is an argv-style list of
+            command-line arguments.
+        """
         wx.Frame.__init__(self, None, -1, 'Aptus')
         AptusToolableFrameMixin.__init__(self)
 

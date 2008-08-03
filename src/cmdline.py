@@ -27,8 +27,10 @@ class AptusCmdApp():
             im = im.resize(compute.size, Image.ANTIALIAS)
         compute.write_image(im, compute.outfile)
 
+
 def main(args):
     AptusCmdApp().main(args)
+
     
 if __name__ == '__main__':
     main(sys.argv[1:])
