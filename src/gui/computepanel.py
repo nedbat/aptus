@@ -26,7 +26,7 @@ class ComputePanel(wx.Panel):
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_IDLE, self.on_idle)
-
+        
     def set_geometry(self, center=None, diam=None, corners=None):
         """ Change the panel to display a new place in the Set.
             `center` is the ri coords of the new center, `diam` is the r and i
@@ -186,3 +186,18 @@ class ComputePanel(wx.Panel):
         """
         aptst = AptusState(self.compute)
         aptst.write(pth)
+
+
+class MiniComputePanel(ComputePanel):
+    """ A compute panel for use as a minor pane.
+    """
+    def __init__(self, *args, **kwargs):
+        ComputePanel.__init__(self, *args, **kwargs)
+
+        self.Bind(wx.EVT_LEFT_DCLICK, self.on_left_dclick)
+
+    def on_left_dclick(self, event):
+        """ Double-clicking on a mini compute panel opens a new window to the same
+            view.
+        """
+        wx.GetApp().new_window(compute=self.compute)

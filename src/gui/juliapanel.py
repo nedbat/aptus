@@ -2,14 +2,14 @@
     window.
 """
 
-from aptus.gui.computepanel import ComputePanel
+from aptus.gui.computepanel import MiniComputePanel
 from aptus.gui.ids import *
 from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
 from aptus.importer import importer
 
 wx = importer("wx")
 
-class JuliaPanel(ComputePanel, ListeningWindowMixin):
+class JuliaPanel(MiniComputePanel, ListeningWindowMixin):
     """ A panel displaying the Julia set for the current point in another window.
     """
     
@@ -17,7 +17,7 @@ class JuliaPanel(ComputePanel, ListeningWindowMixin):
         """ Create a JuliaPanel, with `parent` as its parent, and `viewwin` as
             the window to track.
         """
-        ComputePanel.__init__(self, parent, size=size)
+        MiniComputePanel.__init__(self, parent, size=size)
         ListeningWindowMixin.__init__(self)
         
         self.viewwin = viewwin

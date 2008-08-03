@@ -13,8 +13,9 @@ import math
 
 
 MIN_RECT = 20
+ParentComputePanel = ComputePanel
 
-class YouAreHereWin(ComputePanel, ListeningWindowMixin):
+class YouAreHereWin(ParentComputePanel, ListeningWindowMixin):
     """ A panel slaved to another ComputePanel to show where the master panel is
         on the Set.  These are designed to be stacked in a YouAreHereStack to show
         successive magnifications.
@@ -25,7 +26,7 @@ class YouAreHereWin(ComputePanel, ListeningWindowMixin):
         of the last window in the stack.
     """
     def __init__(self, parent, mainwin, center, diam, size=wx.DefaultSize):
-        ComputePanel.__init__(self, parent, size=size)
+        ParentComputePanel.__init__(self, parent, size=size)
         ListeningWindowMixin.__init__(self)
         
         self.mainwin = mainwin
@@ -66,11 +67,11 @@ class YouAreHereWin(ComputePanel, ListeningWindowMixin):
     def on_size(self, event):
         # Need to recalc our rectangle.
         self.hererect = None
-        ComputePanel.on_size(self, event)
+        ParentComputePanel.on_size(self, event)
 
     def on_idle(self, event):
         # Let the ComputePanel resize.
-        ComputePanel.on_idle(self, event)
+        ParentComputePanel.on_idle(self, event)
         # Then we can recalc our rectangle.
         if not self.hererect:
             self.calc_rectangle()

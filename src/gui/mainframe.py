@@ -16,9 +16,10 @@ import os, os.path
 class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
     """ The main window frame of the Aptus app.
     """
-    def __init__(self, args=None):
+    def __init__(self, args=None, compute=None):
         """ Create an Aptus main GUI frame.  `args` is an argv-style list of
-            command-line arguments.
+            command-line arguments. `compute` is an existing compute object to
+            copy settings from.
         """
         wx.Frame.__init__(self, None, -1, 'Aptus')
         AptusToolableFrameMixin.__init__(self)
@@ -29,6 +30,9 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
         if args:
             opts = AptusOptions(self.panel.compute)
             opts.read_args(args)
+        if compute:
+            self.panel.compute.copy_all(compute)
+            
         self.panel.supersample = 1
 
         if 0:
