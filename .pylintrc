@@ -53,8 +53,20 @@ load-plugins=
 #enable-msg=
 
 # Disable the message(s) with the given id(s).
-disable-msg=I0011,C0103,R0903,W0142,C0324,R0201,C0111,W0232,W0702,W0703,W0201,W0401,W0614,R0801,R0901,W0603
-
+# C0103: 10: Invalid name "wx" (should match (([A-Z_][A-Z1-9_]*)|(__.*__))$)
+# C0111: 12:AptusGuiApp: Missing docstring
+# C0324:205:YouAreHereStack.on_geometry_changed: Comma not followed by a space
+# R0201: 35:GuiProgressReporter.end: Method could be a function
+# R0801:  1: Similar lines in 2 files
+# R0901:164:YouAreHereStack: Too many ancestors (9/7)
+# R0903: 17:GimpGradient._segment: Too few public methods (0/1)
+# W0142: 49:PaletteWin.on_paint: Used * or ** magic
+# W0201: 84:ComputePanel.on_size: Attribute 'check_size' defined outside __init__
+# W0232: 64:JsonWriter: Class has no __init__ method
+# W0401:  7: Wildcard import aptus.gui.ids
+# W0603: 94:ConsoleProgressReporter.end: Using the global statement
+# W0614:  6: Unused import id_show_palettes from wildcard import
+disable-msg=C0103,C0111,C0324, R0201,R0801,R0901,R0903, W0142,W0201,W0232,W0401,W0603,W0614
 
 [REPORTS]
 
