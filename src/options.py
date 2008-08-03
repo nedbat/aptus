@@ -15,10 +15,17 @@ high-quality rendering.
 """.replace('\n', ' ')
 
 class AptusOptions:
+    """ An option parser for Aptus states.
+    """
+    
     def __init__(self, target):
+        """ Create an AptusOptions parser.  Attributes are set on the target.
+        """
         self.target = target
         
     def read_args(self, argv):
+        """ Read aptus options from the provided argv.
+        """
         parser = optparse.OptionParser(
             usage="%prog [options] [parameterfile]",
             description=description
@@ -59,6 +66,9 @@ class AptusOptions:
             self.target.supersample = int(options.supersample)
 
     def opts_from_file(self, fname):
+        """ Read aptus options from the given filename.  Various forms of input
+            file are supported.
+        """
         if fname.endswith('.aptus'):
             aptst = AptusState(self.target)
             aptst.read(fname)
