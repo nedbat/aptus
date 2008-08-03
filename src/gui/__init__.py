@@ -14,8 +14,8 @@ class AptusGuiApp(wx.PySimpleApp):
         wx.PySimpleApp.__init__(self)
         self.new_window(args)
             
-    def new_window(self, args=None):
-        AptusMainFrame(args).Show()
+    def new_window(self, args=None, compute=None):
+        AptusMainFrame(args=args, compute=compute).Show()
 
 
 def main(args):

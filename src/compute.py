@@ -28,6 +28,7 @@ class AptusCompute:
         self.diam = 3.0, 3.0
         self.size = 600, 600
         self.angle = 0.0
+        self._geometry_attributes = ['center', 'diam', 'size', 'angle']
         
         # computation
         self.iter_limit = 999
@@ -36,13 +37,13 @@ class AptusCompute:
         self.supersample = 1
         self.mode = 'mandelbrot'
         self.rijulia = 0.0, 0.0
-        self.computation_attributes = ['iter_limit', 'bailout', 'continuous', 'supersample', 'mode', 'rijulia']
+        self._computation_attributes = ['iter_limit', 'bailout', 'continuous', 'supersample', 'mode', 'rijulia']
         
         # coloring
         self.palette = None
         self.palette_phase = 0
         self.palette_scale = 1.0
-        self.coloring_attributes = ['palette', 'palette_phase', 'palette_scale']
+        self._coloring_attributes = ['palette', 'palette_phase', 'palette_scale']
         
         # other
         self.outfile = 'Aptus.png'
@@ -71,7 +72,7 @@ class AptusCompute:
         self.old_pixsize = self.pixsize
         self.old_ri0 = self.eng.ri0
         self.old_angle = self.angle
-        for a in self.computation_attributes:
+        for a in self._computation_attributes:
             setattr(self, 'old_'+a, getattr(self, a))
         
     def _clear_old_geometry(self):
@@ -79,11 +80,11 @@ class AptusCompute:
         self.old_pixsize = 0
         self.old_ri0 = (0,0)
         self.old_angle = 0
-        for a in self.computation_attributes:
+        for a in self._computation_attributes:
             setattr(self, 'old_'+a, 0)
     
     def computation_changed(self):
-        for a in self.computation_attributes:
+        for a in self._computation_attributes:
             if getattr(self, 'old_'+a) != getattr(self, a):
                 return True
         return False
@@ -184,19 +185,32 @@ class AptusCompute:
         """
         self.counts = None
 
+    def copy_all(self, other):
+        """ Copy the important attributes from other to self.
+        """
+        self.copy_geometry(other)
+        self.copy_coloring(other)
+        self.copy_computation(other)
+
+    def copy_geometry(self, other):
+        """ Copy the geometry attributes from other to self, returning True if
+            any of them actually changed.
+        """
+        return self._copy_attributes(other, self._geometry_attributes)
+
     def copy_coloring(self, other):
         """ Copy the coloring attributes from other to self, returning True if
             any of them actually changed.
         """
-        return self.copy_attributes(other, self.coloring_attributes)
+        return self._copy_attributes(other, self._coloring_attributes)
 
     def copy_computation(self, other):
         """ Copy the computation attributes from other to self, returning True if
             any of them actually changed.
         """
-        return self.copy_attributes(other, self.computation_attributes)
+        return self._copy_attributes(other, self._computation_attributes)
     
-    def copy_attributes(self, other, attrs):
+    def _copy_attributes(self, other, attrs):
         """ Copy a list of attributes from other to self, returning True if
             any of them actually changed.
         """
