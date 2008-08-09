@@ -13,7 +13,7 @@ class DictPanel(wx.Panel):
     """
     def __init__(self, parent, keymap):
         wx.Panel.__init__(self, parent)
-        
+        print "Handle: %r" % self.GetHandle()
         self.keymap = keymap
         self.keywins = []
         
