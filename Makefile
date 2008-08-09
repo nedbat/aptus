@@ -5,8 +5,10 @@ RESFILE = src/gui/resources.py
 install: build
 	python setup.py install
 
-build: $(RESFILE)
+build: 
 	python setup.py build 
+
+rez: $(RESFILE)
 
 $(RESFILE): etc/crosshair.gif
 	python /Python25/Scripts/img2py -n Crosshair etc/crosshair.gif $(RESFILE)
@@ -16,7 +18,6 @@ clean:
 	-rm -rf dist
 	-rm -f MANIFEST
 	-rm -f doc/*.png
-	-rm -f $(RESFILE)
 	-rm -f *.pyc */*.pyc */*/*.pyc */*/*/*.pyc
 	-rm -f *.pyo */*.pyo */*/*.pyo */*/*/*.pyo
 	-rm -f *.bak */*.bak */*/*.bak */*/*/*.bak
