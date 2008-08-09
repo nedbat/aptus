@@ -18,7 +18,7 @@ class PointInfoPanel(DictPanel, ListeningWindowMixin):
         { 'label': 'y', 'key': 'y', },
         { 'label': 'r', 'key': 'r', },
         { 'label': 'i', 'key': 'i', },
-        { 'label': 'count', 'key': 'count', },
+        { 'label': 'count', 'key': 'count', 'fmt': '%.2f'},
         { 'label': 'color', 'key': 'color', },
         ]
         
