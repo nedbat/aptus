@@ -23,23 +23,23 @@ class DictPanel(wx.Panel):
             value = wx.StaticText(self, -1, style=wx.ALIGN_RIGHT)
             grid.Add(label)
             grid.Add(value)
-            self.keywins.append((keyd['key'], value))
+            self.keywins.append((keyd, value))
         
         sizer = wx.BoxSizer()
         sizer.Add(grid, flag=wx.TOP|wx.RIGHT|wx.BOTTOM|wx.LEFT, border=3)
         self.SetSizer(sizer)
         sizer.Fit(self)
         
-    def update(self, d):
-        """ Update the values in the panel, from the dictionary d.
+    def update(self, dval):
+        """ Update the values in the panel, from the dictionary `dval`.
         """
         maxw = 50
-        for key, valwin in self.keywins:
-            val = d[key]
+        for keyd, valwin in self.keywins:
+            val = dval[keyd['key']]
             if isinstance(val, (int, long)):
-                s = locale.format("%d", val, True)
+                s = locale.format(keyd.get('fmt', "%d"), val, True)
             elif isinstance(val, float):
-                s = "%.10e" % val
+                s = keyd.get('fmt', "%.10e") % val
             else:
                 s = str(val)
             valwin.SetLabel(s)
