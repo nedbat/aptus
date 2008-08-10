@@ -45,7 +45,7 @@ class AptusToolFrame(wx.MiniFrame):
     def __init__(self, mainframe, title='', size=wx.DefaultSize):
         # If I pass mainframe into MiniFrame, the focus gets messed up, and keys don't work anymore!?  Really, where?
         wx.MiniFrame.__init__(self, mainframe, title=title, size=size,
-            style=wx.DEFAULT_MINIFRAME_STYLE|wx.CLOSE_BOX
+            style=wx.DEFAULT_FRAME_STYLE | wx.TINY_CAPTION_HORIZ
             )
         self.mainframe = mainframe
         self.mainframe.add_toolwin(self)
