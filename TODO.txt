@@ -17,6 +17,10 @@
 - Decide on re-entrancy, keep things from getting tangled up.
 - Combine pointinfo and stats panel, and add more info to it.
 - Maybe a better way to manage all the little windows?
+- Finish basic Julia:
+    - saving and reading state
+    - larger Julia exploration window
+    - don't let L or J do anything in a Julia window
 
 * Bugs
 

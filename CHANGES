@@ -2,8 +2,22 @@
 Aptus 2.0 beta, August 2008
 ---------------------------
 
+* Multiple top-level exploration windows.  Use 'n' to make a new window.
 
-
+* Tool panels show supplementary information:
+  * You Are Here shows your location in the Mandelbrot set.  Use 'l' to show it.
+  * Palettes panel shows all the palettes, and the one currently in use.
+  * Statistics panel shows statistics about the latest computation.
+  * Point Info panel shows information about the current point, shift-hover to indicate point.
+  * Julia panel shows Julia set for the current point, shift-hover to indicate point.
+    Double-clicking the Julia panel opens a new exploration window to explore that Julia set.
+  
+* Computation improvements:
+  * Faster.
+  * The exploration window updates during computation.  
+  * Continuous coloring is more accurate now: banding artifacts are gone.
+  * When dragging the exploration window, pixels still in the window aren't re-calculated.
+  
 ----------------------
 Aptus 1.56, April 2008
 ----------------------
