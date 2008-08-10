@@ -4,6 +4,7 @@
 from aptus.importer import importer
 wx = importer("wx")
 
+# Set the locale to the user's default.
 import locale
 locale.setlocale(locale.LC_ALL, "")
 
@@ -36,9 +37,9 @@ class DictPanel(wx.Panel):
         for keyd, valwin in self.keywins:
             val = dval[keyd['key']]
             if isinstance(val, (int, long)):
-                s = locale.format(keyd.get('fmt', "%d"), val, True)
+                s = locale.format(keyd.get('fmt', "%d"), val, grouping=True)
             elif isinstance(val, float):
-                s = keyd.get('fmt', "%.10e") % val
+                s = locale.format(keyd.get('fmt', "%.10e"), val, grouping=True)
             else:
                 s = str(val)
             valwin.SetLabel(s)
