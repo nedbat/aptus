@@ -197,7 +197,7 @@ class MiniComputePanel(ComputePanel):
 
         self.Bind(wx.EVT_LEFT_DCLICK, self.on_left_dclick)
 
-    def on_left_dclick(self, event):
+    def on_left_dclick(self, event_unused):
         """ Double-clicking on a mini compute panel opens a new window to the same
             view.
         """
