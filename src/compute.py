@@ -6,6 +6,7 @@ from aptus.importer import importer
 from aptus.options import AptusState
 from aptus.tinyjson import dumps
 from aptus.progress import NullProgressReporter
+from aptus import settings
 
 # Import our extension engine.
 AptEngine = importer('AptEngine')
@@ -24,9 +25,9 @@ class AptusCompute:
     """
     def __init__(self):
         # geometry
-        self.center = -0.6, 0.0
-        self.diam = 3.0, 3.0
-        self.size = 600, 600
+        self.center = settings.mandelbrot_center
+        self.diam = settings.mandelbrot_diam, settings.mandelbrot_diam
+        self.size = settings.explorer_size
         self.angle = 0.0
         self._geometry_attributes = ['center', 'diam', 'size', 'angle']
         

@@ -5,6 +5,7 @@ from aptus.importer import importer
 from aptus.gui.computepanel import ComputePanel
 from aptus.gui.ids import *
 from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
+from aptus import settings
 
 wx = importer("wx")
 from wx.lib.scrolledpanel import ScrolledPanel
@@ -185,10 +186,11 @@ class YouAreHereStack(ScrolledPanel, ListeningWindowMixin):
         self.on_geometry_changed()
 
     def on_geometry_changed(self, event_unused=None):
-        diam = 3.0
+        mode = self.viewwin.compute.mode
+        diam = min(settings.diam(mode))
         
         # How many YouAreHereWin's will we need?
-        targetdiam = self.viewwin.compute.diam[0]
+        targetdiam = min(self.viewwin.compute.diam)
         num_wins = int(math.ceil((math.log(diam)-math.log(targetdiam))/math.log(self.stepfactor)))
         num_wins = num_wins or 1
         
@@ -197,7 +199,7 @@ class YouAreHereStack(ScrolledPanel, ListeningWindowMixin):
         for i in range(num_wins):
             if i == 0:
                 # Don't recenter the topmost YouAreHere.
-                center = None
+                center = settings.center(mode)
             else:
                 center = self.viewwin.compute.center
             if i < len(cur_wins):
