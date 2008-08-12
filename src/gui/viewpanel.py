@@ -1,6 +1,7 @@
 from aptus.importer import importer
 from aptus.palettes import all_palettes
 from aptus.progress import ConsoleProgressReporter, IntervalProgressReporter, AggregateProgressReporter
+from aptus import settings
 
 from aptus.gui.computepanel import ComputePanel
 from aptus.gui.ids import *
@@ -11,7 +12,7 @@ wx = importer('wx')
 
 # A pre-set list of places to visit, with the j command.
 JUMPS = [
-    ((-0.6,0.0), (3.0,3.0)),
+    (settings.center(), settings.diam()),
     ((-1.8605294939875601,-1.0475516319329809e-005), (2.288818359375e-005,2.288818359375e-005)),
     ((-1.8605327731370924,-1.2700557708795141e-005), (1.7881393432617188e-007,1.7881393432617188e-007)),
     ((0.45687170535326038,0.34780396997928614), (0.005859375,0.005859375)),

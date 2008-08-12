@@ -3,6 +3,7 @@ from aptus.importer import importer
 from aptus.options import AptusState
 from aptus.palettes import all_palettes
 from aptus.progress import NullProgressReporter
+from aptus import settings
 
 from aptus.gui.ids import *
 
@@ -200,4 +201,4 @@ class MiniComputePanel(ComputePanel):
         """ Double-clicking on a mini compute panel opens a new window to the same
             view.
         """
-        wx.GetApp().new_window(compute=self.compute, size=(600,600))
+        wx.GetApp().new_window(compute=self.compute, size=settings.explorer_size)
