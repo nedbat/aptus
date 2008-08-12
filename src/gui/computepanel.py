@@ -200,4 +200,4 @@ class MiniComputePanel(ComputePanel):
         """ Double-clicking on a mini compute panel opens a new window to the same
             view.
         """
-        wx.GetApp().new_window(compute=self.compute)
+        wx.GetApp().new_window(compute=self.compute, size=(600,600))

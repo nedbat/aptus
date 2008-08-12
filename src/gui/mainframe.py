@@ -16,7 +16,7 @@ import os, os.path
 class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
     """ The main window frame of the Aptus app.
     """
-    def __init__(self, args=None, compute=None):
+    def __init__(self, args=None, compute=None, size=None):
         """ Create an Aptus main GUI frame.  `args` is an argv-style list of
             command-line arguments. `compute` is an existing compute object to
             copy settings from.
@@ -33,6 +33,9 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
         if compute:
             self.panel.compute.copy_all(compute)
             
+        if size:
+            self.panel.compute.size = size
+
         self.panel.supersample = 1
 
         if 0:
@@ -194,9 +197,10 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
     def cmd_show_julia(self, event_unused):
         """ Toggle the presence of the Julia tool.
         """
-        if self.julia_tool:
-            self.julia_tool.Destroy()
-        else:
-            from aptus.gui import juliapanel
-            self.julia_tool = juliapanel.JuliaFrame(self, self.panel)
-            self.julia_tool.Show()
+        if self.panel.compute.mode == 'mandelbrot':
+            if self.julia_tool:
+                self.julia_tool.Destroy()
+            else:
+                from aptus.gui import juliapanel
+                self.julia_tool = juliapanel.JuliaFrame(self, self.panel)
+                self.julia_tool.Show()
