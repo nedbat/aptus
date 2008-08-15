@@ -136,7 +136,7 @@ class AptusCompute:
             self.eng.check_cycles = 1
         elif self.mode == 'julia':
             self.eng.julia = 1
-            self.eng.rijulia = self.rijulia
+            self.eng.rijulia = tuple(self.rijulia)
             self.eng.trace_boundary = 0
             self.eng.check_cycles = 0
         else:

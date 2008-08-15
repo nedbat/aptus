@@ -115,17 +115,30 @@ class AptusState:
             f = open(f, 'wb')
         f.write(self.write_string())
     
-    simple_attrs = "center diam angle iter_limit palette_phase palette_scale supersample continuous".split()
+    simple_attrs = "center diam angle iter_limit palette_phase palette_scale supersample continuous mode".split()
+    julia_attrs = "rijulia".split()
     
+    def write_attrs(self, d, attrs):
+        for a in attrs:
+            d[a] = getattr(self.target, a)
+        
     def write_string(self):
         d = {'Aptus State':1}
 
-        for sa in self.simple_attrs:
-            d[sa] = getattr(self.target, sa)
+        self.write_attrs(d, self.simple_attrs)
         d['size'] = list(self.target.size)
         d['palette'] = self.target.palette.spec()
+        
+        if self.target.mode == 'julia':
+            self.write_attrs(d, self.julia_attrs)
+
         return JsonWriter().dumps_dict(d, comma=',\n', colon=': ', first_keys=['Aptus State'])
     
+    def read_attrs(self, d, attrs):
+        for a in attrs:
+            if a in d:
+                setattr(self.target, a, d[a])
+        
     def read(self, f):
         if isinstance(f, basestring):
             f = open(f, 'r')
@@ -133,12 +146,10 @@ class AptusState:
     
     def read_string(self, s):
         d = JsonReader().loads(s)
-        for sa in self.simple_attrs:
-            if sa in d:
-                setattr(self.target, sa, d[sa])
+        self.read_attrs(d, self.simple_attrs)
         self.target.palette = Palette().from_spec(d['palette'])
         self.target.size = d['size']
-        
+        self.read_attrs(d, self.julia_attrs)
 
 class XaosState:
     """ The state of a Xaos rendering.
