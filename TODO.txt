@@ -18,7 +18,7 @@
 - Combine pointinfo and stats panel, and add more info to it.
 - Maybe a better way to manage all the little windows?
 - Finish basic Julia:
-    - saving and reading state
+    + saving and reading state
     + larger Julia exploration window
     + don't let J do anything in a Julia window
     + YouAreHere is centered incorrectly for a Julia set.
