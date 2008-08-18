@@ -36,7 +36,7 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
         if size:
             self.panel.compute.size = size
 
-        self.panel.supersample = 1
+        self.panel.compute.supersample = 1
 
         if 0:
             # Experimental AUI support
