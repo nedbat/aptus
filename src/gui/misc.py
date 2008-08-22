@@ -60,15 +60,16 @@ class ListeningWindowMixin:
         destruction.
     """
     def __init__(self):
-        # The eventManager listeners we've registered
+        # The eventManager listeners we've registered.
         self.listeners = set()
-        # The raw events we've bound to
+        # The raw events we've bound to.
         self.events = set()
 
         self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
 
     def on_destroy(self, event):
         for l in self.listeners:
+            
             eventManager.DeregisterListener(l)
         for other_win, evt in self.events:
             other_win.Unbind(evt)

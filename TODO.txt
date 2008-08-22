@@ -22,7 +22,8 @@
     + larger Julia exploration window
     + don't let J do anything in a Julia window
     + YouAreHere is centered incorrectly for a Julia set.
-
+    - Explorer, spawn a Julia, shift-hover in the Julia explorer window changes the mini julia.
+    
 * Bugs
 
 + If client size is queried while minimized, it comes back as zero, and a divide by zero error happens.
