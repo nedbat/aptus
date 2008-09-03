@@ -1,7 +1,7 @@
 """ Options handling for Aptus.
 """
 
-import optparse
+import optparse, re
 from aptus.palettes import Palette
 from aptus.importer import importer
 from aptus.tinyjson import JsonReader, JsonWriter
@@ -19,10 +19,16 @@ class AptusOptions:
     """
     
     def __init__(self, target):
-        """ Create an AptusOptions parser.  Attributes are set on the target.
+        """ Create an AptusOptions parser.  Attributes are set on the target, which
+            should be an AptusCompute-like thing.
         """
         self.target = target
-        
+    
+    def int_pair(self, s):
+        """ Convert a string argument to a pair of ints.
+        """
+        return map(int, re.split("[,x]", s))
+
     def read_args(self, argv):
         """ Read aptus options from the provided argv.
         """
@@ -61,7 +67,7 @@ class AptusOptions:
         if options.palette_scale:
             self.target.palette_scale = float(options.palette_scale)
         if options.size:
-            self.target.size = map(int, options.size.split('x'))
+            self.target.size = self.int_pair(options.size)
         if options.supersample:
             self.target.supersample = int(options.supersample)
 
@@ -150,6 +156,7 @@ class AptusState:
         self.target.palette = Palette().from_spec(d['palette'])
         self.target.size = d['size']
         self.read_attrs(d, self.julia_attrs)
+
 
 class XaosState:
     """ The state of a Xaos rendering.
