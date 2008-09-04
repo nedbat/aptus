@@ -1,6 +1,6 @@
----------------------------
-Aptus 2.0 beta, August 2008
----------------------------
+------------------------------
+Aptus 2.0 beta, September 2008
+------------------------------
 
 * Multiple top-level exploration windows.  Use 'n' to make a new window.
 
@@ -18,6 +18,9 @@ Aptus 2.0 beta, August 2008
   * Continuous coloring is more accurate now: banding artifacts are gone.
   * When dragging the exploration window, pixels still in the window aren't re-calculated.
   
+* Center and diameter can be specified in the command line arguments.
+
+
 ----------------------
 Aptus 1.56, April 2008
 ----------------------

@@ -4,6 +4,7 @@
 from aptus import __version__
 from aptus.importer import importer
 from aptus.options import AptusState
+from aptus.palettes import all_palettes
 from aptus.tinyjson import dumps
 from aptus.progress import NullProgressReporter
 from aptus import settings
@@ -41,7 +42,7 @@ class AptusCompute:
         self._computation_attributes = ['iter_limit', 'bailout', 'continuous', 'supersample', 'mode', 'rijulia']
         
         # coloring
-        self.palette = None
+        self.palette = all_palettes[0]
         self.palette_phase = 0
         self.palette_scale = 1.0
         self._coloring_attributes = ['palette', 'palette_phase', 'palette_scale']
