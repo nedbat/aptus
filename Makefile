@@ -31,9 +31,12 @@ icon:
 	python scripts/aptuscmd.py etc/icon.aptus -s 31x31
 	python scripts/aptuscmd.py etc/icon.aptus -s 15x15
 
-lint:
+lint: clean
 	python -x /Python25/Scripts/pylint.bat --rcfile=.pylintrc src
 	python checkeol.py
+
+test: install
+	nosetests
 
 asm:
 	gcc.exe -mno-cygwin -mdll -O -Wall -Ic:\\Python25\\lib\\site-packages\\numpy\\core\\include -Ic:\\Python25\\include -Ic:\\Python25\\PC -c ext/engine.c -O3 -g -Wa,-alh > engine.lst
