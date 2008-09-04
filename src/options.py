@@ -24,10 +24,23 @@ class AptusOptions:
         """
         self.target = target
     
+    def pair(self, s, cast):
+        """ Convert a string argument to a pair of other casted values.
+        """
+        vals = map(cast, re.split("[,x]", s))
+        if len(vals) == 1:
+            vals = vals*2
+        return vals
+        
     def int_pair(self, s):
         """ Convert a string argument to a pair of ints.
         """
-        return map(int, re.split("[,x]", s))
+        return self.pair(s, int)
+
+    def float_pair(self, s):
+        """ Convert a string argument to a pair of floats.
+        """
+        return self.pair(s, float)
 
     def read_args(self, argv):
         """ Read aptus options from the provided argv.
@@ -38,7 +51,9 @@ class AptusOptions:
         )
         parser.add_option("-a", "--angle", dest="angle", help="set the angle of rotation")
         parser.add_option("-b", "--bailout", dest="bailout", help="set the radius of the escape circle")
+        parser.add_option("--center", dest="center", help="set the center of the view", metavar="RE,IM")
         parser.add_option("-c", "--continuous", dest="continuous", help="use continuous coloring", action="store_true")
+        parser.add_option("--diam", dest="diam", help="set the diameter of the view")
         parser.add_option("-i", "--iterlimit", dest="iter_limit", help="set the limit on the iteration count")
         parser.add_option("-o", "--output", dest="outfile", help="set the output filename (aptuscmd.py only)")
         parser.add_option("--phase", dest="palette_phase", help="set the palette phase", metavar="PHASE")
@@ -56,8 +71,12 @@ class AptusOptions:
             self.target.angle = float(options.angle)
         if options.bailout:
             self.target.bailout = float(options.bailout)
+        if options.center:
+            self.target.center = self.float_pair(options.center)
         if options.continuous:
             self.target.continuous = options.continuous
+        if options.diam:
+            self.target.diam = self.float_pair(options.diam)
         if options.iter_limit:
             self.target.iter_limit = int(options.iter_limit)
         if options.outfile:

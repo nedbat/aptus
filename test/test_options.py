@@ -39,3 +39,9 @@ class OptionsTest(unittest.TestCase):
     def testMisc(self):
         target = self.try_read_args("-c")
         self.assertEqual(target.continuous, True)
+
+    def testFloatPair(self):
+        target = self.try_read_args("--center=1.5x2.5")
+        self.assertEqual(target.center, [1.5, 2.5])
+        target = self.try_read_args("--center=1.275")
+        self.assertEqual(target.center, [1.275, 1.275])
