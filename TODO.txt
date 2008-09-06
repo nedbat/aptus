@@ -110,7 +110,8 @@ x Optimize boundary.py so we can use it for high iterations
     - .cs (see Gnofract 4D)
     - .ugr (see Gnofract 4D)
 - More varied palettes.
-    
+- Use GEGL to do powerful image stuff? http://gegl.org/
+
 * Power
 
 - Editable parameters for things like cycle checking epsilon.

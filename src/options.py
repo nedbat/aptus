@@ -14,6 +14,7 @@ aptusgui.py for interactive exploration, and aptuscmd.py for
 high-quality rendering.
 """.replace('\n', ' ')
 
+
 class AptusOptions:
     """ An option parser for Aptus states.
     """
@@ -127,7 +128,11 @@ class AptusOptions:
         else:
             raise Exception("Don't know how to read options from %s" % fname)
 
-    
+
+class AptusStateError(Exception):
+    pass
+
+
 class AptusState:
     """ A serialization class for the state of an Aptus rendering.
         The result is a JSON representation.
