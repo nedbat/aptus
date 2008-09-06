@@ -1,8 +1,10 @@
-# A teeny tiny JSON module.
+# A teeny tiny JSON module, just for Aptus' needs.
+# Doesn't handle all of JSON, but a proper subset.
 # Ned Batchelder, http://nedbatchelder.com
 
 # Safe eval, from http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/364469
 
+from aptus import AptusException
 import compiler
 
 class UnsafeSourceError(Exception):
@@ -88,12 +90,26 @@ class JsonWriter:
             keys = [ fk for fk in first_keys if fk in keys ] + [ k for k in keys if k not in first_keys ]
         return "{" + comma.join([ self.dumps(k) + colon + self.dumps(v[k]) for k in keys ]) + "}"
 
+
+class JsonError(AptusException):
+    """ A problem occurred trying to process some JSON.
+    """
+    pass
+
+
 class JsonReader:
     def loads(self, s):
-        return safe_eval(s)
+        try:
+            return safe_eval(s)
+        except SyntaxError, se:
+            raise JsonError("Couldn't parse JSON on line %d: %s" % (se.lineno, se.text.strip()))
+        except Exception, e:
+            raise JsonError("Couldn't parse JSON")
+
 
 def loads(s):
     return safe_eval(s)
+
 
 def dumps(v):
     return JsonWriter().dumps(v)

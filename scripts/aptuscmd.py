@@ -1,3 +1,7 @@
 #!/usr/bin/env python
-import aptus.cmdline, sys
-aptus.cmdline.main(sys.argv[1:])
+import aptus, aptus.cmdline, sys
+
+try:
+    aptus.cmdline.main(sys.argv[1:])
+except aptus.AptusException, ae:
+    print "Oh no! %s" % ae
