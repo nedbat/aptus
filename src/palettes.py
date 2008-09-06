@@ -36,11 +36,14 @@ class Palette:
         _spec is a value that can be passed to from_spec to reconstitute the
             palette. It's returned by the spec property.
     """
+    
+    default_adjusts = {'hue': 0, 'saturation': 0}
+    
     def __init__(self):
         self.incolor = (0,0,0)
         self.fcolors = [(0.0,0.0,0.0), (1.0,1.0,1.0)]
         self._spec = []
-        self.adjusts = {'hue': 0, 'saturation': 0}
+        self.adjusts = dict(self.default_adjusts)
 
         self._colors_from_fcolors()
     
@@ -83,7 +86,8 @@ class Palette:
             with from_spec().
         """
         s = self._spec[:]
-        s.append(['adjust', self.adjusts])
+        if self.adjusts != self.default_adjusts:
+            s.append(['adjust', self.adjusts])
         return s
     
     def rgb_colors(self, colors):
