@@ -405,7 +405,6 @@ class AptusViewPanel(ComputePanel):
     def cmd_cycle_palette(self, event):
         delta = event.GetClientData()
         self.compute.palette_phase += delta
-        self.compute.palette_phase %= len(self.compute.palette)
         self.coloring_changed()
         
     def cmd_scale_palette(self, event):

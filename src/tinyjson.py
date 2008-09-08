@@ -99,12 +99,14 @@ class JsonError(AptusException):
 
 class JsonReader:
     def loads(self, s):
+        # Pylint gets mixed up about the se variable...
+        # pylint: disable-msg=E1101
         try:
             return safe_eval(s)
         except SyntaxError, se:
             raise JsonError("Couldn't parse JSON on line %d: %s" % (se.lineno, se.text.strip()))
         except Exception, e:
-            raise JsonError("Couldn't parse JSON")
+            raise JsonError("Couldn't parse JSON: %s" % e)
 
 
 def loads(s):
