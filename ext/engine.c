@@ -737,12 +737,13 @@ apply_palette(AptEngine *self, PyObject *args)
     PyArrayObject *pix;
     int phase;
     double scale;
-    
+    int wrap;
+
     // Objects we get during the function.
     PyObject * pint = NULL;
     int ok = 0;
     
-    if (!PyArg_ParseTuple(args, "O!OidOO!", &PyArray_Type, &counts, &colbytes_obj, &phase, &scale, &incolor_obj, &PyArray_Type, &pix)) {
+    if (!PyArg_ParseTuple(args, "O!OidOiO!", &PyArray_Type, &counts, &colbytes_obj, &phase, &scale, &incolor_obj, &wrap, &PyArray_Type, &pix)) {
         goto done;
     }
     
@@ -765,7 +766,21 @@ apply_palette(AptEngine *self, PyObject *args)
     // A one-element cache of count and color.
     npy_uint8 *plastpix = NULL;
     npy_uint32 lastc = (*(npy_uint32 *)PyArray_GETPTR2(counts, 0, 0))+1;    // Something different than the first value.
-    
+
+// A macro to deal with out-of-range color indexes
+#define WRAP_COLOR(cindex)                      \
+        if (wrap) {                             \
+            cindex %= ncolors;                  \
+        }                                       \
+        else {                                  \
+            if (cindex < 0) {                   \
+                cindex = 0;                     \
+            }                                   \
+            else if (cindex >= ncolors) {       \
+                cindex = ncolors - 1;           \
+            }                                   \
+        }
+
     // Walk the arrays
     int h = PyArray_DIM(counts, 0);
     int w = PyArray_DIM(counts, 1);
@@ -790,15 +805,18 @@ apply_palette(AptEngine *self, PyObject *args)
                     if (self->blend_colors == 1) {
                         // Not blending colors, each count is a literal palette
                         // index.
-                        int cindex = (c + phase) % ncolors;
+                        int cindex = c + phase;
+                        WRAP_COLOR(cindex)
                         memcpy(ppix, (colbytes + cindex*3), 3);
                     }
                     else {
                         double cf = c * scale / self->blend_colors;
                         int cbase = cf;
                         float cfrac = cf - cbase;
-                        int c1index = (cbase + phase) % ncolors;
-                        int c2index = (cbase + 1 + phase) % ncolors;
+                        int c1index = cbase + phase;
+                        int c2index = cbase + 1 + phase;
+                        WRAP_COLOR(c1index)
+                        WRAP_COLOR(c2index)
                         for (i = 0; i < 3; i++) {
                             float col1 = colbytes[c1index*3+i];
                             float col2 = colbytes[c2index*3+i];

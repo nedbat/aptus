@@ -53,6 +53,7 @@ load-plugins=
 #enable-msg=
 
 # Disable the message(s) with the given id(s).
+# I0011:106: Locally disabling E1101
 # C0103: 10: Invalid name "wx" (should match (([A-Z_][A-Z1-9_]*)|(__.*__))$)
 # C0111: 12:AptusGuiApp: Missing docstring
 # C0324:205:YouAreHereStack.on_geometry_changed: Comma not followed by a space
@@ -66,7 +67,7 @@ load-plugins=
 # W0401:  7: Wildcard import aptus.gui.ids
 # W0603: 94:ConsoleProgressReporter.end: Using the global statement
 # W0614:  6: Unused import id_show_palettes from wildcard import
-disable-msg=C0103,C0111,C0324, R0201,R0801,R0901,R0903, W0142,W0201,W0232,W0401,W0603,W0614
+disable-msg=I0011,C0103,C0111,C0324, R0201,R0801,R0901,R0903, W0142,W0201,W0232,W0401,W0603,W0614
 
 [REPORTS]
 

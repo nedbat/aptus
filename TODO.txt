@@ -162,3 +162,5 @@ x Optimize boundary.py so we can use it for high iterations
 
 + Some kind of progress indicator.
 + Cycle detection
+
+http://groups.google.com/group/sci.fractals/browse_thread/thread/e7873432d97aff8/6299651657de38bc?lnk=gst&q=julia+peitgen#6299651657de38bc

@@ -230,9 +230,15 @@ class AptusCompute:
     def color_mandel(self):
         if (self.pix is None) or (self.pix.shape != self.counts.shape):
             self.pix = numpy.zeros((self.counts.shape[0], self.counts.shape[1], 3), dtype=numpy.uint8)
+        # Modulo in C is ill-defined if anything is negative, so make sure the
+        # phase is positive if we're going to wrap.
+        phase = self.palette_phase
+        color_bytes = self.palette.color_bytes()
+        if self.palette.wrap:
+            phase %= len(color_bytes)
         self.eng.apply_palette(
-            self.counts, self.palette.color_bytes(), self.palette_phase, self.palette_scale,
-            self.palette.incolor, self.pix
+            self.counts, color_bytes, phase, self.palette_scale,
+            self.palette.incolor, self.palette.wrap, self.pix
             )
         return self.pix
     

@@ -44,6 +44,7 @@ class Palette:
         self.fcolors = [(0.0,0.0,0.0), (1.0,1.0,1.0)]
         self._spec = []
         self.adjusts = dict(self.default_adjusts)
+        self.wrap = True
 
         self._colors_from_fcolors()
     
@@ -88,6 +89,10 @@ class Palette:
         s = self._spec[:]
         if self.adjusts != self.default_adjusts:
             s.append(['adjust', self.adjusts])
+        if self.incolor != (0,0,0):
+            s.append(['rgb_incolor', {'color': self.incolor}])
+        if not self.wrap:
+            s.append(['wrapping', {'wrap': 0}])
         return s
     
     def rgb_colors(self, colors):
@@ -192,7 +197,12 @@ class Palette:
         """ Set the color for the interior of the Mandelbrot set.
         """
         self.incolor = color
-        self._spec.append(['rgb_incolor', {'color':color}])
+        return self
+
+    def wrapping(self, wrap):
+        """ Set the wrap boolean on or off.
+        """
+        self.wrap = wrap
         return self
 
     def gradient(self, ggr_file, ncolors):
@@ -274,4 +284,5 @@ all_palettes = [
     Palette().gradient(data_file('palettes/ib18.ggr'), 50),
     Palette().gradient(data_file('palettes/redblue.ggr'), 50),
     Palette().gradient(data_file('palettes/DEM_screen.ggr'), 50),
+    Palette().rgb_colors([(0,0,0), (255,255,255)]).wrapping(False),
     ]
