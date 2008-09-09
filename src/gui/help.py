@@ -63,7 +63,7 @@ HELP_HTML = """\
 </tr>
 </table>
 
-<p><b>Controls:</b></p>
+<p><b>Interactive controls:</b></p>
 
 <blockquote>
 <b>a</b>: set the angle of rotation.<br>
@@ -89,11 +89,24 @@ HELP_HTML = """\
 <b>shift</b>: indicate a point of interest for Julia set and point info.
 </blockquote>
 
+<p><b>Tool windows: press a key to toggle on and off:</b></p>
+
+<blockquote>
+<b>shift-j</b>: Show a Julia set for the current (shift-hovered) point.<br>
+<b>l (ell)</b>: Show zoom snapshots indicating the current position.<br>
+<b>p</b>: Show a list of palettes that can be applied to the current view.<br>
+<b>q</b>: Show point info for the current (shift-hovered) point.<br>
+<b>v</b>: Show statistics for the latest calculation.<br>
+</blockquote>
+
+<p>On the command line, use <tt><b>--help</b></tt> to see options.</p>
+
 <p>Built with
 <a href='http://python.org'>Python</a>, <a href='http://wxpython.org'>wxPython</a>,
 <a href='http://numpy.scipy.org/'>numpy</a>, and
-<a href='http://www.pythonware.com/library/pil/handbook/index.htm'>PIL</a>.
-<br>Thanks to Rob McMullen and Paul Ollis for help with the wxPython drawing code.</p>
+<a href='http://www.pythonware.com/library/pil/handbook/index.htm'>PIL</a>.</p>
+
+<p>Thanks to Rob McMullen and Paul Ollis for help with the wxPython drawing code.</p>
 """ % terms
 
 class HelpDlg(HtmlDialog):
