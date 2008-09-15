@@ -24,28 +24,8 @@ class AptusOptions:
             should be an AptusCompute-like thing.
         """
         self.target = target
-    
-    def pair(self, s, cast):
-        """ Convert a string argument to a pair of other casted values.
-        """
-        vals = map(cast, re.split("[,x]", s))
-        if len(vals) == 1:
-            vals = vals*2
-        return vals
-        
-    def int_pair(self, s):
-        """ Convert a string argument to a pair of ints.
-        """
-        return self.pair(s, int)
 
-    def float_pair(self, s):
-        """ Convert a string argument to a pair of floats.
-        """
-        return self.pair(s, float)
-
-    def read_args(self, argv):
-        """ Read aptus options from the provided argv.
-        """
+    def _create_parser(self):
         parser = optparse.OptionParser(
             usage="%prog [options] [parameterfile]",
             description=description
@@ -62,7 +42,30 @@ class AptusOptions:
         parser.add_option("-s", "--size", dest="size", help="set the pixel size of the image", metavar="WIDxHGT")
         parser.add_option("--super", dest="supersample",
                           help="set the supersample rate (aptuscmd.py only)", metavar="S")
+        return parser
+    
+    def _pair(self, s, cast):
+        """ Convert a string argument to a pair of other casted values.
+        """
+        vals = map(cast, re.split("[,x]", s))
+        if len(vals) == 1:
+            vals = vals*2
+        return vals
         
+    def _int_pair(self, s):
+        """ Convert a string argument to a pair of ints.
+        """
+        return self._pair(s, int)
+
+    def _float_pair(self, s):
+        """ Convert a string argument to a pair of floats.
+        """
+        return self._pair(s, float)
+
+    def read_args(self, argv):
+        """ Read aptus options from the provided argv.
+        """
+        parser = self._create_parser()
         options, args = parser.parse_args(argv)
 
         if len(args) > 0:
@@ -73,11 +76,11 @@ class AptusOptions:
         if options.bailout:
             self.target.bailout = float(options.bailout)
         if options.center:
-            self.target.center = self.float_pair(options.center)
+            self.target.center = self._float_pair(options.center)
         if options.continuous:
             self.target.continuous = options.continuous
         if options.diam:
-            self.target.diam = self.float_pair(options.diam)
+            self.target.diam = self._float_pair(options.diam)
         if options.iter_limit:
             self.target.iter_limit = int(options.iter_limit)
         if options.outfile:
@@ -87,9 +90,15 @@ class AptusOptions:
         if options.palette_scale:
             self.target.palette_scale = float(options.palette_scale)
         if options.size:
-            self.target.size = self.int_pair(options.size)
+            self.target.size = self._int_pair(options.size)
         if options.supersample:
             self.target.supersample = int(options.supersample)
+
+    def options_help(self):
+        """ Return the help text about the command line options.
+        """
+        parser = self._create_parser()
+        return parser.format_help()
 
     def opts_from_file(self, fname):
         """ Read aptus options from the given filename.  Various forms of input
