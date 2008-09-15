@@ -96,7 +96,7 @@ HELP_HTML = """\
 <b>l (ell)</b>: Show zoom snapshots indicating the current position.<br>
 <b>p</b>: Show a list of palettes that can be applied to the current view.<br>
 <b>q</b>: Show point info for the current (shift-hovered) point.<br>
-<b>v</b>: Show statistics for the latest calculation.<br>
+<b>v</b>: Show statistics for the latest calculation.
 </blockquote>
 
 <p>On the command line, use <tt><b>--help</b></tt> to see options.</p>
