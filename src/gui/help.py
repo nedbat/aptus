@@ -13,15 +13,17 @@ import webbrowser
 
 class HtmlDialog(wx.Dialog):
     """ A simple dialog for displaying HTML, with clickable links that launch
-        a web browser.
+        a web browser, or change the page displayed in the dialog.
     """
-    def __init__(self, parent, caption,
+    def __init__(self, parent, caption, pages, subs=None,
                  pos=wx.DefaultPosition, size=(500,530),
                  style=wx.DEFAULT_DIALOG_STYLE):
         wx.Dialog.__init__(self, parent, -1, caption, pos, size, style)
         if pos == (-1, -1):
             self.CenterOnScreen(wx.BOTH)
 
+        self.pages = pages
+        self.subs = subs or {}
         self.html = wx.html.HtmlWindow(self, -1)
         self.html.Bind(wx.html.EVT_HTML_LINK_CLICKED, self.on_link_clicked)
         ok = wx.Button(self, wx.ID_OK, "OK")
@@ -45,8 +47,8 @@ class HtmlDialog(wx.Dialog):
             self.set_page(url.split(':')[1])
 
     def set_page(self, pagename):
-        html = HELP_HEADER + HELP_PAGES[pagename]
-        html = html % TERMS
+        html = self.pages['head'] + self.pages[pagename]
+        html = html % self.subs
         self.html.SetPage(html)
 
 
@@ -60,26 +62,27 @@ TERMS = {
     'version': __version__,
     }
     
-HELP_HEADER = """\
-<table width='100%%'>
-<tr>
-    <td width='50' valign='top'><img src='%(iconsrc)s'/></td>
-    <td valign='top'>
-        <b>Aptus %(version)s</b>, Mandelbrot set explorer.<br>
-        Copyright 2007-2008, Ned Batchelder.<br>
-        <a href='http://nedbatchelder.com/code/aptus'>http://nedbatchelder.com/code/aptus</a>
-    </td>
-</tr>
-</table>
-
-<p>
-    <a href='internal:interactive'>Interactive</a> |
-    <a href='internal:command'>Command line</a> |
-    <a href='internal:about'>About</a></p>
-<hr>
-"""
 
 HELP_PAGES = {
+    'head': """\
+        <table width='100%%'>
+        <tr>
+            <td width='50' valign='top'><img src='%(iconsrc)s'/></td>
+            <td valign='top'>
+                <b>Aptus %(version)s</b>, Mandelbrot set explorer.<br>
+                Copyright 2007-2008, Ned Batchelder.<br>
+                <a href='http://nedbatchelder.com/code/aptus'>http://nedbatchelder.com/code/aptus</a>
+            </td>
+        </tr>
+        </table>
+        
+        <p>
+            <a href='internal:interactive'>Interactive</a> |
+            <a href='internal:command'>Command line</a> |
+            <a href='internal:about'>About</a></p>
+        <hr>
+        """,
+
     'interactive': """
         <p><b>Interactive controls:</b></p>
         
@@ -137,4 +140,4 @@ class HelpDlg(HtmlDialog):
     """ The help dialog for Aptus.
     """
     def __init__(self, parent):
-        HtmlDialog.__init__(self, parent, "Aptus", size=(650,530))
+        HtmlDialog.__init__(self, parent, "Aptus", HELP_PAGES, subs=TERMS, size=(650,530))
