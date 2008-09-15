@@ -3,6 +3,7 @@
     Copyright 2007-2008, Ned Batchelder
 """
 
+from aptus import data_file
 from aptus.importer import importer
 from aptus.gui.mainframe import AptusMainFrame
 
@@ -11,14 +12,53 @@ wx = importer('wx')
 
 class AptusGuiApp(wx.PySimpleApp):
     def __init__(self, args):
+        self.args = args
         wx.PySimpleApp.__init__(self)
-        self.new_window(args)
             
+    def OnInit(self):
+        frame = self.new_window(self.args)
+        SplashScreen(frame).Show()
+        return True
+
     def new_window(self, *args, **kwargs):
-        AptusMainFrame(*args, **kwargs).Show()
+        frame = AptusMainFrame(*args, **kwargs)
+        frame.Show()
+        return frame
+
+
+class SplashScreen(wx.SplashScreen):
+    """ A nice splash screen.
+    """
+    def __init__(self, parent=None):
+        bitmap = wx.Image(name=data_file("splash.png")).ConvertToBitmap()
+        style = wx.SPLASH_CENTRE_ON_PARENT | wx.SPLASH_TIMEOUT
+        duration = 3000 # milliseconds
+        wx.SplashScreen.__init__(self, bitmap, style, duration, parent)
+        self.Bind(wx.EVT_CLOSE, self.on_exit)
+        wx.Yield()
+
+    def on_exit(self, evt):
+        self.alpha = 255
+        self.timer = wx.Timer(self)
+        self.Bind(wx.EVT_TIMER, self.fade_some)
+        self.timer.Start(25)
+
+        # Don't actually destroy the window or skip the event, so the timer can
+        # run, and fade the window out..
+        
+    def fade_some(self, evt):
+        self.alpha -= 16
+        if self.alpha <= 0:
+            self.timer.Stop()
+            del self.timer
+            self.Destroy()
+        else:
+            self.SetTransparent(self.alpha)
 
 
 def main(args):
     """ The main for the Aptus GUI.
     """
     AptusGuiApp(args).MainLoop()
+
+
