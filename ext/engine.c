@@ -21,6 +21,8 @@ typedef npy_uint8 u1int;
 typedef npy_uint32 u4int;
 typedef npy_uint64 u8int;
 
+#define max_u4int NPY_MAX_UINT32
+
 // Macros lifted from Linux kernel.  Use likely(cond) in an if to indicate that
 // condition is most likely true, and unlikely(cond) to indicate unlikely to be
 // true.  The compiler will arrange the generated code so the straight-line path
@@ -517,16 +519,29 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     // to exist along one of the edges.  We can quickly find the minimum, and then
     // use that value in compute_count to quickly iterate to the minimum without
     // checking the bailout condition.
+    int miniteredge = INT_MAX;
     if (self->trace_boundary) {
         for (yi = 0; yi < h; yi++) {
             CALC_POINT(0, yi);
+            if (c < miniteredge) {
+                miniteredge = c;
+            }
             CALC_POINT(w-1, yi);
+            if (c < miniteredge) {
+                miniteredge = c;
+            }
         }
         for (xi = 1; xi < w-1; xi++) {
             CALC_POINT(xi, 0);
+            if (c < miniteredge) {
+                miniteredge = c;
+            }
             CALC_POINT(xi, h-1);
+            if (c < miniteredge) {
+                miniteredge = c;
+            }
         }
-        self->stats.miniteredge = self->stats.miniter;
+        self->stats.miniteredge = miniteredge;
     }
     else {
         self->stats.miniteredge = 0;
