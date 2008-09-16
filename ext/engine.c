@@ -21,7 +21,7 @@ typedef npy_uint8 u1int;
 typedef npy_uint32 u4int;
 typedef npy_uint64 u8int;
 
-#define max_u4int NPY_MAX_UINT32
+#define MAX_U4INT NPY_MAX_UINT32
 
 // Macros lifted from Linux kernel.  Use likely(cond) in an if to indicate that
 // condition is most likely true, and unlikely(cond) to indicate unlikely to be
@@ -313,7 +313,7 @@ compute_count(AptEngine *self, int xi, int yi)
             if (unlikely(count > self->stats.maxiter)) {
                 self->stats.maxiter = count;
             }
-            if (unlikely(self->stats.miniter == 0 || count < self->stats.miniter)) {
+            if (unlikely(count < self->stats.miniter)) {
                 self->stats.miniter = count;
             }
             )
@@ -330,7 +330,7 @@ compute_count(AptEngine *self, int xi, int yi)
                 if (unlikely(count > self->stats.maxitercycle)) {
                     self->stats.maxitercycle = count;
                 }
-                if (unlikely(self->stats.minitercycle == 0 || count < self->stats.minitercycle)) {
+                if (unlikely(count < self->stats.minitercycle)) {
                     self->stats.minitercycle = count;
                 }
                 )
@@ -490,6 +490,14 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     const int MIN_PROGRESS = 1000000;  // Don't call progress unless we've done this many iters.
     )
 
+    // Set convenient sentinel values for the min stats.
+    if (self->stats.miniter == 0) {
+        self->stats.miniter = INT_MAX;
+    }
+    if (self->stats.minitercycle == 0) {
+        self->stats.minitercycle = MAX_U4INT;
+    }
+    
 #define STATUS(x,y) *(npy_uint8 *)PyArray_GETPTR2(status, (y), (x))
 #define COUNTS(x,y) *(npy_uint32 *)PyArray_GETPTR2(counts, (y), (x))
 #define DIR_DOWN    0
@@ -731,6 +739,15 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     ok = 1;
     
 done:
+    // Clean up sentinel values for the min stats.
+    if (self->stats.miniter == INT_MAX) {
+        self->stats.miniter = 0;
+    }
+    if (self->stats.minitercycle == MAX_U4INT) {
+        self->stats.minitercycle = 0;
+    }
+    
+    // Free allocated memory.
     if (points != NULL) {
         free(points);
     }
