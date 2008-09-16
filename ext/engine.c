@@ -385,24 +385,6 @@ compute_count(AptEngine *self, int xi, int yi)
     return count;
 }
 
-// mandelbrot_point
-
-static char mandelbrot_point_doc[] = "Compute a Mandelbrot count for a point";
-
-static PyObject *
-mandelbrot_point(AptEngine *self, PyObject *args)
-{
-    int xi, yi;
-    
-    if (!PyArg_ParseTuple(args, "ii", &xi, &yi)) {
-        return NULL;
-    }
-
-    int count = compute_count(self, xi, yi);
-
-    return Py_BuildValue("i", count);
-}
-
 // Helper: call_progress
 STATS_DECL(
 static int
@@ -973,7 +955,6 @@ AptEngine_getsetters[] = {
 
 static PyMethodDef
 AptEngine_methods[] = {
-    { "mandelbrot_point",   (PyCFunction) mandelbrot_point,   METH_VARARGS, mandelbrot_point_doc },
     { "mandelbrot_array",   (PyCFunction) mandelbrot_array,   METH_VARARGS, mandelbrot_array_doc },
     { "apply_palette",      (PyCFunction) apply_palette,      METH_VARARGS, apply_palette_doc },
     { "clear_stats",        (PyCFunction) clear_stats,        METH_NOARGS,  clear_stats_doc },
