@@ -423,12 +423,12 @@ human_u8int(u8int big, char *buf)
     return buf;
 }
 
-// mandelbrot_array
+// compute_array
 
-static char mandelbrot_array_doc[] = "Compute Mandelbrot counts for an array";
+static char compute_array_doc[] = "Compute Mandelbrot counts for an array";
 
 static PyObject *
-mandelbrot_array(AptEngine *self, PyObject *args)
+compute_array(AptEngine *self, PyObject *args)
 {
     // Arguments to the function.
     PyArrayObject *counts;
@@ -437,6 +437,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     //  1: computed, but not filled.
     //  2: computed and filled.
     PyArrayObject *status;
+    int num_compute;
     PyObject * progress;
     
     // Malloc'ed buffers.
@@ -445,7 +446,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
     
     int ok = 0;
     
-    if (!PyArg_ParseTuple(args, "O!O!O", &PyArray_Type, &counts, &PyArray_Type, &status, &progress)) {
+    if (!PyArg_ParseTuple(args, "O!O!iO", &PyArray_Type, &counts, &PyArray_Type, &status, &num_compute, &progress)) {
         goto done;
     }
     
@@ -693,7 +694,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
                         if (ptsstored > w) {
                             if (self->stats.totaliter - last_progress > MIN_PROGRESS) {
                                 sprintf(info, "trace %d * %d, totaliter %s", c, ptsstored, human_u8int(self->stats.totaliter, uinfo));
-                                if (!call_progress(self, progress, ((double)num_pixels)/(w*h), info)) {
+                                if (!call_progress(self, progress, ((double)num_pixels)/num_compute, info)) {
                                     goto done;
                                 }
                                 last_progress = self->stats.totaliter;
@@ -709,7 +710,7 @@ mandelbrot_array(AptEngine *self, PyObject *args)
         // At the end of the scan line, call progress if we've made enough progress
         if (self->stats.totaliter - last_progress > MIN_PROGRESS) {
             sprintf(info, "scan %d, totaliter %s", yi+1, human_u8int(self->stats.totaliter, uinfo));
-            if (!call_progress(self, progress, ((double)num_pixels)/(w*h), info)) {
+            if (!call_progress(self, progress, ((double)num_pixels)/num_compute, info)) {
                 goto done;
             }
             last_progress = self->stats.totaliter;
@@ -955,10 +956,10 @@ AptEngine_getsetters[] = {
 
 static PyMethodDef
 AptEngine_methods[] = {
-    { "mandelbrot_array",   (PyCFunction) mandelbrot_array,   METH_VARARGS, mandelbrot_array_doc },
-    { "apply_palette",      (PyCFunction) apply_palette,      METH_VARARGS, apply_palette_doc },
-    { "clear_stats",        (PyCFunction) clear_stats,        METH_NOARGS,  clear_stats_doc },
-    { "get_stats",          (PyCFunction) get_stats,          METH_NOARGS,  get_stats_doc },
+    { "compute_array",      (PyCFunction) compute_array,    METH_VARARGS, compute_array_doc },
+    { "apply_palette",      (PyCFunction) apply_palette,    METH_VARARGS, apply_palette_doc },
+    { "clear_stats",        (PyCFunction) clear_stats,      METH_NOARGS,  clear_stats_doc },
+    { "get_stats",          (PyCFunction) get_stats,        METH_NOARGS,  get_stats_doc },
     { NULL }
 };
 
