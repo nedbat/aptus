@@ -555,19 +555,22 @@ compute_array(AptEngine *self, PyObject *args)
             
             // A pixel that's been calculated but not traced needs to be traced.
             if (s == 1 && self->trace_boundary) {
-                char curdir = DIR_DOWN;
+                char curdir = DIR_UP;
                 int curx = xi, cury = yi;
                 int origx = xi, origy = yi;
                 int lastx = xi, lasty = yi;
                 int start = 1;
                 
                 STATUS(xi, yi) = 2;
-                ptsstored = 0;
+
+                points[0].x = curx;
+                points[0].y = cury;
+                ptsstored = 1;
                 
                 // Walk the boundary
                 for (;;) {
                     // Eventually, we reach our starting point. Stop.
-                    if (unlikely(!start && curx == origx && cury == origy && curdir == DIR_DOWN)) {
+                    if (unlikely(!start && curx == origx && cury == origy && curdir == DIR_UP)) {
                         break;
                     }
                     

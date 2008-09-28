@@ -261,7 +261,9 @@ class AptusCompute:
         self.progress.end()
         self._record_old_geometry()
         self.pixels_computed = True
-        self.status = None  # It's all 2's now, no point in keeping it.
+        # Once compute_array is done, the status array is all 2's, so there's no
+        # point in keeping it around.
+        self.status = None
         
     # Information methods
     
