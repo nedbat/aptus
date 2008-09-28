@@ -33,12 +33,8 @@ class SplashScreen(wx.SplashScreen):
         bitmap = wx.Image(name=data_file("splash.png")).ConvertToBitmap()
         splash_style = wx.SPLASH_TIMEOUT | wx.SPLASH_NO_CENTRE
         style = wx.FRAME_NO_TASKBAR | wx.STAY_ON_TOP | wx.NO_BORDER
-        duration = 2000 # milliseconds
-        wx.SplashScreen.__init__(self, bitmap, splash_style, duration, parent, style=style)
-        pos = parent.ClientToScreen((0, 0))
-        pos.x += 100
-        pos.y += 100
-        self.Move(pos)
+        wx.SplashScreen.__init__(self, bitmap, splash_style, 2000, parent, style=style)
+        self.Move(parent.ClientToScreen((0, 0)) + (50, 50))
         self.Bind(wx.EVT_CLOSE, self.on_exit)
         wx.Yield()
 
