@@ -257,7 +257,6 @@ class AptusCompute:
         # three buckets of values: 0,1,2.
         buckets, _ = numpy.histogram(self.status, 3, (0, 2))
         num_compute = buckets[0]
-        print "num_compute =", num_compute
         self.eng.compute_array(self.counts, self.status, num_compute, self.progress.progress)
         self.progress.end()
         self._record_old_geometry()

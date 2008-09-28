@@ -40,7 +40,7 @@
 + Dragging in the main window shouldn't change the position in the Julia window.
 + When computing only part of the screen, the percentage complete is wrong b/c
     it thinks we have to recompute all the pixels.
-+ Dragging the window confuses the boundary tracer now that edgemin is in.
+- Dragging the window confuses the boundary tracer now that edgemin is in.
     se: slow; ne: slow; sw: fast; nw: slow
 - Display the YouAreHere panel.  Zoom way in.  Zoom way out again, the panel doesn't close
     automatically when the view window closes, and looks like it doesn't properly
