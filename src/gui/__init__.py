@@ -38,7 +38,7 @@ class SplashScreen(wx.SplashScreen):
         self.Bind(wx.EVT_CLOSE, self.on_exit)
         wx.Yield()
 
-    def on_exit(self, evt):
+    def on_exit(self, evt_unused):
         self.alpha = 255
         self.timer = wx.Timer(self)
         self.Bind(wx.EVT_TIMER, self.fade_some)
@@ -47,7 +47,7 @@ class SplashScreen(wx.SplashScreen):
         # Don't actually destroy the window or skip the event, so the timer can
         # run, and fade the window out..
         
-    def fade_some(self, evt):
+    def fade_some(self, evt_unused):
         self.alpha -= 16
         if self.alpha <= 0:
             self.timer.Stop()
