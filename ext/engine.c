@@ -247,7 +247,8 @@ fequal(AptEngine *self, aptfloat a, aptfloat b)
 // compute_count: the heart of the Mandelbrot algorithm.
 //
 // Given an integer coordinate xi,yi, return the iteration count for that point
-// in the current array.
+// in the current array.  If continuous coloring, then the returned value is
+// scaled up (a fixed-point number essentially).
 
 static int
 compute_count(AptEngine *self, int xi, int yi)
@@ -532,7 +533,7 @@ compute_array(AptEngine *self, PyObject *args)
                 miniteredge = c;
             }
         }
-        self->stats.miniteredge = miniteredge;
+        self->stats.miniteredge = miniteredge / self->cont_levels;
     }
     else {
         self->stats.miniteredge = 0;
