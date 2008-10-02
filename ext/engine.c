@@ -447,7 +447,7 @@ compute_array(AptEngine *self, PyObject *args)
     
     int ok = 0;
     
-    if (!PyArg_ParseTuple(args, "O!O!iO", &PyArray_Type, &counts, &PyArray_Type, &status, &num_compute, &progress)) {
+    if (!PyArg_ParseTuple(args, "O!O!iO:compute_array", &PyArray_Type, &counts, &PyArray_Type, &status, &num_compute, &progress)) {
         goto done;
     }
     
@@ -762,7 +762,7 @@ apply_palette(AptEngine *self, PyObject *args)
     PyObject * pint = NULL;
     int ok = 0;
     
-    if (!PyArg_ParseTuple(args, "O!OidOiO!", &PyArray_Type, &counts, &colbytes_obj, &phase, &scale, &incolor_obj, &wrap, &PyArray_Type, &pix)) {
+    if (!PyArg_ParseTuple(args, "O!OidOiO!:apply_palette", &PyArray_Type, &counts, &colbytes_obj, &phase, &scale, &incolor_obj, &wrap, &PyArray_Type, &pix)) {
         goto done;
     }
     
