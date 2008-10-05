@@ -26,6 +26,7 @@ class GuiProgressReporter:
         self.aptview = aptview
         
     def begin(self):
+        print "Beginning"
         wx.BeginBusyCursor()
         
     def progress(self, frac_done_unused, info_unused=''):
@@ -34,6 +35,7 @@ class GuiProgressReporter:
         wx.SafeYield()
 
     def end(self):
+        print "Ending"
         wx.EndBusyCursor()
 
 
