@@ -7,6 +7,7 @@
 <what when='20080330T150400'>Update to 1.51.</what>
 <what when='20080405T211600'>Update to 1.55.</what>
 <what when='20080420T111000'>Update to 1.56.</what>
+<what when='20081005T142900'>Update to 2.0.</what>
 </history>
 
 <p>Aptus is a Mandelbrot set viewer and renderer.  It is written in Python
@@ -34,8 +35,8 @@ Before installing Aptus, you'll need to install these prerequisite Python packag
 <p>Download the kit that's right for you.  Linux and Mac use the tar.gz, Windows
 users will probably be happier with the .exe:</p>
 
-<download path='code/aptus/Aptus-1.56.tar.gz' />
-<download path='code/aptus/Aptus-1.56.win32-py2.5.exe' />
+<download path='code/aptus/Aptus-2.0.tar.gz' />
+<download path='code/aptus/Aptus-2.0.win32-py2.5.exe' />
 
 <p>Install the kit with the usual command:</p>
 
@@ -66,10 +67,12 @@ directly as a parameter file.
 <h2>GUI usage</h2>
 
 <p>Start Aptus with aptusgui.py, and start poking around. Left click or drag
-zooms you in, right click zooms you out.  Type 'h' for help on other controls.</p>
+zooms you in, right click zooms you out.  Type 'h' for help on other controls.
+Detailed descriptions of GUI behavior are below.</p>
 
 <p>aptusgui.py also accepts applicable command-line switches so you can start it from a
 parameter file, or specify the size of the window, and so on.</p>
+
 
 <h2>Command line usage</h2>
 
@@ -89,7 +92,9 @@ Options:
                         set the angle of rotation
   -b BAILOUT, --bailout=BAILOUT
                         set the radius of the escape circle
+  --center=RE,IM        set the center of the view
   -c, --continuous      use continuous coloring
+  --diam=DIAM           set the diameter of the view
   -i ITER_LIMIT, --iterlimit=ITER_LIMIT
                         set the limit on the iteration count
   -o OUTFILE, --output=OUTFILE
@@ -102,8 +107,109 @@ Options:
 </code>
 
 
+<h1>GUI controls</h1>
+
+<p>The Aptus GUI is very bare: there's just an image of the Mandelbrot set, with
+no visible controls.  You use the mouse and keyboard to control Aptus.</p>
+
+<h2>Moving around</h2>
+
+<p>Left-clicking zooms into the set, right-clicking zooms out; clicking while
+holding the Ctrl (or Cmd) key zooms just a little bit. If you drag out a
+rectangle with the left mouse button, you will zoom into that rectangle, so you
+have more control over exactly where you end up.</p>
+
+<p>If you drag with the middle mouse button, you will drag the image, re-centering
+it on a new point of interest.</p>
+
+<p>The 'a' key will prompt you for a new angle of rotation for the image.</p>
+
+<p>The 'n' key will open a new top-level window to explore elsewhere in the set.</p>
+
+<h2>Appearance</h2>
+
+<p>The image of the Mandelbrot set is drawn by calculating a value at each pixel,
+then mapping that value to a color through a palette.  The values can be discrete
+or continuous <emdash/> use the 'c' key to toggle between the two.</p>
+
+<p>The accuracy of the black boundary of the set depends on the number of iterations
+Aptus is permitted to calculate at each point.  The value can be adjusted with
+the 'i' key.</p>
+
+<p>Aptus has handful of different palettes. Cycle through them with the '&lt;'
+(less-than) and '&gt;' (greater-than) keys. A list of all the palettes can be
+displayed with 'p'. The color mapped to each value can be shifted one color with
+the ',' (comma) and '.' (period) keys. If the pixel values are continuous, then
+the palette can also be scaled to change the distance between color bands
+<emdash/> use the ';' (semicolon) and "'" (apostrophe) keys, optionally with the
+Ctrl key to change just a little.</p>
+
+<p>The hue and saturation of the palette can also be shifted.  The '[' and ']'
+(square bracket) keys change the hue, and '{' and '}' (curly braces) change the
+saturation.  Both also use the Ctrl key to change just a little.</p>
+
+<p>The '0' (zero) key will reset all palette adjustments.</p>
+
+<h2>Auxiliary windows</h2>
+
+<p>Aptus has a few tool windows.  Each is toggled with a particular key.</p>
+
+<p>'p' displays a list of all Aptus' palettes.  Clicking one will change
+the display to use it.</p>
+
+<p>'v' displays a list of statistics about the last fractal calculation.</p>
+
+<p>'q' displays information about a point in the display.  Hold the shift key
+and hover over a point in the image to see iteration counts, coordinates, and so on.</p>
+    
+<p>'l' (lowercase L) displays the You Are Here panel.  It shows a series of images,
+zooming in to the currently displayed view of the set.  Each image has a rectangle
+drawn on it corresponding to the next image in the list, so that you can see
+how your close-up view in the main window relates to the larger set.  Any rectangle
+can be dragged to change the main window's view of the set.</p>
+
+
+<h2>Julia set</h2>
+
+<p>The Julia set is closely related to the Mandelbrot set.  Each point in the
+Mandelbrot set corresponds to a Julia set.  To display the Julia set, use the 'J'
+key (with the shift key).  A small tool window appears.  It shows the Julia set
+for the current shift-hovered point in the main window.  Hold the shift key and
+move the mouse over the Mandelbrot set.  The Julia set will change as the mouse
+moves.</p>
+
+<p>To further explore a particular Julia set, double-click in the Julia set window.
+You'll get a new top-level window displaying the Julia set, and you can use all
+the usual Aptus controls to navigate and manipulate the image.</p>
+
+    
 <h1>History</h1>
 
+<h2>Version 2.0, October 2008</h2>
+
+<ul>
+<li>Multiple top-level exploration windows.</li>
+
+<li>Tool panels show supplementary information:
+    <ul>
+    <li>You Are Here shows your location in the Mandelbrot set.</li>
+    <li>Palettes panel shows all the palettes, and the one currently in use.</li>
+    <li>Statistics panel shows statistics about the latest computation.</li>
+    <li>Point Info panel shows information about the current point, shift-hover to indicate point.</li>
+    <li>Julia panel shows Julia set for the current point, shift-hover to indicate point.
+    Double-clicking the Julia panel opens a new exploration window to explore that Julia set.</li>
+    </ul></li>
+    
+<li>Computation improvements:
+    <ul>
+    <li>Faster.</li>
+    <li>The exploration window updates during computation.</li>
+    <li>Continuous coloring is more accurate now: banding artifacts are gone.</li>
+    <li>When dragging the exploration window, pixels still in the window aren't re-calculated.</li>
+    </ul></li>
+    
+<li>Center and diameter can be specified in the command line arguments.</li>
+</ul>
 
 <h2>Version 1.56, April 2008</h2>
 
