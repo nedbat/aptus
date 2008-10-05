@@ -12,7 +12,6 @@ class AptusToolableFrameMixin:
     """
     def __init__(self):
         self.toolwins = []
-        #self.Bind(wx.EVT_ACTIVATE, self.on_activate)
         self.Bind(wx.EVT_ICONIZE, self.on_iconize)
         self.Bind(wx.EVT_CLOSE, self.on_close)
 
@@ -21,10 +20,6 @@ class AptusToolableFrameMixin:
 
     def remove_toolwin(self, toolwin):
         self.toolwins.remove(toolwin)
-
-    #def on_activate(self, event):
-    #    print "on_activate:", event, event.GetActive(), wx.GetApp().IsActive()
-    #    event.Skip()
 
     def on_iconize(self, event):
         bshow = not event.Iconized()
@@ -69,11 +64,9 @@ class ListeningWindowMixin:
 
     def on_destroy(self, event):
         for l in self.listeners:
-            
             eventManager.DeregisterListener(l)
         for other_win, evt in self.events:
             other_win.Unbind(evt)
-        event.Skip()
 
     def register_listener(self, fn, evt, sender):
         """ Register a listener for an eventManager event. This will be automatically
