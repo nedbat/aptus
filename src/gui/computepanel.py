@@ -83,6 +83,7 @@ class ComputePanel(wx.Panel):
     
     def on_size(self, event_unused):
         self.check_size = True
+        self.on_idle(event_unused)
         
     def on_idle(self, event_unused):
         if self.check_size and self.GetClientSize() != self.compute.size:
