@@ -18,8 +18,8 @@ ParentComputePanel = ComputePanel
 
 class YouAreHereWin(ParentComputePanel, ListeningWindowMixin):
     """ A panel slaved to another ComputePanel to show where the master panel is
-        on the Set.  These are designed to be stacked in a YouAreHereStack to show
-        successive magnifications.
+        on the Set.  These are designed to be stacked in a YouAreHereStack to
+        show successive magnifications.
         
         Two windows are referenced: the main view window (so that we can change
         the view), and the window our rectangle represents.  This can be either
@@ -196,7 +196,7 @@ class YouAreHereStack(ScrolledPanel, ListeningWindowMixin):
         
         cur_wins = list(self.sizer.Children)
         last = None
-        for i in range(num_wins):
+        for i in xrange(num_wins):
             if i == 0:
                 # Don't recenter the topmost YouAreHere.
                 center = settings.center(mode)
