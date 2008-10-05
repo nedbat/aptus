@@ -92,7 +92,6 @@ class AptusCompute:
         return False
 
     def create_mandel(self):
-        
         # ssize is the dimensions of the sample array, in samples across and down.
         self.ssize = self.size[0]*self.supersample, self.size[1]*self.supersample
         
@@ -258,7 +257,6 @@ class AptusCompute:
         buckets, _ = numpy.histogram(self.status, 3, (0, 2))
         num_compute = buckets[0]
         self.eng.compute_array(self.counts, self.status, num_compute, self.progress.progress)
-        print "Enging progress"
         self.progress.end()
         self._record_old_geometry()
         self.pixels_computed = True
