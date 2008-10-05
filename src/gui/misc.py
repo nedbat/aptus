@@ -62,7 +62,7 @@ class ListeningWindowMixin:
 
         self.Bind(wx.EVT_WINDOW_DESTROY, self.on_destroy)
 
-    def on_destroy(self, event):
+    def on_destroy(self, event_unused):
         for l in self.listeners:
             eventManager.DeregisterListener(l)
         for other_win, evt in self.events:
