@@ -24,6 +24,7 @@ class ComputePanel(wx.Panel):
         self.compute.palette = all_palettes[0]
 
         # Bind events
+        self.Bind(wx.EVT_SHOW, self.on_show)
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_IDLE, self.on_idle)
@@ -81,9 +82,12 @@ class ComputePanel(wx.Panel):
         
     # Event handlers
     
+    def on_show(self, event):
+        if event.Show:
+            self.on_idle(event)
+
     def on_size(self, event_unused):
         self.check_size = True
-        self.on_idle(event_unused)
         
     def on_idle(self, event_unused):
         if self.check_size and self.GetClientSize() != self.compute.size:
