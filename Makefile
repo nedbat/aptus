@@ -66,3 +66,6 @@ publish: publish_kit publish_doc publish_samples
 
 local_kit: kit
 	cp -v dist/*.* $(LOCALHOME)
+
+pypi:
+	python setup.py register
