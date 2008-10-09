@@ -13,7 +13,7 @@
 + Engine extension should be nested in aptus package.
 + Windows kits pre-built.
 
-* V2
+* V3
 - Decide on re-entrancy, keep things from getting tangled up.
 - Combine pointinfo and stats panel, and add more info to it.
 - Maybe a better way to manage all the little windows?
@@ -26,6 +26,9 @@
     
 * Bugs
 
+- Somehow I managed to zoom in then zoom out, and ended up outside the legal
+    radius and the set disappeared.
+- Resizing a window larger, the background shows pixels left over from other windows?
 + If client size is queried while minimized, it comes back as zero, and a divide by zero error happens.
 + Proper prompting about overwriting existing files.
 + If you zoom out too far, boundary tracing makes the whole set disappear.
@@ -35,8 +38,6 @@
 + If the file-save picker says "PNG", and the filename is "foo.aptus", it should
     save as a .aptus file.
 + In continuous mode, there's a stark ring of radius 8 or so.
-- Somehow I managed to zoom in then zoom out, and ended up outside the legal
-    radius and the set disappeared.
 + Dragging in the main window shouldn't change the position in the Julia window.
 + When computing only part of the screen, the percentage complete is wrong b/c
     it thinks we have to recompute all the pixels.
@@ -45,7 +46,6 @@
 + Display the YouAreHere panel.  Zoom way in.  Zoom way out again, the panel doesn't close
     automatically when the view window closes, and looks like it doesn't properly
     clean up unneeded zoom levels in the stack either.
-- Resizing a window larger, the background shows pixels left over from other windows?
 
 * Speed
 
@@ -58,75 +58,76 @@
 - Take advantage of symmetry across the x-axis.
 - Adaptively choose a number of continuous levels (other than 256) based on the
     actual steps in the palette, etc.
+- When dragging the image, keep parts scrolled off-screen, in case they come back.
+- What does edge-min do to cycle checks?  It prevents us from finding shorter cycles,
+    but does that matter?
 x Optimize boundary.py so we can use it for high iterations
 + Boundary checking in C
 + Fracint computes the miniter by running the edges (where the min must be), then
     uses it to skip the bailout check until reaching the miniter.
-- What does edge-min do to cycle checks?  It prevents us from finding shorter cycles,
-    but does that matter?
 + Go through the bitblting python code to see if we can skip some of the steps.
 + A custom coloring endpoint in the engine to replace the multiple numpy operations.
 + When dragging the image, only re-calc the parts that have been exposed.
-- When dragging the image, keep parts scrolled off-screen, in case they come back.
 + When resizing the window, do similar pixel-retention as when dragging.
 
 * UI
 
-+ Make a window icon.
+- Use CaptureMouse on dragging to avoid lost drags.
 - Status bar for progress and stats presentation.
 - GUI progress indicator.
-+ Paint partial progress in the window.
 - Palette editor.
-+ Multiple windows.
 - Back button
     - with a list of places you've been (with thumbnails).
-+ Draggable rectangle in addition to click-to-zoom.
 - Open command to load aptus state files.
 -   and palette files
 - Mac: app icon  (if 'wxMac' in wx.PlatformInfo:)
 - Custom bookmarks (like the J key).
-+ Help
 - Ubuntu: resizing the window tries to recalc as you drag (bad idle handling?)
 - Arrow keys for nudging the viewport.
++ Make a window icon.
++ Help
++ Draggable rectangle in addition to click-to-zoom.
++ Multiple windows.
++ Paint partial progress in the window.
 
 * Beauty
 
-+ HSV palette
 - Generalized palette specification
-+ Reading GIMP gradients as palettes
 - Xaos palette options:
-    + Palette shifting
     - Algorithmic palette
-+ Rotation (simply store the pixel offsets as dx and dy computed from angle).
-+ Continuous coloring (http://linas.org/art-gallery/escape/smooth.html)
-+ A palette specification, so the complete specs for a pic can be stored.
-+ Try to reduce flicker during palette changing (http://wiki.wxpython.org/index.cgi/DoubleBufferedDrawing)
-    When cycling colors, display flashes. (wxWindow::IsDoubleBuffered)
 - Add an extra segment to non-cyclic ggr palettes.
 - Mirroring non-cyclic palettes.
-+ Hue tweaking: [ and ] adjust the hue throughout the current palette.
 - Read other palette files:
     - .map (see Gnofract 4D)
     - .cs (see Gnofract 4D)
     - .ugr (see Gnofract 4D)
 - More varied palettes.
 - Use GEGL to do powerful image stuff? http://gegl.org/
++ HSV palette
++ Hue tweaking: [ and ] adjust the hue throughout the current palette.
++ Rotation (simply store the pixel offsets as dx and dy computed from angle).
++ Continuous coloring (http://linas.org/art-gallery/escape/smooth.html)
++ A palette specification, so the complete specs for a pic can be stored.
++ Try to reduce flicker during palette changing (http://wiki.wxpython.org/index.cgi/DoubleBufferedDrawing)
+    When cycling colors, display flashes. (wxWindow::IsDoubleBuffered)
++ Reading GIMP gradients as palettes
++ Palette shifting
 
 * Power
 
 - Editable parameters for things like cycle checking epsilon.
-+ Refactor engine.c so that it defines a class, rather than having all those globals.
-+ Command line invocation (refactor a bunch of stuff)
 - Multi-precision floats
 - Interruptable rendering: write partial counts (and all other state) to a file and restart.
 - Save counts in a file so a long compute can then be re-colored easily.
++ Refactor engine.c so that it defines a class, rather than having all those globals.
++ Command line invocation (refactor a bunch of stuff)
 
 * Knowledge
 
 - Stats: what's the census of iteration counts in the image?
+- Switchable coloring: standard, cycle count, etc.
 + Stats: some counters (totaliter) need to be more than 32-bit ints.
 + Better progress reporting for trace_boundary: has to count pixels rather than scanlines.
-- Switchable coloring: standard, cycle count, etc.
 + Some way of embedding the mandelbrot parameters into the final .PNG, so it can be recreated.
 + A You-Are-Here mini panel showing the general location you are viewing
 +   (maybe more than one step's worth).
@@ -163,4 +164,4 @@ x Optimize boundary.py so we can use it for high iterations
 + Some kind of progress indicator.
 + Cycle detection
 
-http://groups.google.com/group/sci.fractals/browse_thread/thread/e7873432d97aff8/6299651657de38bc?lnk=gst&q=julia+peitgen#6299651657de38bc
+The Beauty of Fractals parameters for Fractint v18: http://groups.google.com/group/sci.fractals/browse_thread/thread/e7873432d97aff8/6299651657de38bc?lnk=gst&q=julia+peitgen#6299651657de38bc
