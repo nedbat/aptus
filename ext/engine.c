@@ -1016,7 +1016,7 @@ AptEngineType = {
 static PyMethodDef
 AptEngine_classmethods[] = {
     { "type_check", type_check, METH_VARARGS, type_check_doc },
-    { NULL, NULL }
+    { NULL }
 };
 
 void
