@@ -392,7 +392,7 @@ static int
 call_progress(AptEngine *self, PyObject *progress, double frac_complete, char *info)
 {
     int ok = 1;
-    PyObject * arglist = Py_BuildValue("(ds)", frac_complete, info);
+    PyObject * arglist = Py_BuildValue("ds", frac_complete, info);
     PyObject * result = PyEval_CallObject(progress, arglist);
     if (result == NULL) {
         ok = 0;
@@ -897,7 +897,8 @@ static char get_stats_doc[] = "Get the statistics as a dictionary";
 static PyObject *
 get_stats(AptEngine *self)
 {
-    return Py_BuildValue("{sisKsIsIsIsisisIsIsIsIsI}",
+    return Py_BuildValue(
+        "{si,sK,sI,sI,sI,si,si,sI,sI,sI,sI,sI}",
         "maxiter", self->stats.maxiter,
         "totaliter", self->stats.totaliter,
         "totalcycles", self->stats.totalcycles,
@@ -926,7 +927,8 @@ type_check(PyObject *self, PyObject *args)
     big <<= 40;
     sprintf(info, "Big 1<<40 = %s", human_u8int(big, uinfo));
     
-    return Py_BuildValue("{sisisisiss}",
+    return Py_BuildValue(
+        "{si,si,si,si,ss}",
         "double", sizeof(double),
         "aptfloat", sizeof(aptfloat),
         "u4int", sizeof(u4int),
