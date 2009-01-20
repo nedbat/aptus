@@ -81,12 +81,6 @@ typedef struct {
 
 // Class methods
 
-static void
-AptEngine_dealloc(AptEngine *self)
-{
-    self->ob_type->tp_free((PyObject*)self);
-}
-
 static int
 AptEngine_init(AptEngine *self, PyObject *args, PyObject *kwds)
 {
@@ -112,6 +106,12 @@ AptEngine_init(AptEngine *self, PyObject *args, PyObject *kwds)
     self->cycle_params.delta = -1;
 
     return 0;
+}
+
+static void
+AptEngine_dealloc(AptEngine *self)
+{
+    self->ob_type->tp_free((PyObject*)self);
 }
 
 // ri0 property methods
