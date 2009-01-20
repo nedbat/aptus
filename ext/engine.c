@@ -87,41 +87,30 @@ AptEngine_dealloc(AptEngine *self)
     self->ob_type->tp_free((PyObject*)self);
 }
 
-static PyObject *
-AptEngine_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
-{
-    AptEngine * self;
-
-    self = (AptEngine *)type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->ri0.r = 0.0;
-        self->ri0.i = 0.0;
-        self->ridx.r = 0.001;
-        self->ridx.i = 0.0;
-        self->ridy.r = 0.0;
-        self->ridy.i = 0.001;
-        self->rijulia.r = 0.0;
-        self->rijulia.i = 0.0;
-        self->iter_limit = 999;
-        self->bailout = 2.0;
-        self->check_cycles = 1;
-        self->trace_boundary = 1;
-        self->cont_levels = 1.0;
-        self->blend_colors = 1;
-        self->julia = 0;
-
-        self->cycle_params.initial_period = 43;
-        self->cycle_params.tries = 10;
-        self->cycle_params.factor = 2;
-        self->cycle_params.delta = -1;
-    }
-
-    return (PyObject *)self;
-}
-
 static int
 AptEngine_init(AptEngine *self, PyObject *args, PyObject *kwds)
 {
+    self->ri0.r = 0.0;
+    self->ri0.i = 0.0;
+    self->ridx.r = 0.001;
+    self->ridx.i = 0.0;
+    self->ridy.r = 0.0;
+    self->ridy.i = 0.001;
+    self->rijulia.r = 0.0;
+    self->rijulia.i = 0.0;
+    self->iter_limit = 999;
+    self->bailout = 2.0;
+    self->check_cycles = 1;
+    self->trace_boundary = 1;
+    self->cont_levels = 1.0;
+    self->blend_colors = 1;
+    self->julia = 0;
+
+    self->cycle_params.initial_period = 43;
+    self->cycle_params.tries = 10;
+    self->cycle_params.factor = 2;
+    self->cycle_params.delta = -1;
+
     return 0;
 }
 
@@ -1009,14 +998,14 @@ AptEngineType = {
     0,                         /* tp_dictoffset */
     (initproc)AptEngine_init,  /* tp_init */
     0,                         /* tp_alloc */
-    AptEngine_new,             /* tp_new */
+    0,                         /* tp_new */
 };
 
 
 // Module definition
 
 static PyMethodDef
-AptEngine_classmethods[] = {
+AptEngine_functions[] = {
     { "type_check", type_check, METH_VARARGS, type_check_doc },
     { NULL }
 };
@@ -1028,11 +1017,12 @@ initengine(void)
     
     PyObject* m;
 
+    AptEngineType.tp_new = PyType_GenericNew;
     if (PyType_Ready(&AptEngineType) < 0) {
         return;
     }
 
-    m = Py_InitModule3("aptus.engine", AptEngine_classmethods, "Fast Aptus Mandelbrot engine.");
+    m = Py_InitModule3("aptus.engine", AptEngine_functions, "Fast Aptus Mandelbrot engine.");
 
     if (m == NULL) {
         return;
