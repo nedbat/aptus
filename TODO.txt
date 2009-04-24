@@ -14,6 +14,7 @@
 + Windows kits pre-built.
 
 * V3
+
 - Decide on re-entrancy, keep things from getting tangled up.
 - Combine pointinfo and stats panel, and add more info to it.
 - Maybe a better way to manage all the little windows?
@@ -23,7 +24,11 @@
     + don't let J do anything in a Julia window
     + YouAreHere is centered incorrectly for a Julia set.
     - Explorer, spawn a Julia, shift-hover in the Julia explorer window changes the mini julia.
-    
+
+* Clean-up
+
+- Use PyMem_Malloc in the extension.
+
 * Bugs
 
 - Somehow I managed to zoom in then zoom out, and ended up outside the legal
