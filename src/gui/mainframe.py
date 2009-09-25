@@ -66,6 +66,7 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
         self.Bind(wx.EVT_MENU, self.cmd_new, id=id_new)
         self.Bind(wx.EVT_MENU, self.cmd_save, id=id_save)
         self.Bind(wx.EVT_MENU, self.cmd_help, id=id_help)
+        self.Bind(wx.EVT_MENU, self.cmd_fullscreen, id=id_fullscreen)
         self.Bind(wx.EVT_MENU, self.cmd_show_youarehere, id=id_show_youarehere)
         self.Bind(wx.EVT_MENU, self.cmd_show_palettes, id=id_show_palettes)
         self.Bind(wx.EVT_MENU, self.cmd_show_stats, id=id_show_stats)
@@ -153,6 +154,9 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
         dlg = HelpDlg(self)
         dlg.ShowModal()
 
+    def cmd_fullscreen(self, event_unused):
+        self.ShowFullScreen(not self.IsFullScreen())
+        
     def cmd_show_youarehere(self, event_unused):
         """ Toggle the presence of the YouAreHere tool.
         """
