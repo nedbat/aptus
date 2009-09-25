@@ -283,6 +283,8 @@ class AptusViewPanel(ComputePanel):
             self.fire_command(id_set_bailout)
         elif keycode == ord('C'):
             self.fire_command(id_toggle_continuous)
+        elif keycode == ord('F'):
+            self.fire_command(id_fullscreen)
         elif keycode == ord('H'):
             self.fire_command(id_help)
         elif keycode == ord('I'):
