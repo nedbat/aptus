@@ -88,7 +88,6 @@ HELP_PAGES = {
         
         <blockquote>
         <b>a</b>: set the angle of rotation.<br>
-        <b>b</b>: set the radius of the bailout circle.<br>
         <b>c</b>: toggle continuous coloring.<br>
         <b>f</b>: toggle full-screen display.<br>
         <b>h</b> or <b>?</b>: show this help.<br>

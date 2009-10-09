@@ -58,7 +58,6 @@ class AptusViewPanel(ComputePanel):
 
         self.Bind(wx.EVT_MENU, self.cmd_set_angle, id=id_set_angle)
         self.Bind(wx.EVT_MENU, self.cmd_set_iter_limit, id=id_set_iter_limit)
-        self.Bind(wx.EVT_MENU, self.cmd_set_bailout, id=id_set_bailout)
         self.Bind(wx.EVT_MENU, self.cmd_toggle_continuous, id=id_toggle_continuous)
         self.Bind(wx.EVT_MENU, self.cmd_jump, id=id_jump)
         self.Bind(wx.EVT_MENU, self.cmd_redraw, id=id_redraw)
@@ -279,8 +278,6 @@ class AptusViewPanel(ComputePanel):
 
         if keycode == ord('A'):
             self.fire_command(id_set_angle)
-        elif keycode == ord('B'):
-            self.fire_command(id_set_bailout)
         elif keycode == ord('C'):
             self.fire_command(id_toggle_continuous)
         elif keycode == ord('F'):
@@ -383,9 +380,6 @@ class AptusViewPanel(ComputePanel):
     def cmd_set_iter_limit(self, event_unused):
         self.set_value('Iteration limit:', 'Set the iteration limit', 'iter_limit', int, self.computation_changed)
         
-    def cmd_set_bailout(self, event_unused):
-        self.set_value('Bailout:', 'Set the radius of the escape circle', 'bailout', float, self.computation_changed)
-
     def cmd_toggle_continuous(self, event_unused):
         self.compute.continuous = not self.compute.continuous
         self.computation_changed()
