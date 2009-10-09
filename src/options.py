@@ -31,7 +31,6 @@ class AptusOptions:
             description=description
         )
         parser.add_option("-a", "--angle", dest="angle", help="set the angle of rotation")
-        parser.add_option("-b", "--bailout", dest="bailout", help="set the radius of the escape circle")
         parser.add_option("--center", dest="center", help="set the center of the view", metavar="RE,IM")
         parser.add_option("-c", "--continuous", dest="continuous", help="use continuous coloring", action="store_true")
         parser.add_option("--diam", dest="diam", help="set the diameter of the view")
@@ -73,8 +72,6 @@ class AptusOptions:
 
         if options.angle:
             self.target.angle = float(options.angle)
-        if options.bailout:
-            self.target.bailout = float(options.bailout)
         if options.center:
             self.target.center = self._float_pair(options.center)
         if options.continuous:

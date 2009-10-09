@@ -90,8 +90,6 @@ Options:
   -h, --help            show this help message and exit
   -a ANGLE, --angle=ANGLE
                         set the angle of rotation
-  -b BAILOUT, --bailout=BAILOUT
-                        set the radius of the escape circle
   --center=RE,IM        set the center of the view
   -c, --continuous      use continuous coloring
   --diam=DIAM           set the diameter of the view

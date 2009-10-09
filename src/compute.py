@@ -34,12 +34,11 @@ class AptusCompute:
         
         # computation
         self.iter_limit = 999
-        self.bailout = 0
         self.continuous = False
         self.supersample = 1
         self.mode = 'mandelbrot'
         self.rijulia = 0.0, 0.0
-        self._computation_attributes = ['iter_limit', 'bailout', 'continuous', 'supersample', 'mode', 'rijulia']
+        self._computation_attributes = ['iter_limit', 'continuous', 'supersample', 'mode', 'rijulia']
         
         # coloring
         self.palette = all_palettes[0]
@@ -116,11 +115,8 @@ class AptusCompute:
         self.eng.trace_boundary = 1
         self.progress = NullProgressReporter()
     
-        # If bailout was never specified, then default differently based on
-        # continuous or discrete coloring.
-        if self.bailout:
-            self.eng.bailout = self.bailout
-        elif self.continuous:
+        # Set bailout differently based on continuous or discrete coloring.
+        if self.continuous:
             self.eng.bailout = 100.0
         else:
             self.eng.bailout = 2.0
