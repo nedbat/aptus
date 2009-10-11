@@ -10,7 +10,7 @@ from aptus.gui.misc import AptusToolableFrameMixin
 wx = importer("wx")
 import wx.aui
 
-import os, os.path
+import os, os.path, re
 
 
 class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
@@ -67,6 +67,7 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
         self.Bind(wx.EVT_MENU, self.cmd_save, id=id_save)
         self.Bind(wx.EVT_MENU, self.cmd_help, id=id_help)
         self.Bind(wx.EVT_MENU, self.cmd_fullscreen, id=id_fullscreen)
+        self.Bind(wx.EVT_MENU, self.cmd_window_size, id=id_window_size)
         self.Bind(wx.EVT_MENU, self.cmd_show_youarehere, id=id_show_youarehere)
         self.Bind(wx.EVT_MENU, self.cmd_show_palettes, id=id_show_palettes)
         self.Bind(wx.EVT_MENU, self.cmd_show_stats, id=id_show_stats)
@@ -156,7 +157,25 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
 
     def cmd_fullscreen(self, event_unused):
         self.ShowFullScreen(not self.IsFullScreen())
-        
+    
+    def cmd_window_size(self, event_unused):
+        cur_size = "%d x %d" % tuple(self.GetClientSize())
+        dlg = wx.TextEntryDialog(self.GetTopLevelParent(), "Window size",
+            "New window size?", cur_size)
+
+        if dlg.ShowModal() == wx.ID_OK:
+            new_size = dlg.GetValue().strip()
+            m = re.match(r"(?P<w>\d+)\s*[x, ]\s*(?P<h>\d+)|s/(?P<mini>[\d.]+)", new_size)
+            if m:
+                if m.group('mini') is not None:
+                    factor = float(m.group('mini'))
+                    screen_w, screen_h = wx.GetDisplaySize()
+                    w, h = screen_w/factor, screen_h/factor
+                elif m.group('w') is not None:
+                    w, h = int(m.group('w')), int(m.group('h'))
+                self.SetClientSize((w,h))
+        dlg.Destroy()
+
     def cmd_show_youarehere(self, event_unused):
         """ Toggle the presence of the YouAreHere tool.
         """

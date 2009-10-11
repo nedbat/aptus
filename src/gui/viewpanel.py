@@ -305,7 +305,9 @@ class AptusViewPanel(ComputePanel):
             self.fire_command(id_save)
         elif keycode == ord('V'):
             self.fire_command(id_show_stats)
-            
+        elif keycode == ord('W'):
+            self.fire_command(id_window_size)
+
         elif keycode == ord('0'):       # zero
             self.fire_command(id_reset_palette)
 
