@@ -70,7 +70,7 @@ HELP_PAGES = {
             <td width='50' valign='top'><img src='%(iconsrc)s'/></td>
             <td valign='top'>
                 <b>Aptus %(version)s</b>, Mandelbrot set explorer.<br>
-                Copyright 2007-2008, Ned Batchelder.<br>
+                Copyright 2007-2009, Ned Batchelder.<br>
                 <a href='http://nedbatchelder.com/code/aptus'>http://nedbatchelder.com/code/aptus</a>
             </td>
         </tr>
@@ -96,6 +96,7 @@ HELP_PAGES = {
         <b>n</b>: open a new window.<br>
         <b>r</b>: redraw the current image.<br>
         <b>s</b>: save the current image or settings.<br>
+        <b>w</b>: set the window size.<br>
         <b>&lt;</b> or <b>&gt;</b>: switch to the next palette.<br>
         <b>,</b> or <b>.</b>: cycle the current palette one color.<br>
         <b>;</b> or <b>'</b>: stretch the palette colors (+%(ctrl)s: just a little), if continuous.<br>
