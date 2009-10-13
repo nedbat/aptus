@@ -29,6 +29,7 @@ class StatsPanel(DictPanel, ListeningWindowMixin):
         { 'label': 'Boundaries traced', 'key': 'boundaries', },
         { 'label': 'Boundaries filled', 'key': 'boundariesfilled', },
         { 'label': 'Longest boundary', 'key': 'longestboundary', },
+        { 'label': 'Largest fill', 'key': 'largestfilled', },
         { 'label': 'Min edge iter', 'key': 'miniteredge', },
         ]
         

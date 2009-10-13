@@ -75,6 +75,7 @@ typedef struct {
         u4int   boundaries;     // Number of boundaries traced.
         u4int   boundariesfilled; // Number of boundaries filled.
         u4int   longestboundary; // Most points in a traced boundary.
+        u4int   largestfilled;  // Most pixels filled in a boundary.
     } stats;
 
 } AptEngine;
@@ -693,6 +694,10 @@ compute_array(AptEngine *self, PyObject *args)
                                 last_progress = self->stats.totaliter;
                             }
                         }
+                        
+                        if (num_filled > self->stats.largestfilled) {
+                            self->stats.largestfilled = num_filled;
+                        }
                     }
                     )
                 } // end if points
@@ -875,6 +880,7 @@ clear_stats(AptEngine *self)
     self->stats.boundaries = 0;
     self->stats.boundariesfilled = 0;
     self->stats.longestboundary = 0;
+    self->stats.largestfilled = 0;
 
     return Py_BuildValue("");
 }
@@ -887,7 +893,7 @@ static PyObject *
 get_stats(AptEngine *self)
 {
     return Py_BuildValue(
-        "{si,sK,sI,sI,sI,si,si,sI,sI,sI,sI,sI}",
+        "{si,sK,sI,sI,sI,si,si,sI,sI,sI,sI,sI,sI}",
         "maxiter", self->stats.maxiter,
         "totaliter", self->stats.totaliter,
         "totalcycles", self->stats.totalcycles,
@@ -899,7 +905,8 @@ get_stats(AptEngine *self)
         "computedpoints", self->stats.computedpoints,
         "boundaries", self->stats.boundaries,
         "boundariesfilled", self->stats.boundariesfilled,
-        "longestboundary", self->stats.longestboundary
+        "longestboundary", self->stats.longestboundary,
+        "largestfilled", self->stats.largestfilled
         );
 }
 
