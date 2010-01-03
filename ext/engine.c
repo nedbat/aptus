@@ -382,12 +382,10 @@ static int
 call_progress(AptEngine *self, PyObject *progress, double frac_complete, char *info)
 {
     int ok = 1;
-    PyObject * arglist = Py_BuildValue("ds", frac_complete, info);
-    PyObject * result = PyEval_CallObject(progress, arglist);
+    PyObject * result = PyObject_CallFunction(progress, "ds", frac_complete, info);
     if (result == NULL) {
         ok = 0;
     }
-    Py_DECREF(arglist);
     Py_XDECREF(result);
     return ok;
 }
@@ -421,14 +419,20 @@ static char compute_array_doc[] = "Compute Mandelbrot counts for an array";
 static PyObject *
 compute_array(AptEngine *self, PyObject *args)
 {
-    // Arguments to the function.
+    // Arguments to compute_array
+    // counts is an array of iteration counts (the actual output of the function).
     PyArrayObject *counts;
     // status is an array of the status of the pixels.
     //  0: hasn't been computed yet.
     //  1: computed, but not filled.
     //  2: computed and filled.
     PyArrayObject *status;
+    // num_compute is the number of pixels that have to be computed, used to
+    // report progress.
     int num_compute;
+    // progress is a Python callable, the progress reporting callback. It takes
+    // two arguments, a fraction (how complete the computation is), and a string
+    // of information.
     PyObject * progress;
     
     // Malloc'ed buffers.
