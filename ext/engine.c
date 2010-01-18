@@ -427,6 +427,8 @@ compute_array(AptEngine *self, PyObject *args)
     //  1: computed, but not filled.
     //  2: computed and filled.
     PyArrayObject *status;
+    // The corners of the rectangle to compute.
+    int xmin, xmax, ymin, ymax;
     // num_compute is the number of pixels that have to be computed, used to
     // report progress.
     int num_compute;
@@ -441,7 +443,10 @@ compute_array(AptEngine *self, PyObject *args)
     
     int ok = 0;
     
-    if (!PyArg_ParseTuple(args, "O!O!iO:compute_array", &PyArray_Type, &counts, &PyArray_Type, &status, &num_compute, &progress)) {
+    if (!PyArg_ParseTuple(args, "O!O!iiiiiO:compute_array",
+            &PyArray_Type, &counts, &PyArray_Type, &status,
+            &xmin, &xmax, &ymin, &ymax,
+            &num_compute, &progress)) {
         goto done;
     }
     
@@ -450,9 +455,6 @@ compute_array(AptEngine *self, PyObject *args)
         goto done;
     }
 
-    // Allocate structures
-    int w = PyArray_DIM(counts, 1);
-    int h = PyArray_DIM(counts, 0);
     int num_pixels = 0;
     
     // points is an array of points on a boundary.
@@ -507,22 +509,22 @@ compute_array(AptEngine *self, PyObject *args)
     // checking the bailout condition.
     int miniteredge = INT_MAX;
     if (self->trace_boundary) {
-        for (yi = 0; yi < h; yi++) {
-            CALC_POINT(0, yi);
+        for (yi = ymin; yi < ymax; yi++) {
+            CALC_POINT(xmin, yi);
             if (c < miniteredge) {
                 miniteredge = c;
             }
-            CALC_POINT(w-1, yi);
+            CALC_POINT(xmax-1, yi);
             if (c < miniteredge) {
                 miniteredge = c;
             }
         }
-        for (xi = 1; xi < w-1; xi++) {
-            CALC_POINT(xi, 0);
+        for (xi = xmin+1; xi < xmax-1; xi++) {
+            CALC_POINT(xi, ymin);
             if (c < miniteredge) {
                 miniteredge = c;
             }
-            CALC_POINT(xi, h-1);
+            CALC_POINT(xi, ymax-1);
             if (c < miniteredge) {
                 miniteredge = c;
             }
@@ -534,8 +536,8 @@ compute_array(AptEngine *self, PyObject *args)
     }
 
     // Loop the pixels in the array.
-    for (yi = 0; yi < h; yi++) {
-        for (xi = 0; xi < w; xi++) {
+    for (yi = ymin; yi < ymax; yi++) {
+        for (xi = xmin; xi < xmax; xi++) {
             // Examine the current pixel.
             s = STATUS(xi, yi);
             if (s == 0) {
@@ -574,7 +576,7 @@ compute_array(AptEngine *self, PyObject *args)
                     // than us).
                     switch (curdir) {
                     case DIR_DOWN:
-                        if (unlikely(cury >= h-1)) {
+                        if (unlikely(cury >= ymax-1)) {
                             curdir = DIR_RIGHT;
                             continue;
                         }
@@ -582,7 +584,7 @@ compute_array(AptEngine *self, PyObject *args)
                         break;
 
                     case DIR_LEFT:
-                        if (unlikely(curx <= 0)) {
+                        if (unlikely(curx <= xmin)) {
                             curdir = DIR_DOWN;
                             continue;
                         }
@@ -590,7 +592,7 @@ compute_array(AptEngine *self, PyObject *args)
                         break;
                     
                     case DIR_UP:
-                        if (unlikely(cury <= 0)) {
+                        if (unlikely(cury <= ymin)) {
                             curdir = DIR_LEFT;
                             continue;
                         }
@@ -598,7 +600,7 @@ compute_array(AptEngine *self, PyObject *args)
                         break;
                     
                     case DIR_RIGHT:
-                        if (unlikely(curx >= w-1)) {
+                        if (unlikely(curx >= xmax-1)) {
                             curdir = DIR_UP;
                             continue;
                         }
@@ -671,7 +673,7 @@ compute_array(AptEngine *self, PyObject *args)
                         // Fill left.
                         for (;;) {
                             ptx--;
-                            if (ptx < 0) {
+                            if (ptx < xmin) {
                                 break;
                             }
                             if (STATUS(ptx, pty) != 0) {
@@ -689,7 +691,7 @@ compute_array(AptEngine *self, PyObject *args)
                         self->stats.boundariesfilled++;
 
                         // If this was a large boundary, call the progress function.
-                        if (ptsstored > w) {
+                        if (ptsstored > (xmax-xmin)) {
                             if (self->stats.totaliter - last_progress > MIN_PROGRESS) {
                                 sprintf(info, "trace %d * %d, totaliter %s", c, ptsstored, human_u8int(self->stats.totaliter, uinfo));
                                 if (!call_progress(self, progress, ((double)num_pixels)/num_compute, info)) {
