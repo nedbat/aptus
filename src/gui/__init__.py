@@ -36,7 +36,6 @@ class SplashScreen(wx.SplashScreen):
         wx.SplashScreen.__init__(self, bitmap, splash_style, 2000, parent, style=style)
         self.Move(parent.ClientToScreen((0, 0)) + (50, 50))
         self.Bind(wx.EVT_CLOSE, self.on_exit)
-        wx.Yield()
 
     def on_exit(self, evt_unused):
         self.alpha = 255
