@@ -14,7 +14,8 @@ AptEngine = importer('AptEngine')
 
 numpy = importer('numpy')
 
-import copy, math
+import copy, math, Queue, threading
+
 
 class AptusCompute:
     """ The Mandelbrot compute class.  It wraps the AptEngine to provide pythonic
@@ -251,19 +252,54 @@ class AptusCompute:
         # Figure out how many pixels have to be computed: make a histogram of
         # the three buckets of values: 0,1,2.
         buckets, _ = numpy.histogram(self.status, 3, (0, 2))
-        num_compute = buckets[0]
-        self.eng.compute_array(
-            self.counts, self.status,
-            0, self.counts.shape[1], 0, self.counts.shape[0],
-            num_compute, self.progress.progress
-            )
+        self.num_compute = buckets[0]
+
+        # File a work queue with the tiles to compute
+        self.tiles = Queue.Queue(0)
+        n = 4
+        xcuts = self.cuts(0, self.counts.shape[1], n)
+        ycuts = self.cuts(0, self.counts.shape[0], n)
+        for i in range(n):
+            for j in range(n):
+                self.tiles.put((xcuts[i], xcuts[i+1], ycuts[j], ycuts[j+1]))
+
+        # Start the threads going.
+        for i in range(2):
+            t = threading.Thread(target=self.worker)
+            t.setDaemon(True)
+            t.start()
+
+        self.tiles.join()
+
+        # Clean up
         self.progress.end()
         self._record_old_geometry()
         self.pixels_computed = True
         # Once compute_array is done, the status array is all 2's, so there's no
         # point in keeping it around.
         self.status = None
-        
+
+    def cuts(self, lo, hi, n):
+        """Return a list of n+1 evenly spaced numbers between `lo` and `hi`."""
+        return [int(round(lo+float(i)*(hi-lo)/n)) for i in range(n+1)]
+
+    def worker(self):
+        while True:
+            try:
+                xmin, xmax, ymin, ymax = self.tiles.get(False)
+                print "got tile: ", xmin, xmax, ymin, ymax
+            except Queue.Empty:
+                # Nothing left to do, time to die
+                break
+                
+            self.eng.compute_array(
+                self.counts, self.status,
+                xmin, xmax, ymin, ymax,
+                self.num_compute, lambda x,y:0#self.progress.progress
+                )
+            self.tiles.task_done()
+
+
     # Information methods
     
     def coords_from_pixel(self, x, y):
