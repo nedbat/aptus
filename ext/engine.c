@@ -442,7 +442,8 @@ compute_array(AptEngine *self, PyObject *args)
     pt * points = NULL;
     
     int ok = 0;
-    
+    int ret;
+
     if (!PyArg_ParseTuple(args, "O!O!iiiiiO:compute_array",
             &PyArray_Type, &counts, &PyArray_Type, &status,
             &xmin, &xmax, &ymin, &ymax,
@@ -454,6 +455,8 @@ compute_array(AptEngine *self, PyObject *args)
         PyErr_SetString(PyExc_TypeError, "progress must be callable");
         goto done;
     }
+
+    PyThreadState *_save = PyEval_SaveThread();
 
     int num_pixels = 0;
     
@@ -694,7 +697,10 @@ compute_array(AptEngine *self, PyObject *args)
                         if (ptsstored > (xmax-xmin)) {
                             if (self->stats.totaliter - last_progress > MIN_PROGRESS) {
                                 sprintf(info, "trace %d * %d, totaliter %s", c, ptsstored, human_u8int(self->stats.totaliter, uinfo));
-                                if (!call_progress(self, progress, ((double)num_pixels)/num_compute, info)) {
+                                PyEval_RestoreThread(_save);
+                                ret = call_progress(self, progress, ((double)num_pixels)/num_compute, info);
+                                _save = PyEval_SaveThread();
+                                if (!ret) {
                                     goto done;
                                 }
                                 last_progress = self->stats.totaliter;
@@ -714,7 +720,10 @@ compute_array(AptEngine *self, PyObject *args)
         // At the end of the scan line, call progress if we've made enough progress
         if (self->stats.totaliter - last_progress > MIN_PROGRESS) {
             sprintf(info, "scan %d, totaliter %s", yi+1, human_u8int(self->stats.totaliter, uinfo));
-            if (!call_progress(self, progress, ((double)num_pixels)/num_compute, info)) {
+            PyEval_RestoreThread(_save);
+            ret = call_progress(self, progress, ((double)num_pixels)/num_compute, info);
+            _save = PyEval_SaveThread();
+            if (!ret) {
                 goto done;
             }
             last_progress = self->stats.totaliter;
@@ -738,7 +747,9 @@ done:
     if (points != NULL) {
         free(points);
     }
-    
+
+    PyEval_RestoreThread(_save);
+
     return ok ? Py_BuildValue("") : NULL;
 }
 
