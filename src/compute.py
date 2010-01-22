@@ -287,7 +287,6 @@ class AptusCompute:
         while True:
             try:
                 xmin, xmax, ymin, ymax = self.tiles.get(False)
-                print "got tile: ", xmin, xmax, ymin, ymax
             except Queue.Empty:
                 # Nothing left to do, time to die
                 break

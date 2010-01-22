@@ -512,6 +512,7 @@ compute_array(AptEngine *self, PyObject *args)
     // checking the bailout condition.
     int miniteredge = INT_MAX;
     if (self->trace_boundary) {
+        // Calc the left and right edges
         for (yi = ymin; yi < ymax; yi++) {
             CALC_POINT(xmin, yi);
             if (c < miniteredge) {
@@ -522,6 +523,7 @@ compute_array(AptEngine *self, PyObject *args)
                 miniteredge = c;
             }
         }
+        // Calc the top and bottom edges
         for (xi = xmin+1; xi < xmax-1; xi++) {
             CALC_POINT(xi, ymin);
             if (c < miniteredge) {
