@@ -112,7 +112,7 @@ class ComputePanel(wx.Panel):
     def get_stats(self):
         """ Return a dictionary full of statistics about the latest computation.
         """
-        return self.compute.eng.get_stats()
+        return self.compute.stats
 
     def get_point_info(self, pt):
         """ Return a dictionary of information about the specified point (in client pixels).

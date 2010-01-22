@@ -14,7 +14,7 @@ AptEngine = importer('AptEngine')
 
 numpy = importer('numpy')
 
-import copy, math, Queue, threading
+import copy, math, Queue, sys, threading
 
 
 class AptusCompute:
@@ -247,7 +247,9 @@ class AptusCompute:
                 self.eng.ri0, self.pixsize, self.angle, self.eng.iter_limit, self.ssize
                 )
             print "center %r, diam %r" % (self.center, self.diam)
-        self.eng.clear_stats()
+    
+        self.stats = ComputeStats()
+
         self.progress.begin()
         # Figure out how many pixels have to be computed: make a histogram of
         # the three buckets of values: 0,1,2.
@@ -291,11 +293,13 @@ class AptusCompute:
                 # Nothing left to do, time to die
                 break
                 
-            self.eng.compute_array(
+            stats = self.eng.compute_array(
                 self.counts, self.status,
                 xmin, xmax, ymin, ymax,
                 self.num_compute, lambda x,y:0#self.progress.progress
                 )
+
+            self.stats += stats
             self.tiles.task_done()
 
 
@@ -335,5 +339,41 @@ class AptusCompute:
         info = PngImagePlugin.PngInfo()
         info.add_text("Software", "Aptus %s" % __version__)
         info.add_text("Aptus State", aptst.write_string())
-        info.add_text("Aptus Stats", dumps(self.eng.get_stats()))
+        info.add_text("Aptus Stats", dumps(self.stats))
         im.save(fpath, 'PNG', pnginfo=info)
+
+
+class ComputeStats(dict):
+    """Collected statistics about the computation."""
+    
+    # This statmap is also used by gui.StatsPanel
+    statmap = [
+        { 'label': 'Min iteration', 'key': 'miniter', 'sum': min },
+        { 'label': 'Max iteration', 'key': 'maxiter', 'sum': max },
+        { 'label': 'Total iterations', 'key': 'totaliter', 'sum': sum },
+        { 'label': 'Total cycles', 'key': 'totalcycles', 'sum': sum },
+        { 'label': 'Shortest cycle', 'key': 'minitercycle', 'sum': min },
+        { 'label': 'Longest cycle', 'key': 'maxitercycle', 'sum': max },
+        { 'label': 'Maxed points', 'key': 'maxedpoints', 'sum': sum },
+        { 'label': 'Computed points', 'key': 'computedpoints', 'sum': sum },
+        { 'label': 'Boundaries traced', 'key': 'boundaries', 'sum': sum },
+        { 'label': 'Boundaries filled', 'key': 'boundariesfilled', 'sum': sum },
+        { 'label': 'Longest boundary', 'key': 'longestboundary', 'sum': max },
+        { 'label': 'Largest fill', 'key': 'largestfilled', 'sum': max },
+        { 'label': 'Min edge iter', 'key': 'miniteredge', 'sum': min },
+        ]
+        
+    def __init__(self):
+        for stat in self.statmap:
+            k = stat['key']
+            if stat['sum'] == min:
+                self[k] = sys.maxint
+            else:
+                self[k] = 0
+
+    def __iadd__(self, other):
+        """Accumulate a dict of stats to ourselves."""
+        for stat in self.statmap:
+            k = stat['key']
+            self[k] = stat['sum']([self[k], other[k]])
+        return self

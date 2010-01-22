@@ -35,6 +35,72 @@ typedef npy_uint64 u8int;
 #define unlikely(x)     (x)
 #endif
 
+// Statistics about the computation (not exposed as a Python type).
+typedef struct {
+    int     maxiter;            // Max iteration that isn't in the set.
+    u8int   totaliter;          // Total number of iterations.
+    u4int   totalcycles;        // Number of cycles detected.
+    u4int   minitercycle;       // Min iteration that was a cycle.
+    u4int   maxitercycle;       // Max iteration that was finally a cycle.
+    int     miniter;            // Minimum iteration count.
+    int     miniteredge;        // Minimum iteration count on the edge.
+    u4int   maxedpoints;        // Number of points that exceeded the maxiter.
+    u4int   computedpoints;     // Number of points that were actually computed.
+    u4int   boundaries;         // Number of boundaries traced.
+    u4int   boundariesfilled;   // Number of boundaries filled.
+    u4int   longestboundary;    // Most points in a traced boundary.
+    u4int   largestfilled;      // Most pixels filled in a boundary.
+} ComputeStats;
+
+void
+ComputeStats_clear(ComputeStats *stats)
+{
+    stats->maxiter = 0;
+    stats->totaliter = 0;
+    stats->totalcycles = 0;
+    stats->minitercycle = INT_MAX;
+    stats->maxitercycle = 0;
+    stats->miniter = INT_MAX;
+    stats->miniteredge = 0;
+    stats->maxedpoints = 0;
+    stats->computedpoints = 0;
+    stats->boundaries = 0;
+    stats->boundariesfilled = 0;
+    stats->longestboundary = 0;
+    stats->largestfilled = 0;
+}
+
+// Create a Python dictionary from a ComputeStats
+
+static PyObject *
+ComputeStats_AsDict(ComputeStats *stats)
+{
+    // Clean up sentinel values for the min stats.
+    if (stats->miniter == INT_MAX) {
+        stats->miniter = 0;
+    }
+    if (stats->minitercycle == MAX_U4INT) {
+        stats->minitercycle = 0;
+    }
+    
+    return Py_BuildValue(
+        "{si,sK,sI,sI,sI,si,si,sI,sI,sI,sI,sI,sI}",
+        "maxiter", stats->maxiter,
+        "totaliter", stats->totaliter,
+        "totalcycles", stats->totalcycles,
+        "minitercycle", stats->minitercycle,
+        "maxitercycle", stats->maxitercycle,
+        "miniter", stats->miniter,
+        "miniteredge", stats->miniteredge,
+        "maxedpoints", stats->maxedpoints,
+        "computedpoints", stats->computedpoints,
+        "boundaries", stats->boundaries,
+        "boundariesfilled", stats->boundariesfilled,
+        "longestboundary", stats->longestboundary,
+        "largestfilled", stats->largestfilled
+        );
+}
+
 // The Engine type.
 
 typedef struct {
@@ -60,26 +126,9 @@ typedef struct {
         int     factor;         // to get a new period, multiply by this,
         int     delta;          //  .. and add this.
     } cycle_params;
-    
-    // Statistics about the computation.
-    struct {
-        int     maxiter;        // Max iteration that isn't in the set.
-        u8int   totaliter;      // Total number of iterations.
-        u4int   totalcycles;    // Number of cycles detected.
-        u4int   minitercycle;   // Min iteration that was a cycle.
-        u4int   maxitercycle;   // Max iteration that was finally a cycle.
-        int     miniter;        // Minimum iteration count.
-        int     miniteredge;    // Minimum iteration count on the edge.
-        u4int   maxedpoints;    // Number of points that exceeded the maxiter.
-        u4int   computedpoints; // Number of points that were actually computed.
-        u4int   boundaries;     // Number of boundaries traced.
-        u4int   boundariesfilled; // Number of boundaries filled.
-        u4int   longestboundary; // Most points in a traced boundary.
-        u4int   largestfilled;  // Most pixels filled in a boundary.
-    } stats;
-
 } AptEngine;
 
+    
 // Class methods
 
 static int
@@ -241,7 +290,7 @@ fequal(AptEngine *self, aptfloat a, aptfloat b)
 // scaled up (a fixed-point number essentially).
 
 static int
-compute_count(AptEngine *self, int xi, int yi)
+compute_count(AptEngine *self, int xi, int yi, ComputeStats *stats)
 {
     int count = 0;
 
@@ -285,15 +334,15 @@ compute_count(AptEngine *self, int xi, int yi)
     znew.r = z2.r - z2.i + c.r;             \
     znew.i = 2 * z.i * z.r + c.i;           \
     z = znew;                               \
-    STATS_CODE(self->stats.totaliter++;)
+    STATS_CODE(stats->totaliter++;)
 
     // First phase of iterations: quickly iterate up to the minimum iteration
     // count.
-    register int miniter = self->stats.miniteredge;
+    register int miniter = stats->miniteredge;
     while (likely(miniter-- > 0)) {
         ITER1; ITER2;
     }
-    count = self->stats.miniteredge;
+    count = stats->miniteredge;
     
     // Second phase: iterate more carefully, looking for bailout, cycles, etc.
     while (likely(count <= self->iter_limit)) {
@@ -301,11 +350,11 @@ compute_count(AptEngine *self, int xi, int yi)
         if (unlikely(z2.r + z2.i > bail2)) {
             // The point has escaped the bailout.  Update the stats and bail out.
             STATS_CODE(
-            if (unlikely(count > self->stats.maxiter)) {
-                self->stats.maxiter = count;
+            if (unlikely(count > stats->maxiter)) {
+                stats->maxiter = count;
             }
-            if (unlikely(count < self->stats.miniter)) {
-                self->stats.miniter = count;
+            if (unlikely(count < stats->miniter)) {
+                stats->miniter = count;
             }
             )
             break;
@@ -317,12 +366,12 @@ compute_count(AptEngine *self, int xi, int yi)
             if (unlikely(fequal(self, z.r, cycle_check.r) && fequal(self, z.i, cycle_check.i))) {
                 // We're in a cycle! Update stats, and end the iterations.
                 STATS_CODE(
-                self->stats.totalcycles++;
-                if (unlikely(count > self->stats.maxitercycle)) {
-                    self->stats.maxitercycle = count;
+                stats->totalcycles++;
+                if (unlikely(count > stats->maxitercycle)) {
+                    stats->maxitercycle = count;
                 }
-                if (unlikely(count < self->stats.minitercycle)) {
-                    self->stats.minitercycle = count;
+                if (unlikely(count < stats->minitercycle)) {
+                    stats->minitercycle = count;
                 }
                 )
                 // A cycle means we're inside the set (count of 0).
@@ -346,7 +395,7 @@ compute_count(AptEngine *self, int xi, int yi)
 
     // Counts above the iteration limit are colored as if they were in the set.
     if (unlikely(count > self->iter_limit)) {
-        STATS_CODE(self->stats.maxedpoints++;)
+        STATS_CODE(stats->maxedpoints++;)
         count = 0;
     }
     
@@ -371,7 +420,7 @@ compute_count(AptEngine *self, int xi, int yi)
         count = fcount * self->cont_levels;
     }
     
-    STATS_CODE(self->stats.computedpoints++;)
+    STATS_CODE(stats->computedpoints++;)
     
     return count;
 }
@@ -459,7 +508,9 @@ compute_array(AptEngine *self, PyObject *args)
     PyThreadState *_save = PyEval_SaveThread();
 
     int num_pixels = 0;
-    
+    ComputeStats stats;
+    ComputeStats_clear(&stats);
+
     // points is an array of points on a boundary.
     int ptsalloced = 10000;
     points = malloc(sizeof(pt)*ptsalloced);
@@ -473,14 +524,6 @@ compute_array(AptEngine *self, PyObject *args)
     const int MIN_PROGRESS = 1000000;  // Don't call progress unless we've done this many iters.
     )
 
-    // Set convenient sentinel values for the min stats.
-    if (self->stats.miniter == 0) {
-        self->stats.miniter = INT_MAX;
-    }
-    if (self->stats.minitercycle == 0) {
-        self->stats.minitercycle = MAX_U4INT;
-    }
-    
 #define STATUS(x,y) *(npy_uint8 *)PyArray_GETPTR2(status, (y), (x))
 #define COUNTS(x,y) *(npy_uint32 *)PyArray_GETPTR2(counts, (y), (x))
 #define DIR_DOWN    0
@@ -496,7 +539,7 @@ compute_array(AptEngine *self, PyObject *args)
 #define CALC_POINT(xi, yi)                          \
         s = STATUS(xi, yi);                         \
         if (s == 0) {                               \
-            c = compute_count(self, xi, yi);        \
+            c = compute_count(self, xi, yi, &stats);\
             COUNTS(xi, yi) = c;                     \
             num_pixels++;                           \
             STATUS(xi, yi) = s = 1;                 \
@@ -534,10 +577,10 @@ compute_array(AptEngine *self, PyObject *args)
                 miniteredge = c;
             }
         }
-        self->stats.miniteredge = miniteredge / self->cont_levels;
+        stats.miniteredge = miniteredge / self->cont_levels;
     }
     else {
-        self->stats.miniteredge = 0;
+        stats.miniteredge = 0;
     }
 
     // Loop the pixels in the array.
@@ -546,7 +589,7 @@ compute_array(AptEngine *self, PyObject *args)
             // Examine the current pixel.
             s = STATUS(xi, yi);
             if (s == 0) {
-                c = compute_count(self, xi, yi);
+                c = compute_count(self, xi, yi, &stats);
                 COUNTS(xi, yi) = c;
                 num_pixels++;
                 STATUS(xi, yi) = s = 1;
@@ -616,7 +659,7 @@ compute_array(AptEngine *self, PyObject *args)
                     // Get the count of the next position.
                     int c2;
                     if (STATUS(curx, cury) == 0) {
-                        c2 = compute_count(self, curx, cury);
+                        c2 = compute_count(self, curx, cury, &stats);
                         COUNTS(curx, cury) = c2;
                         num_pixels++;
                         STATUS(curx, cury) = 1;
@@ -658,9 +701,9 @@ compute_array(AptEngine *self, PyObject *args)
                 } // end for boundary points
                 
                 STATS_CODE(
-                self->stats.boundaries++;
-                if (ptsstored > self->stats.longestboundary) {
-                    self->stats.longestboundary = ptsstored;
+                stats.boundaries++;
+                if (ptsstored > stats.longestboundary) {
+                    stats.longestboundary = ptsstored;
                 }
                 )
                 
@@ -693,24 +736,24 @@ compute_array(AptEngine *self, PyObject *args)
                 
                     STATS_CODE(    
                     if (num_filled > 0) {
-                        self->stats.boundariesfilled++;
+                        stats.boundariesfilled++;
 
                         // If this was a large boundary, call the progress function.
                         if (ptsstored > (xmax-xmin)) {
-                            if (self->stats.totaliter - last_progress > MIN_PROGRESS) {
-                                sprintf(info, "trace %d * %d, totaliter %s", c, ptsstored, human_u8int(self->stats.totaliter, uinfo));
+                            if (stats.totaliter - last_progress > MIN_PROGRESS) {
+                                sprintf(info, "trace %d * %d, totaliter %s", c, ptsstored, human_u8int(stats.totaliter, uinfo));
                                 PyEval_RestoreThread(_save);
                                 ret = call_progress(self, progress, ((double)num_pixels)/num_compute, info);
                                 _save = PyEval_SaveThread();
                                 if (!ret) {
                                     goto done;
                                 }
-                                last_progress = self->stats.totaliter;
+                                last_progress = stats.totaliter;
                             }
                         }
                         
-                        if (num_filled > self->stats.largestfilled) {
-                            self->stats.largestfilled = num_filled;
+                        if (num_filled > stats.largestfilled) {
+                            stats.largestfilled = num_filled;
                         }
                     }
                     )
@@ -720,15 +763,15 @@ compute_array(AptEngine *self, PyObject *args)
 
         STATS_CODE(
         // At the end of the scan line, call progress if we've made enough progress
-        if (self->stats.totaliter - last_progress > MIN_PROGRESS) {
-            sprintf(info, "scan %d, totaliter %s", yi+1, human_u8int(self->stats.totaliter, uinfo));
+        if (stats.totaliter - last_progress > MIN_PROGRESS) {
+            sprintf(info, "scan %d, totaliter %s", yi+1, human_u8int(stats.totaliter, uinfo));
             PyEval_RestoreThread(_save);
             ret = call_progress(self, progress, ((double)num_pixels)/num_compute, info);
             _save = PyEval_SaveThread();
             if (!ret) {
                 goto done;
             }
-            last_progress = self->stats.totaliter;
+            last_progress = stats.totaliter;
         }
         )
     } // end for yi
@@ -737,14 +780,6 @@ compute_array(AptEngine *self, PyObject *args)
     ok = 1;
     
 done:
-    // Clean up sentinel values for the min stats.
-    if (self->stats.miniter == INT_MAX) {
-        self->stats.miniter = 0;
-    }
-    if (self->stats.minitercycle == MAX_U4INT) {
-        self->stats.minitercycle = 0;
-    }
-    
     // Free allocated memory.
     if (points != NULL) {
         free(points);
@@ -752,7 +787,7 @@ done:
 
     PyEval_RestoreThread(_save);
 
-    return ok ? Py_BuildValue("") : NULL;
+    return ok ? ComputeStats_AsDict(&stats) : NULL;
 }
 
 // apply_palette
@@ -880,55 +915,6 @@ done:
     return ok ? Py_BuildValue("") : NULL;
 }
 
-// clear_stats
-
-static char clear_stats_doc[] = "Clear the statistic counters";
-
-static PyObject *
-clear_stats(AptEngine *self)
-{
-    self->stats.maxiter = 0;
-    self->stats.totaliter = 0;
-    self->stats.totalcycles = 0;
-    self->stats.minitercycle = 0;
-    self->stats.maxitercycle = 0;
-    self->stats.miniter = 0;
-    self->stats.miniteredge = 0;
-    self->stats.maxedpoints = 0;
-    self->stats.computedpoints = 0;
-    self->stats.boundaries = 0;
-    self->stats.boundariesfilled = 0;
-    self->stats.longestboundary = 0;
-    self->stats.largestfilled = 0;
-
-    return Py_BuildValue("");
-}
-
-// get_stats
-
-static char get_stats_doc[] = "Get the statistics as a dictionary";
-
-static PyObject *
-get_stats(AptEngine *self)
-{
-    return Py_BuildValue(
-        "{si,sK,sI,sI,sI,si,si,sI,sI,sI,sI,sI,sI}",
-        "maxiter", self->stats.maxiter,
-        "totaliter", self->stats.totaliter,
-        "totalcycles", self->stats.totalcycles,
-        "minitercycle", self->stats.minitercycle,
-        "maxitercycle", self->stats.maxitercycle,
-        "miniter", self->stats.miniter,
-        "miniteredge", self->stats.miniteredge,
-        "maxedpoints", self->stats.maxedpoints,
-        "computedpoints", self->stats.computedpoints,
-        "boundaries", self->stats.boundaries,
-        "boundariesfilled", self->stats.boundariesfilled,
-        "longestboundary", self->stats.longestboundary,
-        "largestfilled", self->stats.largestfilled
-        );
-}
-
 // type_check
 
 static char type_check_doc[] = "Try out types in the C extension";
@@ -979,8 +965,6 @@ static PyMethodDef
 AptEngine_methods[] = {
     { "compute_array",      (PyCFunction) compute_array,    METH_VARARGS, compute_array_doc },
     { "apply_palette",      (PyCFunction) apply_palette,    METH_VARARGS, apply_palette_doc },
-    { "clear_stats",        (PyCFunction) clear_stats,      METH_NOARGS,  clear_stats_doc },
-    { "get_stats",          (PyCFunction) get_stats,        METH_NOARGS,  get_stats_doc },
     { NULL }
 };
 
