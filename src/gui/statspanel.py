@@ -1,6 +1,7 @@
 """ A panel to display computation statistics.
 """
 
+from aptus.compute import ComputeStats
 from aptus.importer import importer
 from aptus.gui.ids import *
 from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
@@ -17,27 +18,11 @@ class StatsPanel(DictPanel, ListeningWindowMixin):
         recomputations, and updates automatically.
     """
     
-    statmap = [
-        { 'label': 'Min iteration', 'key': 'miniter', },
-        { 'label': 'Max iteration', 'key': 'maxiter', },
-        { 'label': 'Total iterations', 'key': 'totaliter', },
-        { 'label': 'Total cycles', 'key': 'totalcycles', },
-        { 'label': 'Shortest cycle', 'key': 'minitercycle', },
-        { 'label': 'Longest cycle', 'key': 'maxitercycle', },
-        { 'label': 'Maxed points', 'key': 'maxedpoints', },
-        { 'label': 'Computed points', 'key': 'computedpoints', },
-        { 'label': 'Boundaries traced', 'key': 'boundaries', },
-        { 'label': 'Boundaries filled', 'key': 'boundariesfilled', },
-        { 'label': 'Longest boundary', 'key': 'longestboundary', },
-        { 'label': 'Largest fill', 'key': 'largestfilled', },
-        { 'label': 'Min edge iter', 'key': 'miniteredge', },
-        ]
-        
     def __init__(self, parent, viewwin):
         """ Create a StatsPanel, with `parent` as its parent, and `viewwin` as
             the window to track.
         """
-        DictPanel.__init__(self, parent, self.statmap)
+        DictPanel.__init__(self, parent, ComputeStats.statmap)
         ListeningWindowMixin.__init__(self)
         
         self.viewwin = viewwin

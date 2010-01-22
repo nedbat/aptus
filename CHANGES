@@ -1,5 +1,8 @@
+------------
 Next release
 ------------
+
+* Multi-threaded.
 
 * Added full-screen mode.  'f' toggles between full-screen and windowed.
 
@@ -7,9 +10,9 @@ Next release
   or 's/2' for half the screen size.
 
 
-------------------------------
+-----------------------
 Aptus 2.0, October 2008
-------------------------------
+-----------------------
 
 * Multiple top-level exploration windows.  Use 'n' to make a new window.
 

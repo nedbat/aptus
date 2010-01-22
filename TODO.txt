@@ -54,7 +54,7 @@
 
 * Speed
 
-- Multi-threaded to use more than one core.
++ Multi-threaded to use more than one core.
 - Faster epsilon comparison for cycle checking (use tricky int operations...)
     - http://www.cygnus-software.com/papers/comparingfloats/comparingfloats.htm
     - http://lomont.org/Math/Papers/2005/CompareFloat.pdf
