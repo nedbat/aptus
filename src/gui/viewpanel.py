@@ -29,9 +29,10 @@ class GuiProgressReporter:
         wx.BeginBusyCursor()
         
     def progress(self, frac_done_unused, info_unused=''):
-        self.aptview.draw_progress()
-        # Yield so that repaints of the screen will happen.
-        wx.SafeYield()
+        if 1:   # TODO
+            self.aptview.draw_progress()
+            # Yield so that repaints of the screen will happen.
+            wx.SafeYield()
 
     def end(self):
         wx.EndBusyCursor()
