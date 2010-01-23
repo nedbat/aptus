@@ -799,6 +799,8 @@ apply_palette(AptEngine *self, PyObject *args)
 {
     // Arguments to the function.
     PyArrayObject *counts;
+    PyObject * status_obj;
+    PyArrayObject *status;
     PyObject * colbytes_obj;
     PyObject * incolor_obj;
     PyArrayObject *pix;
@@ -810,10 +812,17 @@ apply_palette(AptEngine *self, PyObject *args)
     PyObject * pint = NULL;
     int ok = 0;
     
-    if (!PyArg_ParseTuple(args, "O!OidOiO!:apply_palette", &PyArray_Type, &counts, &colbytes_obj, &phase, &scale, &incolor_obj, &wrap, &PyArray_Type, &pix)) {
+    if (!PyArg_ParseTuple(args, "O!OOidOiO!:apply_palette", &PyArray_Type, &counts, &status_obj, &colbytes_obj, &phase, &scale, &incolor_obj, &wrap, &PyArray_Type, &pix)) {
         goto done;
     }
     
+    if (status_obj != Py_None) {
+        status = (PyArrayObject*)status_obj;
+    }
+    else {
+        status = NULL;
+    }
+
     // Unpack the palette a bit.
     u1int * colbytes;
     Py_ssize_t ncolbytes;
@@ -830,6 +839,9 @@ apply_palette(AptEngine *self, PyObject *args)
         Py_CLEAR(pint);
     }
     
+    u1int no_color[2][3] = { { 0x99, 0x99, 0x99 }, { 0xAA, 0xAA, 0xAA } };
+    const int no_sq = 15;
+
     // A one-element cache of count and color.
     npy_uint8 *plastpix = NULL;
     npy_uint32 lastc = (*(npy_uint32 *)PyArray_GETPTR2(counts, 0, 0))+1;    // Something different than the first value.
@@ -861,46 +873,53 @@ apply_palette(AptEngine *self, PyObject *args)
         npy_uint8 *ppix = (npy_uint8 *)PyArray_GETPTR3(pix, y, 0, 0);
 
         for (x = 0; x < w; x++) {
-            npy_uint32 c = *(npy_uint32*)pcount;
-            if (c == lastc) {
-                // A hit on the one-element cache. Copy the old value.
-                memcpy(ppix, plastpix, 3);
+            if (status && STATUS(x, y) == 0) {
+                // No color at all, uncomputed pixel.
+                int parity = ((x / no_sq) + (y / no_sq)) % 2;
+                memcpy(ppix, no_color[parity], 3);
             }
             else {
-                if (c > 0) {
-                    // The pixel is outside the set, color it with the palette.
-                    if (self->blend_colors == 1) {
-                        // Not blending colors, each count is a literal palette
-                        // index.
-                        int cindex = c + phase;
-                        WRAP_COLOR(cindex)
-                        memcpy(ppix, (colbytes + cindex*3), 3);
-                    }
-                    else {
-                        double cf = c * scale / self->blend_colors;
-                        int cbase = cf;
-                        float cfrac = cf - cbase;
-                        int c1index = cbase + phase;
-                        int c2index = cbase + 1 + phase;
-                        WRAP_COLOR(c1index)
-                        WRAP_COLOR(c2index)
-                        for (i = 0; i < 3; i++) {
-                            float col1 = colbytes[c1index*3+i];
-                            float col2 = colbytes[c2index*3+i];
-                            ppix[i] = (int)(col1 + (col2-col1)*cfrac);
-                        }
-                    }
+                npy_uint32 c = *(npy_uint32*)pcount;
+                if (c == lastc) {
+                    // A hit on the one-element cache. Copy the old value.
+                    memcpy(ppix, plastpix, 3);
                 }
                 else {
-                    // The pixel is in the set, color it with the incolor.
-                    memcpy(ppix, incolbytes, 3);
+                    if (c > 0) {
+                        // The pixel is outside the set, color it with the palette.
+                        if (self->blend_colors == 1) {
+                            // Not blending colors, each count is a literal palette
+                            // index.
+                            int cindex = c + phase;
+                            WRAP_COLOR(cindex)
+                            memcpy(ppix, (colbytes + cindex*3), 3);
+                        }
+                        else {
+                            double cf = c * scale / self->blend_colors;
+                            int cbase = cf;
+                            float cfrac = cf - cbase;
+                            int c1index = cbase + phase;
+                            int c2index = cbase + 1 + phase;
+                            WRAP_COLOR(c1index)
+                            WRAP_COLOR(c2index)
+                            for (i = 0; i < 3; i++) {
+                                float col1 = colbytes[c1index*3+i];
+                                float col2 = colbytes[c2index*3+i];
+                                ppix[i] = (int)(col1 + (col2-col1)*cfrac);
+                            }
+                        }
+                    }
+                    else {
+                        // The pixel is in the set, color it with the incolor.
+                        memcpy(ppix, incolbytes, 3);
+                    }
+                    
+                    // Save this value in our one-element cache.
+                    lastc = c;
+                    plastpix = ppix;
                 }
-                
-                // Save this value in our one-element cache.
-                lastc = c;
-                plastpix = ppix;
             }
-            
+
             // Advance to the next pixel.
             pcount += count_stride;
             ppix += pix_stride;

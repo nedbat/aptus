@@ -233,7 +233,7 @@ class AptusCompute:
         if self.palette.wrap:
             phase %= len(color_bytes)
         self.eng.apply_palette(
-            self.counts, color_bytes, phase, self.palette_scale,
+            self.counts, self.status, color_bytes, phase, self.palette_scale,
             self.palette.incolor, self.palette.wrap, self.pix
             )
         return self.pix
@@ -256,22 +256,25 @@ class AptusCompute:
         buckets, _ = numpy.histogram(self.status, 3, (0, 2))
         self.num_compute = buckets[0]
 
-        # File a work queue with the tiles to compute
-        self.tiles = Queue.Queue(0)
-        n = 4
-        xcuts = self.cuts(0, self.counts.shape[1], n)
-        ycuts = self.cuts(0, self.counts.shape[0], n)
-        for i in range(n):
-            for j in range(n):
-                self.tiles.put((xcuts[i], xcuts[i+1], ycuts[j], ycuts[j+1]))
-
-        # Start the threads going.
-        for i in range(2):
-            t = threading.Thread(target=self.worker)
-            t.setDaemon(True)
-            t.start()
-
-        self.tiles.join()
+        if 0:   # TODO
+            # File a work queue with the tiles to compute
+            self.tiles = Queue.Queue(0)
+            n = 4
+            xcuts = self.cuts(0, self.counts.shape[1], n)
+            ycuts = self.cuts(0, self.counts.shape[0], n)
+            for i in range(n):
+                for j in range(n):
+                    self.tiles.put((xcuts[i], xcuts[i+1], ycuts[j], ycuts[j+1]))
+    
+            # Start the threads going.
+            for i in range(2):
+                t = threading.Thread(target=self.worker)
+                t.setDaemon(True)
+                t.start()
+    
+            self.tiles.join()
+        else:
+            self.compute_some((0, self.counts.shape[1], 0, self.counts.shape[0]))
 
         # Clean up
         self.progress.end()
@@ -288,19 +291,22 @@ class AptusCompute:
     def worker(self):
         while True:
             try:
-                xmin, xmax, ymin, ymax = self.tiles.get(False)
+                coords = self.tiles.get(False)
             except Queue.Empty:
                 # Nothing left to do, time to die
                 break
-                
-            stats = self.eng.compute_array(
-                self.counts, self.status,
-                xmin, xmax, ymin, ymax,
-                self.num_compute, lambda x,y:0#self.progress.progress
-                )
 
-            self.stats += stats
+            self.compute_some(coords)
             self.tiles.task_done()
+
+    def compute_some(self, coords):
+        xmin, xmax, ymin, ymax = coords
+        stats = self.eng.compute_array(
+            self.counts, self.status,
+            xmin, xmax, ymin, ymax,
+            self.num_compute, self.progress.progress
+            )
+        self.stats += stats
 
 
     # Information methods
