@@ -9,6 +9,8 @@ Next release
 * Window size can be set interactively with the 'w' key.  Enter an explicit size,
   or 's/2' for half the screen size.
 
+* Un-computed pixels are shown as gray checkerboard.
+
 
 -----------------------
 Aptus 2.0, October 2008
