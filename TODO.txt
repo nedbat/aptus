@@ -18,7 +18,7 @@
 - Multi-threading
     - Fix progress reporting: compute_array thinks it knows the total pixels.
     + Switching away from window in progress then switching back doesn't show updates.
-    - Update stats window as drawing progresses?
+    + Update stats window as drawing progresses.
 
 - Decide on re-entrancy, keep things from getting tangled up.
 - Combine pointinfo and stats panel, and add more info to it.

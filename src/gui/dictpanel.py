@@ -40,6 +40,8 @@ class DictPanel(wx.Panel):
                 s = locale.format(keyd.get('fmt', "%d"), val, grouping=True)
             elif isinstance(val, float):
                 s = locale.format(keyd.get('fmt', "%.10e"), val, grouping=True)
+            elif val is None:
+                s = u"\u2014"   # emdash
             else:
                 s = str(val)
             valwin.SetLabel(s)

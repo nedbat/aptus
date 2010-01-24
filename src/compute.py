@@ -385,15 +385,14 @@ class ComputeStats(dict):
         
     def __init__(self):
         for stat in self.statmap:
-            k = stat['key']
-            if stat['sum'] == min:
-                self[k] = sys.maxint
-            else:
-                self[k] = 0
+            self[stat['key']] = None
 
     def __iadd__(self, other):
         """Accumulate a dict of stats to ourselves."""
         for stat in self.statmap:
             k = stat['key']
-            self[k] = stat['sum']([self[k], other[k]])
+            if self[k] is None:
+                self[k] = other[k]
+            else:
+                self[k] = stat['sum']([self[k], other[k]])
         return self
