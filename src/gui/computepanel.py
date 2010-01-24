@@ -177,6 +177,7 @@ class ComputePanel(wx.Panel):
         self.bitmap = self.bitmap_from_compute()
         self.Refresh()
         self.Update()
+        wx.CallAfter(self.fire_event, AptusRecomputedEvent)
         wx.SafeYield()
         
     def set_view(self):
