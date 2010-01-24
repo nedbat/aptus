@@ -115,7 +115,8 @@ class AptusCompute:
         self.eng.iter_limit = self.iter_limit
         self.eng.trace_boundary = 1
         self.progress = NullProgressReporter()
-    
+        self.while_waiting = None
+
         # Set bailout differently based on continuous or discrete coloring.
         if self.continuous:
             self.eng.bailout = 100.0
@@ -255,24 +256,38 @@ class AptusCompute:
         # the three buckets of values: 0,1,2.
         buckets, _ = numpy.histogram(self.status, 3, (0, 2))
         self.num_compute = buckets[0]
-
-        if 0:   # TODO
-            # File a work queue with the tiles to compute
+        self.num_threads = 2
+        
+        if self.num_threads:
+            # Fill a work queue with the tiles to compute
             self.tiles = Queue.Queue(0)
+            self.done = threading.Event()
             n = 4
             xcuts = self.cuts(0, self.counts.shape[1], n)
             ycuts = self.cuts(0, self.counts.shape[0], n)
             for i in range(n):
                 for j in range(n):
-                    self.tiles.put((xcuts[i], xcuts[i+1], ycuts[j], ycuts[j+1]))
+                    self.tiles.put((xcuts[j], xcuts[j+1], ycuts[i], ycuts[i+1]))
     
             # Start the threads going.
-            for i in range(2):
+            threads = []
+            for i in range(self.num_threads):
                 t = threading.Thread(target=self.worker)
                 t.setDaemon(True)
                 t.start()
-    
-            self.tiles.join()
+                threads.append(t)
+
+            # Wait for threads to finish.  We wait for the event that threads
+            # set when they finish, then look to see if all threads are done.
+            while True:
+                while not self.done.isSet():
+                    if self.while_waiting:
+                        self.while_waiting()
+                    self.done.wait(1)
+                if not any(t.isAlive() for t in threads):
+                    break
+                self.done.clear()
+
         else:
             self.compute_some((0, self.counts.shape[1], 0, self.counts.shape[0]))
 
@@ -294,10 +309,9 @@ class AptusCompute:
                 coords = self.tiles.get(False)
             except Queue.Empty:
                 # Nothing left to do, time to die
+                self.done.set()
                 break
-
             self.compute_some(coords)
-            self.tiles.task_done()
 
     def compute_some(self, coords):
         xmin, xmax, ymin, ymax = coords

@@ -15,6 +15,11 @@
 
 * V3
 
+- Multi-threading
+    - Fix progress reporting: compute_array thinks it knows the total pixels.
+    - Switching away from window in progress then switching back doesn't show updates.
+    - Update stats window as drawing progresses?
+
 - Decide on re-entrancy, keep things from getting tangled up.
 - Combine pointinfo and stats panel, and add more info to it.
 - Maybe a better way to manage all the little windows?
@@ -31,6 +36,7 @@
 
 * Bugs
 
+- Stats panel can show MAX_INT for min cycles if no cycles
 - Somehow I managed to zoom in then zoom out, and ended up outside the legal
     radius and the set disappeared.
 - Resizing a window larger, the background shows pixels left over from other windows?

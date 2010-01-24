@@ -158,13 +158,22 @@ class ComputePanel(wx.Panel):
     def draw_bitmap(self):
         """ Return a bitmap with the image to display in the window.
         """
+        wx.BeginBusyCursor()
         self.compute.progress = self.make_progress_reporter()
+        self.compute.while_waiting = self.draw_progress
         self.compute.compute_pixels()
         wx.CallAfter(self.fire_event, AptusRecomputedEvent)
         self.Refresh()
-        return self.bitmap_from_compute()
+        bitmap = self.bitmap_from_compute()
+        wx.EndBusyCursor()
+        return bitmap
 
     def draw_progress(self):
+        """ Called from the GUI thread periodically during computation.
+        
+        Repaints the window.
+        
+        """
         self.bitmap = self.bitmap_from_compute()
         self.Refresh()
         self.Update()
