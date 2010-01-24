@@ -58,7 +58,7 @@ ComputeStats_clear(ComputeStats *stats)
     stats->maxiter = 0;
     stats->totaliter = 0;
     stats->totalcycles = 0;
-    stats->minitercycle = INT_MAX;
+    stats->minitercycle = MAX_U4INT;
     stats->maxitercycle = 0;
     stats->miniter = INT_MAX;
     stats->miniteredge = 0;
