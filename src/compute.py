@@ -58,7 +58,7 @@ class AptusCompute:
         self.counts = None
         # status is a numpy array of 8bit ints that tracks the boundary trace
         # status of each pixel: 0 for not computed, 1 for computed but not traced,
-        # 2 for traced.
+        # 2 for tracing, and 3 for traced.
         self.status = None
         # An array for the output pixels.
         self.pix = None
@@ -170,12 +170,22 @@ class AptusCompute:
                     oldy, newy = 0, dy
                 else:
                     oldy, newy = -dy, 0
-                
+
                 # Copy the common rectangles.  Old_counts gets copied to counts,
-                # and status gets the common rectangle filled with 2's.
+                # and status gets the common rectangle filled with 3's.
                 self.counts[newy:newy+nr,newx:newx+nc] = old_counts[oldy:oldy+nr,oldx:oldx+nc]
-                self.status[newy:newy+nr,newx:newx+nc] = 1  # 2 == Fully computed and filled
-                
+                self.status[newy:newy+nr,newx:newx+nc] = 3  # 3 == Fully computed and filled
+        
+        if 0:
+            for y in range(self.ssize[1]):
+                l = ""
+                for x in range(self.ssize[0]):
+                    l += "%s%s" % (
+                        "_-=@"[self.status[y,x]],
+                        "0123456789"[self.counts[y,x]%10]
+                        )
+                print l
+
         self.pixels_computed = False
         self._clear_old_geometry()
     
@@ -253,11 +263,14 @@ class AptusCompute:
 
         self.progress.begin()
         # Figure out how many pixels have to be computed: make a histogram of
-        # the three buckets of values: 0,1,2.
-        buckets, _ = numpy.histogram(self.status, 3, (0, 2))
+        # the buckets of values: 0,1,2,3.
+        buckets, _ = numpy.histogram(self.status, 4, (0, 3))
         self.num_compute = buckets[0]
         self.num_threads = 2
-        
+        self.refresh_rate = .5
+
+        #self.eng.debug_callback = self.debug_callback
+
         if self.num_threads:
             # Fill a work queue with the tiles to compute
             self.tiles = Queue.Queue(0)
@@ -283,7 +296,7 @@ class AptusCompute:
                 while not self.done.isSet():
                     if self.while_waiting:
                         self.while_waiting()
-                    self.done.wait(.1)
+                    self.done.wait(self.refresh_rate)
                 if not any(t.isAlive() for t in threads):
                     break
                 self.done.clear()
@@ -295,7 +308,7 @@ class AptusCompute:
         self.progress.end()
         self._record_old_geometry()
         self.pixels_computed = True
-        # Once compute_array is done, the status array is all 2's, so there's no
+        # Once compute_array is done, the status array is all 3's, so there's no
         # point in keeping it around.
         self.status = None
 
@@ -322,6 +335,8 @@ class AptusCompute:
             )
         self.stats += stats
 
+    def debug_callback(self, info):
+        print info
 
     # Information methods
     
