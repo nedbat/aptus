@@ -1,5 +1,5 @@
 // The Aptus Engine C extension for computing Mandelbrot fractals.
-// copyright 2007-2008, Ned Batchelder
+// copyright 2007-2010, Ned Batchelder
 // http://nedbatchelder.com/code/aptus
 
 #include "Python.h"
@@ -129,6 +129,8 @@ typedef struct {
         int     factor;         // to get a new period, multiply by this,
         int     delta;          //  .. and add this.
     } cycle_params;
+    
+    PyObject * debug_callback;  // Maybe defined.
 } AptEngine;
 
     
@@ -157,6 +159,8 @@ AptEngine_init(AptEngine *self, PyObject *args, PyObject *kwds)
     self->cycle_params.tries = 10;
     self->cycle_params.factor = 2;
     self->cycle_params.delta = -1;
+
+    self->debug_callback = Py_BuildValue("");
 
     return 0;
 }
@@ -429,6 +433,7 @@ compute_count(AptEngine *self, int xi, int yi, ComputeStats *stats)
 }
 
 // Helper: call_progress
+
 STATS_DECL(
 static int
 call_progress(AptEngine *self, PyObject *progress, double frac_complete, char *info)
@@ -442,6 +447,22 @@ call_progress(AptEngine *self, PyObject *progress, double frac_complete, char *i
     return ok;
 }
 )
+
+// Helper: call the debug callback
+
+static int
+call_debug(AptEngine *self, char *info)
+{
+    int ok = 1;
+    if (self->debug_callback != Py_None) {
+        PyObject * result = PyObject_CallFunction(self->debug_callback, "s", info);
+        if (result == NULL) {
+            ok = 0;
+        }
+        Py_XDECREF(result);
+    }
+    return ok;
+}
 
 // Helper: display a really big number in a portable way
 
@@ -534,18 +555,38 @@ compute_array(AptEngine *self, PyObject *args)
 #define DIR_UP      2
 #define DIR_RIGHT   3
 
+#define STATUS_UNCOMPUTED 0
+#define STATUS_UNTRACED   1
+#define STATUS_TRACING    2
+#define STATUS_FILLED     3
+
     int xi, yi;
     u1int s;
     int c = 0;
+    int pi, ptx, pty;
     
+// A macro for the debug callback, usually not compiled in.
+#if 0
+#define CALL_DEBUG(info)                            \
+        PyEval_RestoreThread(_save);                \
+        ret = call_debug(self, info);               \
+        _save = PyEval_SaveThread();                \
+        if (!ret) {                                 \
+            goto done;                              \
+        }
+#else
+#define CALL_DEBUG(info)
+#endif
+
 // A macro to get s and c for a particular point.
 #define CALC_POINT(xi, yi)                          \
         s = STATUS(xi, yi);                         \
-        if (s == 0) {                               \
+        if (s == STATUS_UNCOMPUTED) {               \
             c = compute_count(self, xi, yi, &stats);\
             COUNTS(xi, yi) = c;                     \
             num_pixels++;                           \
-            STATUS(xi, yi) = s = 1;                 \
+            STATUS(xi, yi) = s = STATUS_UNTRACED;   \
+            CALL_DEBUG("point");                    \
         }                                           \
         else {                                      \
             c = COUNTS(xi, yi);                     \
@@ -591,25 +632,27 @@ compute_array(AptEngine *self, PyObject *args)
         for (xi = xmin; xi < xmax; xi++) {
             // Examine the current pixel.
             s = STATUS(xi, yi);
-            if (s == 0) {
+            if (s == STATUS_UNCOMPUTED) {
                 c = compute_count(self, xi, yi, &stats);
                 COUNTS(xi, yi) = c;
                 num_pixels++;
-                STATUS(xi, yi) = s = 1;
+                STATUS(xi, yi) = s = STATUS_UNTRACED;
+                CALL_DEBUG("point");
             }
-            else if (s == 1 && self->trace_boundary) {
+            else if (s == STATUS_UNTRACED && self->trace_boundary) {
                 c = COUNTS(xi, yi);
             }
             
             // A pixel that's been calculated but not traced needs to be traced.
-            if (s == 1 && self->trace_boundary) {
-                char curdir = DIR_UP;
+            if (s == STATUS_UNTRACED && self->trace_boundary) {
+                const char FIRST_DIR = DIR_UP;
+                char curdir = FIRST_DIR;
                 int curx = xi, cury = yi;
                 int origx = xi, origy = yi;
                 int lastx = xi, lasty = yi;
                 int start = 1;
                 
-                STATUS(xi, yi) = 2;
+                STATUS(xi, yi) = STATUS_TRACING;
 
                 points[0].x = curx;
                 points[0].y = cury;
@@ -618,7 +661,7 @@ compute_array(AptEngine *self, PyObject *args)
                 // Walk the boundary
                 for (;;) {
                     // Eventually, we reach our starting point. Stop.
-                    if (unlikely(!start && curx == origx && cury == origy && curdir == DIR_UP)) {
+                    if (unlikely(!start && curx == origx && cury == origy && curdir == FIRST_DIR)) {
                         break;
                     }
                     
@@ -660,20 +703,34 @@ compute_array(AptEngine *self, PyObject *args)
                     }
                     
                     // Get the count of the next position.
-                    int c2;
-                    if (STATUS(curx, cury) == 0) {
+                    int c2 = 0;
+                    s = STATUS(curx, cury);
+                    switch (s) {
+                    case STATUS_UNCOMPUTED:
                         c2 = compute_count(self, curx, cury, &stats);
                         COUNTS(curx, cury) = c2;
                         num_pixels++;
-                        STATUS(curx, cury) = 1;
-                    }
-                    else {
+                        STATUS(curx, cury) = STATUS_UNTRACED;
+                        CALL_DEBUG("point");
+                        break;
+                
+                    case STATUS_UNTRACED:
                         c2 = COUNTS(curx, cury);
-                    }
+                        break;
                     
+                    case STATUS_TRACING:
+                        c2 = c; // Should be...
+                        break;
+                    
+                    case STATUS_FILLED:
+                        // Don't wander into filled territory.
+                        c2 = c+1;
+                        break;
+                    }
+
                     // If the same color, turn right, else turn left.
                     if (c2 == c) {
-                        STATUS(curx, cury) = 2;
+                        STATUS(curx, cury) = STATUS_TRACING;
                         // Append the point to the points list, growing dynamically
                         // if we have to.
                         if (unlikely(ptsstored == ptsalloced)) {
@@ -716,24 +773,29 @@ compute_array(AptEngine *self, PyObject *args)
                 if (unlikely(ptsstored >= 8)) {
                     // Flood fill the region. The points list has all the boundary
                     // points, so we only need to fill left from each of those.
+                    // This works because the boundary points are ringed by all
+                    // the points with the wrong color, so there's no chance that
+                    // filling left from the left edge will flood outside the
+                    // region.
                     int num_filled = 0;
-                    int pi;
                     for (pi = 0; pi < ptsstored; pi++) {
-                        int ptx = points[pi].x;
-                        int pty = points[pi].y;
-                        // Fill left.
+                        ptx = points[pi].x;
+                        pty = points[pi].y;
+                        STATUS(ptx, pty) = STATUS_FILLED;
+                        // Fill left from points where we moved up.
                         for (;;) {
                             ptx--;
                             if (ptx < xmin) {
                                 break;
                             }
-                            if (STATUS(ptx, pty) != 0) {
+                            if (STATUS(ptx, pty) != STATUS_UNCOMPUTED) {
                                 break;
                             }
                             COUNTS(ptx, pty) = c;
                             num_pixels++;
                             num_filled++;
-                            STATUS(ptx, pty) = 2;
+                            STATUS(ptx, pty) = STATUS_FILLED;
+                            CALL_DEBUG("fill");
                         }
                     } // end for points to fill
                 
@@ -972,6 +1034,7 @@ AptEngine_members[] = {
     { "blend_colors",   T_INT,      offsetof(AptEngine, blend_colors),      0, "How many levels of color to blend" },
     { "trace_boundary", T_INT,      offsetof(AptEngine, trace_boundary),    0, "Control whether boundaries are traced" },
     { "julia",          T_INT,      offsetof(AptEngine, julia),             0, "Compute Julia set?" },
+    { "debug_callback", T_OBJECT,   offsetof(AptEngine, debug_callback),    0, "Called to debug" },
     { NULL }
 };
 

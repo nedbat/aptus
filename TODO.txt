@@ -36,6 +36,9 @@
 
 * Bugs
 
++ Visit the deep tush (narrow horizontal splinter). Drag the image to the right.
+    Tiles that should be all black that still have old pixels in them won't
+    flood-fill, they paint every scanline.
 + Stats panel can show MAX_INT for min cycles if no cycles
 - Somehow I managed to zoom in then zoom out, and ended up outside the legal
     radius and the set disappeared.
