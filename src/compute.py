@@ -174,7 +174,7 @@ class AptusCompute:
                 # Copy the common rectangles.  Old_counts gets copied to counts,
                 # and status gets the common rectangle filled with 2's.
                 self.counts[newy:newy+nr,newx:newx+nc] = old_counts[oldy:oldy+nr,oldx:oldx+nc]
-                self.status[newy:newy+nr,newx:newx+nc] = 2  # 2 == Fully computed and filled
+                self.status[newy:newy+nr,newx:newx+nc] = 1  # 2 == Fully computed and filled
                 
         self.pixels_computed = False
         self._clear_old_geometry()
@@ -283,7 +283,7 @@ class AptusCompute:
                 while not self.done.isSet():
                     if self.while_waiting:
                         self.while_waiting()
-                    self.done.wait(1)
+                    self.done.wait(.1)
                 if not any(t.isAlive() for t in threads):
                     break
                 self.done.clear()
@@ -376,6 +376,7 @@ class ComputeStats(dict):
         { 'label': 'Longest cycle', 'key': 'maxitercycle', 'sum': max },
         { 'label': 'Maxed points', 'key': 'maxedpoints', 'sum': sum },
         { 'label': 'Computed points', 'key': 'computedpoints', 'sum': sum },
+        { 'label': 'Filled points', 'key': 'filledpoints', 'sum': sum },
         { 'label': 'Boundaries traced', 'key': 'boundaries', 'sum': sum },
         { 'label': 'Boundaries filled', 'key': 'boundariesfilled', 'sum': sum },
         { 'label': 'Longest boundary', 'key': 'longestboundary', 'sum': max },

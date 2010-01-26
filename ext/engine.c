@@ -46,6 +46,7 @@ typedef struct {
     int     miniteredge;        // Minimum iteration count on the edge.
     u4int   maxedpoints;        // Number of points that exceeded the maxiter.
     u4int   computedpoints;     // Number of points that were actually computed.
+    u4int   filledpoints;       // Number of points that were filled.
     u4int   boundaries;         // Number of boundaries traced.
     u4int   boundariesfilled;   // Number of boundaries filled.
     u4int   longestboundary;    // Most points in a traced boundary.
@@ -64,6 +65,7 @@ ComputeStats_clear(ComputeStats *stats)
     stats->miniteredge = 0;
     stats->maxedpoints = 0;
     stats->computedpoints = 0;
+    stats->filledpoints = 0;
     stats->boundaries = 0;
     stats->boundariesfilled = 0;
     stats->longestboundary = 0;
@@ -84,7 +86,7 @@ ComputeStats_AsDict(ComputeStats *stats)
     }
     
     return Py_BuildValue(
-        "{si,sK,sI,sI,sI,si,si,sI,sI,sI,sI,sI,sI}",
+        "{si,sK,sI,sI,sI,si,si,sI,sI,sI,sI,sI,sI,sI}",
         "maxiter", stats->maxiter,
         "totaliter", stats->totaliter,
         "totalcycles", stats->totalcycles,
@@ -94,6 +96,7 @@ ComputeStats_AsDict(ComputeStats *stats)
         "miniteredge", stats->miniteredge,
         "maxedpoints", stats->maxedpoints,
         "computedpoints", stats->computedpoints,
+        "filledpoints", stats->filledpoints,
         "boundaries", stats->boundaries,
         "boundariesfilled", stats->boundariesfilled,
         "longestboundary", stats->longestboundary,
@@ -734,7 +737,8 @@ compute_array(AptEngine *self, PyObject *args)
                         }
                     } // end for points to fill
                 
-                    STATS_CODE(    
+                    STATS_CODE(
+                    stats.filledpoints += num_filled;
                     if (num_filled > 0) {
                         stats.boundariesfilled++;
 
