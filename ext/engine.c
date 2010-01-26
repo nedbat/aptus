@@ -529,11 +529,12 @@ compute_array(AptEngine *self, PyObject *args)
         goto done;
     }
 
-    PyThreadState *_save = PyEval_SaveThread();
-
-    int num_pixels = 0;
     ComputeStats stats;
     ComputeStats_clear(&stats);
+
+    Py_BEGIN_ALLOW_THREADS
+
+    int num_pixels = 0;
 
     // points is an array of points on a boundary.
     int ptsalloced = 10000;
@@ -568,9 +569,9 @@ compute_array(AptEngine *self, PyObject *args)
 // A macro for the debug callback, usually not compiled in.
 #if 0
 #define CALL_DEBUG(info)                            \
-        PyEval_RestoreThread(_save);                \
+        Py_BLOCK_THREADS                            \
         ret = call_debug(self, info);               \
-        _save = PyEval_SaveThread();                \
+        Py_UNBLOCK_THREADS                          \
         if (!ret) {                                 \
             goto done;                              \
         }
@@ -808,9 +809,9 @@ compute_array(AptEngine *self, PyObject *args)
                         if (ptsstored > (xmax-xmin)) {
                             if (stats.totaliter - last_progress > MIN_PROGRESS) {
                                 sprintf(info, "trace %d * %d, totaliter %s", c, ptsstored, human_u8int(stats.totaliter, uinfo));
-                                PyEval_RestoreThread(_save);
+                                Py_BLOCK_THREADS
                                 ret = call_progress(self, progress, ((double)num_pixels)/num_compute, info);
-                                _save = PyEval_SaveThread();
+                                Py_UNBLOCK_THREADS
                                 if (!ret) {
                                     goto done;
                                 }
@@ -831,9 +832,9 @@ compute_array(AptEngine *self, PyObject *args)
         // At the end of the scan line, call progress if we've made enough progress
         if (stats.totaliter - last_progress > MIN_PROGRESS) {
             sprintf(info, "scan %d, totaliter %s", yi+1, human_u8int(stats.totaliter, uinfo));
-            PyEval_RestoreThread(_save);
+            Py_BLOCK_THREADS
             ret = call_progress(self, progress, ((double)num_pixels)/num_compute, info);
-            _save = PyEval_SaveThread();
+            Py_UNBLOCK_THREADS
             if (!ret) {
                 goto done;
             }
@@ -851,7 +852,7 @@ done:
         free(points);
     }
 
-    PyEval_RestoreThread(_save);
+    Py_END_ALLOW_THREADS
 
     return ok ? ComputeStats_AsDict(&stats) : NULL;
 }
