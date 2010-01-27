@@ -448,7 +448,16 @@ call_progress(AptEngine *self, PyObject *progress, double frac_complete, char *i
 }
 )
 
-// Helper: call the debug callback
+// A debug callback, usually not compiled in.
+
+#if 0
+#define CALL_DEBUG(info)                            \
+        Py_BLOCK_THREADS                            \
+        ret = call_debug(self, info);               \
+        Py_UNBLOCK_THREADS                          \
+        if (!ret) {                                 \
+            goto done;                              \
+        }
 
 static int
 call_debug(AptEngine *self, char *info)
@@ -463,6 +472,10 @@ call_debug(AptEngine *self, char *info)
     }
     return ok;
 }
+
+#else
+#define CALL_DEBUG(info)
+#endif
 
 // Helper: display a really big number in a portable way
 
@@ -549,48 +562,35 @@ compute_array(AptEngine *self, PyObject *args)
     const int MIN_PROGRESS = 1000000;  // Don't call progress unless we've done this many iters.
     )
 
+// Convenient accessors for our arrays
 #define STATUS(x,y) *(npy_uint8 *)PyArray_GETPTR2(status, (y), (x))
 #define COUNTS(x,y) *(npy_uint32 *)PyArray_GETPTR2(counts, (y), (x))
-#define DIR_DOWN    0
-#define DIR_LEFT    1
-#define DIR_UP      2
-#define DIR_RIGHT   3
 
-#define STATUS_UNCOMPUTED 0
-#define STATUS_UNTRACED   1
-#define STATUS_TRACING    2
-#define STATUS_FILLED     3
+    enum {
+        DIR_DOWN, DIR_LEFT, DIR_UP, DIR_RIGHT
+    };
+
+    enum {
+        STATUS_UNCOMPUTED, STATUS_UNTRACED, STATUS_TRACING, STATUS_FILLED
+    };
 
     int xi, yi;
     u1int s;
     int c = 0;
     int pi, ptx, pty;
     
-// A macro for the debug callback, usually not compiled in.
-#if 0
-#define CALL_DEBUG(info)                            \
-        Py_BLOCK_THREADS                            \
-        ret = call_debug(self, info);               \
-        Py_UNBLOCK_THREADS                          \
-        if (!ret) {                                 \
-            goto done;                              \
-        }
-#else
-#define CALL_DEBUG(info)
-#endif
-
 // A macro to get s and c for a particular point.
-#define CALC_POINT(xi, yi)                          \
-        s = STATUS(xi, yi);                         \
-        if (s == STATUS_UNCOMPUTED) {               \
-            c = compute_count(self, xi, yi, &stats);\
-            COUNTS(xi, yi) = c;                     \
-            num_pixels++;                           \
-            STATUS(xi, yi) = s = STATUS_UNTRACED;   \
-            CALL_DEBUG("point");                    \
-        }                                           \
-        else {                                      \
-            c = COUNTS(xi, yi);                     \
+#define CALC_POINT(xi, yi)                              \
+        s = STATUS(xi, yi);                             \
+        if (s == STATUS_UNCOMPUTED) {                   \
+            c = compute_count(self, xi, yi, &stats);    \
+            COUNTS(xi, yi) = c;                         \
+            num_pixels++;                               \
+            STATUS(xi, yi) = s = STATUS_UNTRACED;       \
+            CALL_DEBUG("point");                        \
+        }                                               \
+        else {                                          \
+            c = COUNTS(xi, yi);                         \
         }
 
     // Walk the edges of the array to find the minimum iteration count.  If
