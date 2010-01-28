@@ -14,7 +14,34 @@ AptEngine = importer('AptEngine')
 
 numpy = importer('numpy')
 
-import copy, math, Queue, sys, threading
+import copy, math, Queue, sys, thread, threading
+
+
+class WorkerPool:
+    def __init__(self):
+        self.workers = []            # List of threads that will do work.
+        self.work = Queue.Queue(0)   # The queue of work items.
+        self.num_threads = 2
+
+    def get_ready(self):
+        """Call before adding work.  Prepares the pool."""
+        if not self.workers:
+            for i in range(self.num_threads):
+                t = threading.Thread(target=self.worker)
+                t.setDaemon(True)
+                t.start()
+                self.workers.append(t)
+        
+    def put(self, work_item):
+        """Add a work item, which should be (q, compute, coords)."""
+        self.work.put(work_item)
+
+    def worker(self):
+        """The work function on each of our compute threads."""
+        while True:
+            result_queue, apt_compute, coords = self.work.get()
+            apt_compute.compute_some(coords)
+            result_queue.put(coords)
 
 
 class AptusCompute:
@@ -25,6 +52,9 @@ class AptusCompute:
         fractal plane, real and imaginary floats.  The xy plane are screen coordinates,
         in pixels, usually integers.
     """
+
+    worker_pool = WorkerPool()
+    
     def __init__(self):
         # geometry
         self.center = settings.mandelbrot_center
@@ -53,7 +83,7 @@ class AptusCompute:
 
         # The C extension for doing the heavy lifting.
         self.eng = AptEngine()
-        
+
         # counts is a numpy array of 32bit ints: the iteration counts at each pixel.
         self.counts = None
         # status is a numpy array of 8bit ints that tracks the boundary trace
@@ -176,6 +206,7 @@ class AptusCompute:
                 self.counts[newy:newy+nr,newx:newx+nc] = old_counts[oldy:oldy+nr,oldx:oldx+nc]
                 self.status[newy:newy+nr,newx:newx+nc] = 3  # 3 == Fully computed and filled
         
+        # In desperate times, printing the counts and status might help...
         if 0:
             for y in range(self.ssize[1]):
                 l = ""
@@ -266,42 +297,39 @@ class AptusCompute:
         # the buckets of values: 0,1,2,3.
         buckets, _ = numpy.histogram(self.status, 4, (0, 3))
         self.num_compute = buckets[0]
-        self.num_threads = 2
         self.refresh_rate = .5
 
         #self.eng.debug_callback = self.debug_callback
 
-        if self.num_threads:
-            # Fill a work queue with the tiles to compute
-            self.tiles = Queue.Queue(0)
-            self.done = threading.Event()
+        if self.worker_pool:
+            # Start the threads going.
+            self.worker_pool.get_ready()
+
+            # Create work items with the tiles to compute
+            result_queue = Queue.Queue(0)
             n = 4
+            n_todo = 0
             xcuts = self.cuts(0, self.counts.shape[1], n)
             ycuts = self.cuts(0, self.counts.shape[0], n)
             for i in range(n):
                 for j in range(n):
-                    self.tiles.put((xcuts[j], xcuts[j+1], ycuts[i], ycuts[i+1]))
-    
-            # Start the threads going.
-            threads = []
-            for i in range(self.num_threads):
-                t = threading.Thread(target=self.worker)
-                t.setDaemon(True)
-                t.start()
-                threads.append(t)
+                    coords = (xcuts[j], xcuts[j+1], ycuts[i], ycuts[i+1])
+                    self.worker_pool.put((result_queue, self, coords))
+                    n_todo += 1
 
-            # Wait for threads to finish.  We wait for the event that threads
-            # set when they finish, then look to see if all threads are done.
-            while True:
-                while not self.done.isSet():
+            while n_todo:
+                while True:
                     if self.while_waiting:
                         self.while_waiting()
-                    self.done.wait(self.refresh_rate)
-                if not any(t.isAlive() for t in threads):
-                    break
-                self.done.clear()
+                    try:
+                        result_queue.get(timeout=self.refresh_rate)
+                        n_todo -= 1
+                        break
+                    except Queue.Empty:
+                        pass
 
         else:
+            # Not threading: just compute the whole rectangle right now.
             self.compute_some((0, self.counts.shape[1], 0, self.counts.shape[0]))
 
         # Clean up
@@ -315,16 +343,6 @@ class AptusCompute:
     def cuts(self, lo, hi, n):
         """Return a list of n+1 evenly spaced numbers between `lo` and `hi`."""
         return [int(round(lo+float(i)*(hi-lo)/n)) for i in range(n+1)]
-
-    def worker(self):
-        while True:
-            try:
-                coords = self.tiles.get(False)
-            except Queue.Empty:
-                # Nothing left to do, time to die
-                self.done.set()
-                break
-            self.compute_some(coords)
 
     def compute_some(self, coords):
         xmin, xmax, ymin, ymax = coords

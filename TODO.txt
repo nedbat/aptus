@@ -17,6 +17,9 @@
 
 - Multi-threading
     - Fix progress reporting: compute_array thinks it knows the total pixels.
+    + Proper thread pool for multiple drawing windows.
+    + Prevent recursive Yield calls that bork the UI.
+    - Keep the UI responsive while computing?
     + Switching away from window in progress then switching back doesn't show updates.
     + Update stats window as drawing progresses.
 
