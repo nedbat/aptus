@@ -436,10 +436,10 @@ compute_count(AptEngine *self, int xi, int yi, ComputeStats *stats)
 
 STATS_DECL(
 static int
-call_progress(AptEngine *self, PyObject *progress, double frac_complete, char *info)
+call_progress(AptEngine *self, PyObject *progress, PyObject *prog_arg, u4int num_complete, char *info)
 {
     int ok = 1;
-    PyObject * result = PyObject_CallFunction(progress, "ds", frac_complete, info);
+    PyObject * result = PyObject_CallFunction(progress, "OIs", prog_arg, num_complete, info);
     if (result == NULL) {
         ok = 0;
     }
@@ -515,9 +515,8 @@ compute_array(AptEngine *self, PyObject *args)
     PyArrayObject *status;
     // The corners of the rectangle to compute.
     int xmin, xmax, ymin, ymax;
-    // num_compute is the number of pixels that have to be computed, used to
-    // report progress.
-    int num_compute;
+    // An opaque argument to pass to the progress function.
+    PyObject * prog_arg;
     // progress is a Python callable, the progress reporting callback. It takes
     // two arguments, a fraction (how complete the computation is), and a string
     // of information.
@@ -530,10 +529,10 @@ compute_array(AptEngine *self, PyObject *args)
     int ok = 0;
     int ret;
 
-    if (!PyArg_ParseTuple(args, "O!O!iiiiiO:compute_array",
+    if (!PyArg_ParseTuple(args, "O!O!iiiiOO:compute_array",
             &PyArray_Type, &counts, &PyArray_Type, &status,
             &xmin, &xmax, &ymin, &ymax,
-            &num_compute, &progress)) {
+            &prog_arg, &progress)) {
         goto done;
     }
     
@@ -547,7 +546,7 @@ compute_array(AptEngine *self, PyObject *args)
 
     Py_BEGIN_ALLOW_THREADS
 
-    int num_pixels = 0;
+    u4int num_pixels = 0;
 
     // points is an array of points on a boundary.
     int ptsalloced = 10000;
@@ -810,7 +809,7 @@ compute_array(AptEngine *self, PyObject *args)
                             if (stats.totaliter - last_progress > MIN_PROGRESS) {
                                 sprintf(info, "trace %d * %d, totaliter %s", c, ptsstored, human_u8int(stats.totaliter, uinfo));
                                 Py_BLOCK_THREADS
-                                ret = call_progress(self, progress, ((double)num_pixels)/num_compute, info);
+                                ret = call_progress(self, progress, prog_arg, num_pixels, info);
                                 Py_UNBLOCK_THREADS
                                 if (!ret) {
                                     goto done;
@@ -833,7 +832,7 @@ compute_array(AptEngine *self, PyObject *args)
         if (stats.totaliter - last_progress > MIN_PROGRESS) {
             sprintf(info, "scan %d, totaliter %s", yi+1, human_u8int(stats.totaliter, uinfo));
             Py_BLOCK_THREADS
-            ret = call_progress(self, progress, ((double)num_pixels)/num_compute, info);
+            ret = call_progress(self, progress, prog_arg, num_pixels, info);
             Py_UNBLOCK_THREADS
             if (!ret) {
                 goto done;

@@ -39,9 +39,37 @@ class WorkerPool:
     def worker(self):
         """The work function on each of our compute threads."""
         while True:
-            result_queue, apt_compute, coords = self.work.get()
-            apt_compute.compute_some(coords)
+            result_queue, apt_compute, n_tile, coords = self.work.get()
+            apt_compute.compute_some(n_tile, coords)
             result_queue.put(coords)
+
+
+class BucketCountingProgressReporter:
+    """ A progress reporter for parallel tiles.
+    """
+    def __init__(self, num_buckets, expected_total, reporter):
+        self.buckets = [0] * num_buckets
+        self.expected_total = expected_total
+        self.reporter = reporter
+
+    def begin(self):
+        self.reporter.begin()
+    
+    def progress(self, arg, num_done, info=''):
+        """Bucket-counting progress.
+        
+        `arg` is the number of the tile.  `num_done` is the number of pixels
+        computed so far in that tile.
+        
+        """
+        self.buckets[arg] = num_done
+        # Compute a fraction, in millionths.
+        total = sum(self.buckets)
+        frac_done = int(total * 1000000.0 / self.expected_total)
+        self.reporter.progress(0, frac_done, info)
+
+    def end(self):
+        self.reporter.end()
 
 
 class AptusCompute:
@@ -291,11 +319,15 @@ class AptusCompute:
     
         self.stats = ComputeStats()
 
-        self.progress.begin()
         # Figure out how many pixels have to be computed: make a histogram of
         # the buckets of values: 0,1,2,3.
         buckets, _ = numpy.histogram(self.status, 4, (0, 3))
-        self.num_compute = buckets[0]
+        num_compute = buckets[0]
+        n_side_cuts = 4
+
+        self.bucket_progress = BucketCountingProgressReporter(n_side_cuts**2, num_compute, self.progress)
+
+        self.bucket_progress.begin()
         self.refresh_rate = .5
 
         #self.eng.debug_callback = self.debug_callback
@@ -306,14 +338,13 @@ class AptusCompute:
 
             # Create work items with the tiles to compute
             result_queue = Queue.Queue(0)
-            n = 4
             n_todo = 0
-            xcuts = self.cuts(0, self.counts.shape[1], n)
-            ycuts = self.cuts(0, self.counts.shape[0], n)
-            for i in range(n):
-                for j in range(n):
+            xcuts = self.cuts(0, self.counts.shape[1], n_side_cuts)
+            ycuts = self.cuts(0, self.counts.shape[0], n_side_cuts)
+            for i in range(n_side_cuts):
+                for j in range(n_side_cuts):
                     coords = (xcuts[j], xcuts[j+1], ycuts[i], ycuts[i+1])
-                    self.worker_pool.put((result_queue, self, coords))
+                    self.worker_pool.put((result_queue, self, n_todo, coords))
                     n_todo += 1
 
             while n_todo:
@@ -329,10 +360,10 @@ class AptusCompute:
 
         else:
             # Not threading: just compute the whole rectangle right now.
-            self.compute_some((0, self.counts.shape[1], 0, self.counts.shape[0]))
+            self.compute_some(0, (0, self.counts.shape[1], 0, self.counts.shape[0]))
 
         # Clean up
-        self.progress.end()
+        self.bucket_progress.end()
         self._record_old_geometry()
         self.pixels_computed = True
         # Once compute_array is done, the status array is all 3's, so there's no
@@ -343,12 +374,12 @@ class AptusCompute:
         """Return a list of n+1 evenly spaced numbers between `lo` and `hi`."""
         return [int(round(lo+float(i)*(hi-lo)/n)) for i in range(n+1)]
 
-    def compute_some(self, coords):
+    def compute_some(self, n_tile, coords):
         xmin, xmax, ymin, ymax = coords
         stats = self.eng.compute_array(
             self.counts, self.status,
             xmin, xmax, ymin, ymax,
-            self.num_compute, self.progress.progress
+            n_tile, self.bucket_progress.progress
             )
         self.stats += stats
 
