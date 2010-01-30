@@ -66,7 +66,7 @@ class BucketCountingProgressReporter:
         # Compute a fraction, in millionths.
         total = sum(self.buckets)
         frac_done = int(total * 1000000.0 / self.expected_total)
-        self.reporter.progress(0, frac_done, info)
+        self.reporter.progress(0, frac_done, "[%2d] %s" % (arg, info))
 
     def end(self):
         self.reporter.end()
