@@ -6,6 +6,11 @@
 #include "numpy/arrayobject.h"
 #include "structmember.h"
 
+// Py_BEGIN_ALLOW_THREADS produces a compiler warning (yuk).  Re-define it in
+// a way that doesn't.
+#undef Py_BEGIN_ALLOW_THREADS
+#define Py_BEGIN_ALLOW_THREADS { PyThreadState *_save = PyEval_SaveThread();
+
 // Type definitions.
 
 // A floating-point number.
