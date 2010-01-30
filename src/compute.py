@@ -143,7 +143,6 @@ class AptusCompute:
             )
  
         self.eng.iter_limit = self.iter_limit
-        self.eng.trace_boundary = 1
         self.progress = NullProgressReporter()
         self.while_waiting = None
 
