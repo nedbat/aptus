@@ -910,9 +910,6 @@ apply_palette(AptEngine *self, PyObject *args)
         Py_CLEAR(pint);
     }
     
-    u1int no_color[2][3] = { { 0x99, 0x99, 0x99 }, { 0xAA, 0xAA, 0xAA } };
-    const int no_sq = 15;
-
     // A one-element cache of count and color.
     npy_uint8 *plastpix = NULL;
     npy_uint32 lastc = (*(npy_uint32 *)PyArray_GETPTR2(counts, 0, 0))+1;    // Something different than the first value.
@@ -944,12 +941,8 @@ apply_palette(AptEngine *self, PyObject *args)
         npy_uint8 *ppix = (npy_uint8 *)PyArray_GETPTR3(pix, y, 0, 0);
 
         for (x = 0; x < w; x++) {
-            if (status && STATUS(x, y) == 0) {
-                // No color at all, uncomputed pixel.
-                //int parity = ((x / no_sq) + (y / no_sq)) % 2;
-                //memcpy(ppix, no_color[parity], 3);
-            }
-            else {
+            // Don't touch pixels that haven't been computed.
+            if (!status || STATUS(x, y) != 0) {
                 npy_uint32 c = *(npy_uint32*)pcount;
                 if (c == lastc) {
                     // A hit on the one-element cache. Copy the old value.
