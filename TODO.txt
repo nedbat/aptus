@@ -109,6 +109,7 @@ x Optimize boundary.py so we can use it for high iterations
 
 * Beauty
 
+- Other mappings of count to palette: log, for example.
 - Generalized palette specification
 - Xaos palette options:
     - Algorithmic palette
