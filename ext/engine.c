@@ -946,8 +946,8 @@ apply_palette(AptEngine *self, PyObject *args)
         for (x = 0; x < w; x++) {
             if (status && STATUS(x, y) == 0) {
                 // No color at all, uncomputed pixel.
-                int parity = ((x / no_sq) + (y / no_sq)) % 2;
-                memcpy(ppix, no_color[parity], 3);
+                //int parity = ((x / no_sq) + (y / no_sq)) % 2;
+                //memcpy(ppix, no_color[parity], 3);
             }
             else {
                 npy_uint32 c = *(npy_uint32*)pcount;
