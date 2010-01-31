@@ -52,6 +52,7 @@ typedef struct {
     u4int   maxedpoints;        // Number of points that exceeded the maxiter.
     u4int   computedpoints;     // Number of points that were actually computed.
     u4int   filledpoints;       // Number of points that were filled.
+    u4int   flippedpoints;      // Number of points that were flipped.
     u4int   boundaries;         // Number of boundaries traced.
     u4int   boundariesfilled;   // Number of boundaries filled.
     u4int   longestboundary;    // Most points in a traced boundary.
@@ -71,6 +72,7 @@ ComputeStats_clear(ComputeStats *stats)
     stats->maxedpoints = 0;
     stats->computedpoints = 0;
     stats->filledpoints = 0;
+    stats->flippedpoints = 0;
     stats->boundaries = 0;
     stats->boundariesfilled = 0;
     stats->longestboundary = 0;
@@ -91,7 +93,7 @@ ComputeStats_AsDict(ComputeStats *stats)
     }
     
     return Py_BuildValue(
-        "{si,sK,sI,sI,sI,si,si,sI,sI,sI,sI,sI,sI,sI}",
+        "{si,sK,sI,sI,sI,si,si,sI,sI,sI,sI,sI,sI,sI,sI}",
         "maxiter", stats->maxiter,
         "totaliter", stats->totaliter,
         "totalcycles", stats->totalcycles,
@@ -102,6 +104,7 @@ ComputeStats_AsDict(ComputeStats *stats)
         "maxedpoints", stats->maxedpoints,
         "computedpoints", stats->computedpoints,
         "filledpoints", stats->filledpoints,
+        "flippedpoints", stats->flippedpoints,
         "boundaries", stats->boundaries,
         "boundariesfilled", stats->boundariesfilled,
         "longestboundary", stats->longestboundary,
@@ -582,7 +585,38 @@ compute_array(AptEngine *self, PyObject *args)
     u1int s;
     int c = 0;
     int pi, ptx, pty;
+
+    // Figure out if we can flip around the x-axis.
+    int flipping = 0;
+    aptfloat axisy = 0;
+    int fliplo = 0, fliphi = 0;
     
+    if (!self->julia && self->ridx.r != 0 && self->ridx.i == 0 && self->ridy.r == 0 && self->ridy.i != 0) {
+        // The symmetry axis is horizontal.
+        axisy = self->ri0.i/-self->ridy.i;
+        aptfloat above, below;
+        
+        above = self->ri0.i + floor(axisy)*self->ridy.i;
+        below = self->ri0.i + ceil(axisy)*self->ridy.i;
+        if (fequal(self, above, -below)) {
+            if (ymin < axisy && axisy < ymax-1) {
+                flipping = 1;
+                fliphi = floor(axisy);
+                fliplo = fliphi - (ymax - fliphi);
+            }
+        }
+    }
+    
+// A macro to potentially flip a results across the x axis.
+#define FLIP_POINT(xi, yi, c, s)                        \
+        if (flipping && fliplo < yi && yi < fliphi) {   \
+            int yother = axisy + (axisy - yi);          \
+            COUNTS(xi, yother) = c;                     \
+            STATUS(xi, yother) = s;                     \
+            stats.flippedpoints++;                      \
+            num_pixels++;                               \
+        }                                               \
+
 // A macro to get s and c for a particular point.
 #define CALC_POINT(xi, yi)                              \
         s = STATUS(xi, yi);                             \
@@ -591,6 +625,7 @@ compute_array(AptEngine *self, PyObject *args)
             COUNTS(xi, yi) = c;                         \
             num_pixels++;                               \
             STATUS(xi, yi) = s = STATUS_UNTRACED;       \
+            FLIP_POINT(xi, yi, c, STATUS_UNTRACED);     \
             CALL_DEBUG("point");                        \
         }                                               \
         else {                                          \
@@ -642,6 +677,7 @@ compute_array(AptEngine *self, PyObject *args)
                 COUNTS(xi, yi) = c;
                 num_pixels++;
                 STATUS(xi, yi) = s = STATUS_UNTRACED;
+                FLIP_POINT(xi, yi, c, STATUS_UNTRACED);
                 CALL_DEBUG("point");
             }
             else if (s == STATUS_UNTRACED && self->trace_boundary) {
@@ -716,6 +752,7 @@ compute_array(AptEngine *self, PyObject *args)
                         COUNTS(curx, cury) = c2;
                         num_pixels++;
                         STATUS(curx, cury) = STATUS_UNTRACED;
+                        FLIP_POINT(curx, cury, c2, STATUS_UNTRACED);
                         CALL_DEBUG("point");
                         break;
                 
@@ -804,8 +841,8 @@ compute_array(AptEngine *self, PyObject *args)
                     } // end for points to fill
                 
                     STATS_CODE(
-                    stats.filledpoints += num_filled;
                     if (num_filled > 0) {
+                        stats.filledpoints += num_filled;
                         stats.boundariesfilled++;
 
                         // If this was a large boundary, call the progress function.

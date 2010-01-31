@@ -334,9 +334,9 @@ class AptusCompute:
         # the buckets of values: 0,1,2,3.
         buckets, _ = numpy.histogram(self.status, 4, (0, 3))
         num_compute = buckets[0]
-        n_side_cuts = 4
+        x_side_cuts, y_side_cuts = 4, 1
 
-        self.bucket_progress = BucketCountingProgressReporter(n_side_cuts**2, num_compute, self.progress)
+        self.bucket_progress = BucketCountingProgressReporter(x_side_cuts*y_side_cuts, num_compute, self.progress)
 
         self.bucket_progress.begin()
         self.refresh_rate = .5
@@ -350,10 +350,10 @@ class AptusCompute:
             # Create work items with the tiles to compute
             result_queue = Queue.Queue(0)
             n_todo = 0
-            xcuts = self.cuts(0, self.counts.shape[1], n_side_cuts)
-            ycuts = self.cuts(0, self.counts.shape[0], n_side_cuts)
-            for i in range(n_side_cuts):
-                for j in range(n_side_cuts):
+            xcuts = self.cuts(0, self.counts.shape[1], x_side_cuts)
+            ycuts = self.cuts(0, self.counts.shape[0], y_side_cuts)
+            for i in range(y_side_cuts):
+                for j in range(x_side_cuts):
                     coords = (xcuts[j], xcuts[j+1], ycuts[i], ycuts[i+1])
                     self.worker_pool.put((result_queue, self, n_todo, coords))
                     n_todo += 1
@@ -455,6 +455,7 @@ class ComputeStats(dict):
         { 'label': 'Maxed points', 'key': 'maxedpoints', 'sum': sum },
         { 'label': 'Computed points', 'key': 'computedpoints', 'sum': sum },
         { 'label': 'Filled points', 'key': 'filledpoints', 'sum': sum },
+        { 'label': 'Flipped points', 'key': 'flippedpoints', 'sum': sum },
         { 'label': 'Boundaries traced', 'key': 'boundaries', 'sum': sum },
         { 'label': 'Boundaries filled', 'key': 'boundariesfilled', 'sum': sum },
         { 'label': 'Longest boundary', 'key': 'longestboundary', 'sum': max },
