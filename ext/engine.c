@@ -522,9 +522,9 @@ compute_array(AptEngine *self, PyObject *args)
     int xmin, xmax, ymin, ymax;
     // An opaque argument to pass to the progress function.
     PyObject * prog_arg;
-    // progress is a Python callable, the progress reporting callback. It takes
-    // two arguments, a fraction (how complete the computation is), and a string
-    // of information.
+    // `progress` is a Python callable, the progress reporting callback. It
+    // takes three arguments: the opaque argument, the number of pixels
+    // finished, and a string of information.
     PyObject * progress;
     
     // Malloc'ed buffers.
