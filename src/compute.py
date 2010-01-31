@@ -14,7 +14,7 @@ AptEngine = importer('AptEngine')
 
 numpy = importer('numpy')
 
-import copy, math, Queue, sys, thread, threading
+import copy, math, Queue, sys, thread, threading, time
 
 
 class WorkerPool:
@@ -120,6 +120,8 @@ class AptusCompute:
         self.status = None
         # An array for the output pixels.
         self.pix = None
+        # A gray checkerboard
+        self.chex = None
         
         self.pixels_computed = False
         self._clear_old_geometry()
@@ -293,8 +295,50 @@ class AptusCompute:
         return changed
     
     def color_mandel(self):
-        if (self.pix is None) or (self.pix.shape != self.counts.shape):
-            self.pix = numpy.zeros((self.counts.shape[0], self.counts.shape[1], 3), dtype=numpy.uint8)
+        w, h = self.counts.shape
+        if (self.chex is None) or (self.chex.shape[:2] != self.counts.shape):
+            # Make a checkerboard
+            print "making checkerboard"
+            sq = 15
+            self.c = numpy.fromfunction(lambda x,y: ((x//sq) + (y//sq)) % 2, (w,h))
+            self.chex = numpy.empty((w,h,3))
+            self.chex[self.c == 0] = (0xAA, 0xAA, 0xAA)
+            self.chex[self.c == 1] = (0x99, 0x99, 0x99)
+            #row = [[(0x99,0x99,0x99),(0xAA,0xAA,0xAA)][(i//sq)%2] for i in range(w)]
+            #self.chex[[i for i in range(h) if (i//sq)%2 == 0]] = row
+            #row = [[(0xAA,0xAA,0xAA),(0x99,0x99,0x99)][(i//sq)%2] for i in range(w)]
+            #self.chex[[i for i in range(h) if (i//sq)%2 == 1]] = row
+
+        if (self.pix is None) or (self.pix.shape[:2] != self.counts.shape):
+            w, h = self.counts.shape
+            self.pix = numpy.zeros((w, h, 3), dtype=numpy.uint8)
+
+        # Apply the checkerboard where status is zero.
+        #self.pix[numpy.logical_and(self.status == 0, self.c == 0)] = 0xAA
+        #self.pix[numpy.logical_and(self.status == 0, self.c == 1)] = 0x99
+
+        #print "shapes: pix = %r, status = %r, chex = %r" % (
+        #    self.pix.shape if self.pix is not None else None,
+        #    self.status.shape if self.status is not None else None,
+        #    self.chex.shape if self.chex is not None else None
+        #    )
+        #if self.status is not None:
+        #    print "self.status == 0 -> %r" % ((self.status == 0).shape,)
+        print "coloring"
+
+        if self.status is not None:
+            print "shapes: pix = %r, status = %r, chex = %r" % (
+                self.pix.shape if self.pix is not None else None,
+                self.status.shape if self.status is not None else None,
+                self.chex.shape if self.chex is not None else None
+                )
+            try:
+                self.pix[self.status == 0] = self.chex[self.status == 0]
+            except ValueError:
+                # Not sure why, but sometimes this throws
+                # ValueError: array is not broadcastable to correct shape
+                raise#pass
+
         # Modulo in C is ill-defined if anything is negative, so make sure the
         # phase is positive if we're going to wrap.
         phase = self.palette_phase
@@ -347,10 +391,12 @@ class AptusCompute:
                     self.worker_pool.put((result_queue, self, n_todo, coords))
                     n_todo += 1
 
+            next_time = time.time() + self.refresh_rate
             while n_todo:
                 while True:
-                    if self.while_waiting:
+                    if self.while_waiting and time.time() > next_time:
                         self.while_waiting()
+                        next_time = time.time() + self.refresh_rate
                     try:
                         result_queue.get(timeout=self.refresh_rate)
                         n_todo -= 1
