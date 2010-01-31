@@ -11,6 +11,7 @@ Next release
 
 * Un-computed pixels are shown as gray checkerboard.
 
+* If the view crosses the x-axis, the symmetry is used to speed up computation.
 
 -----------------------
 Aptus 2.0, October 2008
