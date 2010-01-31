@@ -299,10 +299,10 @@ class AptusCompute:
         if (self.chex is None) or (self.chex.shape[:2] != self.counts.shape):
             # Make a checkerboard
             sq = 15
-            self.c = numpy.fromfunction(lambda x,y: ((x//sq) + (y//sq)) % 2, (w,h))
+            c = numpy.fromfunction(lambda x,y: ((x//sq) + (y//sq)) % 2, (w,h))
             self.chex = numpy.empty((w,h,3), dtype=numpy.uint8)
-            self.chex[self.c == 0] = (0xAA, 0xAA, 0xAA)
-            self.chex[self.c == 1] = (0x99, 0x99, 0x99)
+            self.chex[c == 0] = (0xAA, 0xAA, 0xAA)
+            self.chex[c == 1] = (0x99, 0x99, 0x99)
 
         self.pix = numpy.copy(self.chex)
 
