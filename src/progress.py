@@ -108,4 +108,4 @@ class ConsoleProgressReporter:
         totaltotal += total
         nruns += 1
         print "Total: %s (%.4fs)" % (duration(total), total)
-        #print "Running average: %.6fs over %d runs" % (totaltotal/nruns, nruns)
+        print "Running average: %.6fs over %d runs" % (totaltotal/nruns, nruns)

@@ -22,6 +22,9 @@
     - Keep the UI responsive while computing?
     + Switching away from window in progress then switching back doesn't show updates.
     + Update stats window as drawing progresses.
+    - Better choice of tiles:
+        tall if crossing the x axis
+        just one if the window is small enough
 
 - Decide on re-entrancy, keep things from getting tangled up.
 - Combine pointinfo and stats panel, and add more info to it.
@@ -39,13 +42,14 @@
 
 * Bugs
 
+- Stats panel show zero cycles if any of the tiles had zero cycles.
+- Somehow I managed to zoom in then zoom out, and ended up outside the legal
+    radius and the set disappeared.
+- Resizing a window larger, the background shows pixels left over from other windows?
 + Visit the deep tush (narrow horizontal splinter). Drag the image to the right.
     Tiles that should be all black that still have old pixels in them won't
     flood-fill, they paint every scanline.
 + Stats panel can show MAX_INT for min cycles if no cycles
-- Somehow I managed to zoom in then zoom out, and ended up outside the legal
-    radius and the set disappeared.
-- Resizing a window larger, the background shows pixels left over from other windows?
 + If client size is queried while minimized, it comes back as zero, and a divide by zero error happens.
 + Proper prompting about overwriting existing files.
 + If you zoom out too far, boundary tracing makes the whole set disappear.
@@ -72,7 +76,7 @@
     - http://lomont.org/Math/Papers/2005/CompareFloat.pdf
 - Take some more optimizations from Xaos: http://www.delorie.com/gnu/docs/xaos/xaos_29.html
     - Do iterations in batches of 8 to avoid the bailout comparison.
-- Take advantage of symmetry across the x-axis.
++ Take advantage of symmetry across the x-axis.
 - Adaptively choose a number of continuous levels (other than 256) based on the
     actual steps in the palette, etc.
 - When dragging the image, keep parts scrolled off-screen, in case they come back.
