@@ -528,8 +528,8 @@ compute_array(AptEngine *self, PyObject *args)
     PyObject * progress;
     
     // Malloc'ed buffers.
-    typedef struct { int x, y; } pt;
-    pt * points = NULL;
+    typedef struct { int x, y; } Point;
+    Point * points = NULL;
     
     int ok = 0;
     int ret;
@@ -554,8 +554,8 @@ compute_array(AptEngine *self, PyObject *args)
     u4int num_pixels = 0;
 
     // points is an array of points on a boundary.
-    int ptsalloced = 10000;
-    points = malloc(sizeof(pt)*ptsalloced);
+    int ptsalloced = 10;
+    points = PyMem_New(Point, ptsalloced);
     int ptsstored = 0;
 
     STATS_DECL(    
@@ -739,15 +739,14 @@ compute_array(AptEngine *self, PyObject *args)
                         // Append the point to the points list, growing dynamically
                         // if we have to.
                         if (unlikely(ptsstored == ptsalloced)) {
-                            pt * newpoints = malloc(sizeof(pt)*ptsalloced*2);
-                            if (newpoints == NULL) {
+                            Point * newpts = points;
+                            PyMem_Resize(newpts, Point, ptsalloced*2);
+                            if (newpts == NULL) {
                                 PyErr_SetString(PyExc_MemoryError, "couldn't allocate points");
                                 goto done;
                             }
-                            memcpy(newpoints, points, sizeof(pt)*ptsalloced);
+                            points = newpts;
                             ptsalloced *= 2;
-                            free(points);
-                            points = newpoints;
                         }
                         points[ptsstored].x = curx;
                         points[ptsstored].y = cury;
@@ -853,7 +852,7 @@ compute_array(AptEngine *self, PyObject *args)
 done:
     // Free allocated memory.
     if (points != NULL) {
-        free(points);
+        PyMem_Free(points);
     }
 
     Py_END_ALLOW_THREADS

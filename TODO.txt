@@ -35,7 +35,7 @@
 
 * Clean-up
 
-- Use PyMem_Malloc in the extension.
++ Use PyMem_Malloc in the extension.
 
 * Bugs
 
