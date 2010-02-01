@@ -607,15 +607,25 @@ compute_array(AptEngine *self, PyObject *args)
         }
     }
     
-// A macro to potentially flip a results across the x axis.
+    int flipped = 0, yflip = 0;
+    
+// A macro to potentially flip a result across the x axis.
 #define FLIP_POINT(xi, yi, c, s)                        \
         if (flipping && fliplo < yi && yi < fliphi) {   \
             int yother = axisy + (axisy - yi);          \
-            COUNTS(xi, yother) = c;                     \
-            STATUS(xi, yother) = s;                     \
-            stats.flippedpoints++;                      \
-            num_pixels++;                               \
-        }                                               \
+            if (STATUS(xi, yother) == STATUS_UNCOMPUTED) { \
+                COUNTS(xi, yother) = c;                     \
+                STATUS(xi, yother) = s;                     \
+                stats.flippedpoints++;                      \
+                num_pixels++;                               \
+                flipped = 1;yflip = yother;\
+            }                                           \
+            else {\
+                flipped = 0;\
+                printf("noflip %d (%d %d), status = %d, @%d\n", xi, yi, yother, STATUS(xi, yother), __LINE__);\
+                COUNTS(xi, yother) = 0;\
+            }\
+        }
 
 // A macro to get s and c for a particular point.
 #define CALC_POINT(xi, yi)                              \
@@ -745,6 +755,7 @@ compute_array(AptEngine *self, PyObject *args)
                     
                     // Get the count of the next position.
                     int c2 = 0;
+                    flipped = 0;
                     s = STATUS(curx, cury);
                     switch (s) {
                     case STATUS_UNCOMPUTED:
@@ -773,6 +784,7 @@ compute_array(AptEngine *self, PyObject *args)
                     // If the same color, turn right, else turn left.
                     if (c2 == c) {
                         STATUS(curx, cury) = STATUS_TRACING;
+                        if (flipped) STATUS(curx, yflip) = STATUS_TRACING;
                         // Append the point to the points list, growing dynamically
                         // if we have to.
                         if (unlikely(ptsstored == ptsalloced)) {
