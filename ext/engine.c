@@ -598,6 +598,7 @@ compute_array(AptEngine *self, PyObject *args)
         
         above = self->ri0.i + floor(axisy)*self->ridy.i;
         below = self->ri0.i + ceil(axisy)*self->ridy.i;
+        printf("above = %f, below = %f\n", above, below);
         if (fequal(self, above, -below)) {
             if (ymin < axisy && axisy < ymax-1) {
                 flipping = 1;

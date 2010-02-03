@@ -14,7 +14,7 @@ AptEngine = importer('AptEngine')
 
 numpy = importer('numpy')
 
-import copy, math, Queue, sys, thread, threading, time
+import copy, math, Queue, threading, time
 
 
 class WorkerPool:
@@ -167,11 +167,18 @@ class AptusCompute:
         self.eng.ridxdy = (dx, dy, dy, -dx)
         halfsizew = self.ssize[0]/2.0 - 0.5
         halfsizeh = self.ssize[1]/2.0 - 0.5
-        self.eng.ri0 = (
-            self.center[0] - halfsizew * self.eng.ridxdy[0] - halfsizeh * self.eng.ridxdy[2],
-            self.center[1] - halfsizew * self.eng.ridxdy[1] - halfsizeh * self.eng.ridxdy[3]
-            )
+        ri0x = self.center[0] - halfsizew * self.eng.ridxdy[0] - halfsizeh * self.eng.ridxdy[2]
+        ri0y = self.center[1] - halfsizew * self.eng.ridxdy[1] - halfsizeh * self.eng.ridxdy[3]
  
+        # In order for x-axis symmetry to apply, the x axis has to fall between
+        # pixels or through the center of a pixel.
+        pix_offset = ri0y / self.pixsize
+        pix_offset -= math.floor(pix_offset)
+        print "pix_offset = %r" % pix_offset
+        ri0y -= pix_offset * self.pixsize
+
+        self.eng.ri0 = ri0x, ri0y
+    
         self.eng.iter_limit = self.iter_limit
         self.progress = NullProgressReporter()
         self.while_waiting = None
@@ -334,7 +341,7 @@ class AptusCompute:
         # the buckets of values: 0,1,2,3.
         buckets, _ = numpy.histogram(self.status, 4, (0, 3))
         num_compute = buckets[0]
-        x_side_cuts, y_side_cuts = 4, 1
+        x_side_cuts, y_side_cuts = self.slice_tiles()
 
         self.bucket_progress = BucketCountingProgressReporter(x_side_cuts*y_side_cuts, num_compute, self.progress)
 
@@ -388,6 +395,28 @@ class AptusCompute:
     def cuts(self, lo, hi, n):
         """Return a list of n+1 evenly spaced numbers between `lo` and `hi`."""
         return [int(round(lo+float(i)*(hi-lo)/n)) for i in range(n+1)]
+
+    def slice_tiles(self):
+        """Decide how to divide the current view into tiles for workers.
+        
+        Returns two numbers, the number of tiles in the x and y directions.
+        
+        """
+        # Slice into roughly 200-pixel tiles.
+        x, y = self.ssize[0]//200, self.ssize[1]//200
+        
+        # If the xaxis is horizontal, and is in the middle third of the image,
+        # then slice the window into vertical slices to maximize the benefit of
+        # the axis symmetry.
+        top = self.eng.ri0[1]
+        height = self.ssize[1]*self.pixsize
+        if self.angle == 0 and top > 0 and height > top:
+            axis_frac = top / height
+            if .25 < axis_frac < .75:
+                # Use tall slices to get axis symmetry
+                y = 1
+
+        return x, y
 
     def compute_some(self, n_tile, coords):
         xmin, xmax, ymin, ymax = coords
