@@ -13,6 +13,8 @@ Next release
 
 * If the view crosses the x-axis, the symmetry is used to speed up computation.
 
+* 'o' opens saved settings or image files.
+
 -----------------------
 Aptus 2.0, October 2008
 -----------------------

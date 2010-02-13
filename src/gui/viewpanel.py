@@ -274,6 +274,8 @@ class AptusViewPanel(ComputePanel):
             self.fire_command(id_show_youarehere)
         elif keycode == ord('N'):
             self.fire_command(id_new)
+        elif keycode == ord('O'):
+            self.fire_command(id_open)
         elif keycode == ord('P'):
             self.fire_command(id_show_palettes)
         elif keycode == ord('Q'):
@@ -367,10 +369,6 @@ class AptusViewPanel(ComputePanel):
 
     def cmd_redraw(self, event_unused):
         self.compute.clear_results()
-        #cp = list(self.compute.eng.cycle_params)
-        #cp[1] += 1
-        #self.compute.eng.cycle_params = tuple(cp)
-        #print cp
         self.set_view()
         
     def cmd_jump(self, event_unused):

@@ -65,6 +65,7 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
         # Bind commands
         self.Bind(wx.EVT_MENU, self.cmd_new, id=id_new)
         self.Bind(wx.EVT_MENU, self.cmd_save, id=id_save)
+        self.Bind(wx.EVT_MENU, self.cmd_open, id=id_open)
         self.Bind(wx.EVT_MENU, self.cmd_help, id=id_help)
         self.Bind(wx.EVT_MENU, self.cmd_fullscreen, id=id_fullscreen)
         self.Bind(wx.EVT_MENU, self.cmd_window_size, id=id_window_size)
@@ -129,16 +130,17 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
     def cmd_new(self, event_unused):
         wx.GetApp().new_window()
         
-    def cmd_save(self, event_unused):
-        wildcard = (
-            "PNG image (*.png)|*.png|"     
-            "Aptus state (*.aptus)|*.aptus|"
-            "All files (*.*)|*.*"
-            )
+    # Files we can open and save.
+    wildcards = (
+        "PNG image (*.png)|*.png|"     
+        "Aptus state (*.aptus)|*.aptus|"
+        "All files (*.*)|*.*"
+        )
 
+    def cmd_save(self, event_unused):
         dlg = wx.FileDialog(
-            self, message="Save", defaultDir=os.getcwd(), 
-            defaultFile="", style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard=wildcard, 
+            self, message="Save", defaultDir=os.getcwd(), defaultFile="",
+            style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard=self.wildcards
             )
 
         typ, pth = self.show_file_dialog(dlg)
@@ -149,7 +151,18 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
                 self.panel.write_aptus(pth)
             else:
                 self.message("Don't understand how to write file '%s'" % pth)
-                
+
+    def cmd_open(self, event_unused):
+        dlg = wx.FileDialog(
+            self, message="Open", defaultDir=os.getcwd(), defaultFile="",
+            style=wx.OPEN|wx.FILE_MUST_EXIST, wildcard=self.wildcards
+            )
+        typ, pth = self.show_file_dialog(dlg)
+        opts = AptusOptions(self.panel.compute)
+        opts.opts_from_file(pth)
+        self.SetClientSize(self.panel.compute.size)
+        self.panel.fire_command(id_redraw)
+
     def cmd_help(self, event_unused):
         from aptus.gui.help import HelpDlg
         dlg = HelpDlg(self)

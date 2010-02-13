@@ -93,7 +93,8 @@ HELP_PAGES = {
         <b>h</b> or <b>?</b>: show this help.<br>
         <b>i</b>: set the limit on iterations.<br>
         <b>j</b>: jump among a few pre-determined locations.<br>
-        <b>n</b>: open a new window.<br>
+        <b>n</b>: create a new window.<br>
+        <b>o</b>: open a saved settings or image file.<br>
         <b>r</b>: redraw the current image.<br>
         <b>s</b>: save the current image or settings.<br>
         <b>w</b>: set the window size.<br>
