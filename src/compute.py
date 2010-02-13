@@ -169,12 +169,10 @@ class AptusCompute:
         halfsizeh = self.ssize[1]/2.0 - 0.5
         ri0x = self.center[0] - halfsizew * self.eng.ridxdy[0] - halfsizeh * self.eng.ridxdy[2]
         ri0y = self.center[1] - halfsizew * self.eng.ridxdy[1] - halfsizeh * self.eng.ridxdy[3]
- 
+
         # In order for x-axis symmetry to apply, the x axis has to fall between
         # pixels or through the center of a pixel.
-        pix_offset = ri0y / self.pixsize
-        pix_offset -= math.floor(pix_offset)
-        print "pix_offset = %r" % pix_offset
+        pix_offset, _ = math.modf(ri0y / self.pixsize)
         ri0y -= pix_offset * self.pixsize
 
         self.eng.ri0 = ri0x, ri0y

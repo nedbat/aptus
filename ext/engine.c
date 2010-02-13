@@ -598,9 +598,11 @@ compute_array(AptEngine *self, PyObject *args)
         
         above = self->ri0.i + floor(axisy)*self->ridy.i;
         below = self->ri0.i + ceil(axisy)*self->ridy.i;
-        printf("above = %f, below = %f\n", above, below);
+        // printf("above = %f, below = %f\n", above, below);
         if (fequal(self, above, -below)) {
+            // printf("Properly aligned!\n");
             if (ymin < axisy && axisy < ymax-1) {
+                // printf("Flipping!\n");
                 flipping = 1;
                 fliphi = floor(axisy);
                 fliplo = fliphi - (ymax - fliphi);
