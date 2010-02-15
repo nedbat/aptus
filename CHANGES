@@ -7,13 +7,17 @@ Next release
 * Added full-screen mode.  'f' toggles between full-screen and windowed.
 
 * Window size can be set interactively with the 'w' key.  Enter an explicit size,
-  or 's/2' for half the screen size.
+  or 's/2' (or s/3, s/4, etc) for half the screen size.
 
 * Un-computed pixels are shown as gray checkerboard.
 
 * If the view crosses the x-axis, the symmetry is used to speed up computation.
 
 * 'o' opens saved settings or image files.
+
+* The About section of the Help dialog now shows versions of installed
+  pre-requisite packages.
+
 
 -----------------------
 Aptus 2.0, October 2008
