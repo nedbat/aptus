@@ -6,10 +6,14 @@ from aptus.importer import importer
 from aptus.options import AptusOptions
 
 wx = importer('wx')
+numpy = importer('numpy')
+Image = importer('Image')
+
 import wx.lib.layoutf
 import wx.html 
 
-import webbrowser
+import webbrowser, sys
+
 
 class HtmlDialog(wx.Dialog):
     """ A simple dialog for displaying HTML, with clickable links that launch
@@ -60,6 +64,10 @@ TERMS = {
     'ctrl': 'cmd' if is_mac else 'ctrl',
     'iconsrc': data_file('icon48.png'),
     'version': __version__,
+    'python_version': sys.version,
+    'wx_version': wx.__version__,
+    'numpy_version': numpy.__version__,
+    'pil_version': Image.VERSION,
     }
     
 
@@ -134,6 +142,16 @@ HELP_PAGES = {
         <a href='http://www.pythonware.com/library/pil/handbook/index.htm'>PIL</a>.</p>
         
         <p>Thanks to Rob McMullen and Paul Ollis for help with the drawing code.</p>
+        
+        <hr>
+        <p>Installed versions:</p>
+        <p>
+        Aptus: %(version)s<br>
+        Python: %(python_version)s<br>
+        wx: %(wx_version)s<br>
+        numpy: %(numpy_version)s<br>
+        PIL: %(pil_version)s
+        </p>
         """,
     }
 
