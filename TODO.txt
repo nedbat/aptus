@@ -42,7 +42,7 @@
 
 * Bugs
 
-- Stats panel show zero cycles if any of the tiles had zero cycles.
++ Stats panel show zero cycles if any of the tiles had zero cycles.
 - Somehow I managed to zoom in then zoom out, and ended up outside the legal
     radius and the set disappeared.
 - Resizing a window larger, the background shows pixels left over from other windows?

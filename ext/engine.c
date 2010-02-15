@@ -84,15 +84,7 @@ ComputeStats_clear(ComputeStats *stats)
 static PyObject *
 ComputeStats_AsDict(ComputeStats *stats)
 {
-    // Clean up sentinel values for the min stats.
-    if (stats->miniter == INT_MAX) {
-        stats->miniter = 0;
-    }
-    if (stats->minitercycle == MAX_U4INT) {
-        stats->minitercycle = 0;
-    }
-    
-    return Py_BuildValue(
+    PyObject * statdict = Py_BuildValue(
         "{si,sK,sI,sI,sI,si,si,sI,sI,sI,sI,sI,sI,sI,sI}",
         "maxiter", stats->maxiter,
         "totaliter", stats->totaliter,
@@ -110,6 +102,25 @@ ComputeStats_AsDict(ComputeStats *stats)
         "longestboundary", stats->longestboundary,
         "largestfilled", stats->largestfilled
         );
+    
+    // Clean up sentinel values for stats that could have no actual value.
+    if (stats->miniter == INT_MAX) {
+        if (PyDict_SetItemString(statdict, "miniter", Py_None) < 0) {
+            return NULL;
+        }
+    }
+    if (stats->minitercycle == MAX_U4INT) {
+        if (PyDict_SetItemString(statdict, "minitercycle", Py_None) < 0) {
+            return NULL;
+        }
+    }
+    if (stats->maxitercycle == 0) {
+        if (PyDict_SetItemString(statdict, "maxitercycle", Py_None) < 0) {
+            return NULL;
+        }
+    }
+
+    return statdict;
 }
 
 // The Engine type.

@@ -39,5 +39,5 @@ class StatsPanel(DictPanel, ListeningWindowMixin):
 
 class StatsFrame(AptusToolFrame):
     def __init__(self, mainframe, viewwin):
-        AptusToolFrame.__init__(self, mainframe, title='Statistics', size=(180,180))
+        AptusToolFrame.__init__(self, mainframe, title='Statistics', size=(180,250))
         self.panel = StatsPanel(self, viewwin)

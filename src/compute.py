@@ -500,6 +500,8 @@ class ComputeStats(dict):
             k = stat['key']
             if self[k] is None:
                 self[k] = other[k]
+            elif other[k] is None:
+                pass
             else:
                 self[k] = stat['sum']([self[k], other[k]])
         return self
