@@ -22,7 +22,7 @@
     - Keep the UI responsive while computing?
     + Switching away from window in progress then switching back doesn't show updates.
     + Update stats window as drawing progresses.
-    - Better choice of tiles:
+    + Better choice of tiles:
         tall if crossing the x axis
         just one if the window is small enough
 

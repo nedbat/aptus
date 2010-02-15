@@ -1,6 +1,5 @@
 #!/usr/bin/env python
-"""\
-Aptus: A Mandelbrot set explorer and renderer.
+"""Aptus: A Mandelbrot set explorer and renderer.
 
 Aptus is a Mandelbrot set explorer and renderer with a wxPython GUI and
 a computation extension in C for speed.
@@ -68,12 +67,12 @@ setup(
             include_dirs=[numpy.get_include()],
             # Most examples on the web seem to imply that O3 will be automatic,
             # but for me it wasn't, and I want all the speed I can get...
-            extra_compile_args=['-O3', '-fno-strict-aliasing']#, '-msse', '-mfpmath=sse'],
+            extra_compile_args=['-O3', '-fno-strict-aliasing'],
             ),
         ],
     
     scripts = [
         'scripts/aptuscmd.py',
         'scripts/aptusgui.py',
-        ],    
+        ],
     )
