@@ -70,7 +70,7 @@ HELP_PAGES = {
             <td width='50' valign='top'><img src='%(iconsrc)s'/></td>
             <td valign='top'>
                 <b>Aptus %(version)s</b>, Mandelbrot set explorer.<br>
-                Copyright 2007-2009, Ned Batchelder.<br>
+                Copyright 2007-2010, Ned Batchelder.<br>
                 <a href='http://nedbatchelder.com/code/aptus'>http://nedbatchelder.com/code/aptus</a>
             </td>
         </tr>

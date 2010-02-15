@@ -1,6 +1,5 @@
 """ Aptus GUI
     http://nedbatchelder.com/code/aptus
-    Copyright 2007-2008, Ned Batchelder
 """
 
 from aptus import data_file
