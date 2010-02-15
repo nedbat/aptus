@@ -42,10 +42,15 @@
 
 * Bugs
 
-+ Stats panel show zero cycles if any of the tiles had zero cycles.
+- Mac: fullscreen does nothing.
+- Mac: the gray checkerboard is randomly tinted other colors.
+- Ubuntu virtualbox: nothing is drawn until the whole calculation is finished.
+- Ubuntu virtualbox: keystrokes work at first, and then stop working.
 - Somehow I managed to zoom in then zoom out, and ended up outside the legal
     radius and the set disappeared.
 - Resizing a window larger, the background shows pixels left over from other windows?
+
++ Stats panel show zero cycles if any of the tiles had zero cycles.
 + Visit the deep tush (narrow horizontal splinter). Drag the image to the right.
     Tiles that should be all black that still have old pixels in them won't
     flood-fill, they paint every scanline.
