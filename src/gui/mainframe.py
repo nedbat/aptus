@@ -158,10 +158,11 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
             style=wx.OPEN|wx.FILE_MUST_EXIST, wildcard=self.wildcards
             )
         typ, pth = self.show_file_dialog(dlg)
-        opts = AptusOptions(self.panel.compute)
-        opts.opts_from_file(pth)
-        self.SetClientSize(self.panel.compute.size)
-        self.panel.fire_command(id_redraw)
+        if typ:
+            opts = AptusOptions(self.panel.compute)
+            opts.opts_from_file(pth)
+            self.SetClientSize(self.panel.compute.size)
+            self.panel.fire_command(id_redraw)
 
     def cmd_help(self, event_unused):
         from aptus.gui.help import HelpDlg
