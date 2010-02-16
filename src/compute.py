@@ -401,7 +401,7 @@ class AptusCompute:
         
         """
         # Slice into roughly 200-pixel tiles.
-        x, y = min(self.ssize[0]//200, 1), min(self.ssize[1]//200, 1)
+        x, y = max(self.ssize[0]//200, 1), max(self.ssize[1]//200, 1)
 
         # If the xaxis is horizontal, and is in the middle third of the image,
         # then slice the window into vertical slices to maximize the benefit of
