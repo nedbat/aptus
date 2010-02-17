@@ -13,7 +13,9 @@ Next release
 
 * If the view crosses the x-axis, the symmetry is used to speed up computation.
 
-* 'o' opens saved settings or image files.
+* 'o' opens saved settings or image files (*.aptus or *.png).
+
+* Files can be dropped on the Aptus window to open them.
 
 * The About section of the Help dialog now shows versions of installed
   pre-requisite packages.

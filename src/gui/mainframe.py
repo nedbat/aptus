@@ -82,6 +82,9 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
         self.pointinfo_tool = None
         self.julia_tool = None
 
+        # Files can be dropped here.
+        self.SetDropTarget(MainFrameFileDropTarget(self))
+
     def Show(self, show=True):
         # Override Show so we can set the view properly.
         if show:
@@ -128,7 +131,7 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
             return None, None
 
     def cmd_new(self, event_unused):
-        wx.GetApp().new_window()
+        return wx.GetApp().new_window()
         
     # Files we can open and save.
     wildcards = (
@@ -159,10 +162,13 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
             )
         typ, pth = self.show_file_dialog(dlg)
         if typ:
-            opts = AptusOptions(self.panel.compute)
-            opts.opts_from_file(pth)
-            self.SetClientSize(self.panel.compute.size)
-            self.panel.fire_command(id_redraw)
+            self.open_file(pth)
+            
+    def open_file(self, pth):
+        opts = AptusOptions(self.panel.compute)
+        opts.opts_from_file(pth)
+        self.SetClientSize(self.panel.compute.size)
+        self.panel.fire_command(id_redraw)
 
     def cmd_help(self, event_unused):
         from aptus.gui.help import HelpDlg
@@ -241,3 +247,20 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
                 from aptus.gui import juliapanel
                 self.julia_tool = juliapanel.JuliaFrame(self, self.panel)
                 self.julia_tool.Show()
+
+
+class MainFrameFileDropTarget(wx.FileDropTarget):
+    """A drop target so files can be opened by dragging them to the Aptus window.
+    
+    The first file opens in the current window, the rest open new windows.
+    
+    """
+    def __init__(self, frame):
+        wx.FileDropTarget.__init__(self)
+        self.frame = frame
+
+    def OnDropFiles(self, x, y, filenames):
+        self.frame.open_file(filenames[0])
+        for filename in filenames[1:]:
+            frame = self.frame.cmd_new(None)
+            frame.open_file(filename)
