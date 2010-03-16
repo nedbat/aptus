@@ -37,6 +37,8 @@ class AptusViewPanel(ComputePanel):
         self.Bind(wx.EVT_LEAVE_WINDOW, self.on_leave_window)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
         self.Bind(wx.EVT_KEY_UP, self.on_key_up)
+        self.Bind(wx.EVT_KILL_FOCUS, self.on_kill_focus)
+        self.Bind(wx.EVT_SET_FOCUS, self.on_set_focus)
 
         self.Bind(wx.EVT_MENU, self.cmd_set_angle, id=id_set_angle)
         self.Bind(wx.EVT_MENU, self.cmd_set_iter_limit, id=id_set_iter_limit)
@@ -169,6 +171,7 @@ class AptusViewPanel(ComputePanel):
             dc.DrawBitmap(self.bitmap, 0, 0, False)
 
     def on_left_down(self, event):
+        print wx.Window.FindFocus()
         self.pt_down = event.GetPosition()
         self.rubberbanding = False
         if self.panning:
@@ -254,7 +257,7 @@ class AptusViewPanel(ComputePanel):
         shift = event.ShiftDown()
         cmd = event.CmdDown()
         keycode = event.KeyCode
-
+        print "Look:", keycode
         if keycode == ord('A'):
             self.fire_command(id_set_angle)
         elif keycode == ord('C'):
@@ -332,6 +335,16 @@ class AptusViewPanel(ComputePanel):
             if not self.pan_locked:
                 self.panning = False
             
+    def on_set_focus(self, event):
+        print "Set focus"
+
+    def on_kill_focus(self, event):
+        import traceback; traceback.print_stack()
+        print "Kill focus to %r" % event.GetWindow()
+        print "Parent: %r" % self.GetParent()
+        if self.GetParent():
+            print "Isactive: %r" % self.GetParent().IsActive()
+
     # Command helpers
 
     def set_value(self, dtitle, dprompt, attr, caster, when_done):
