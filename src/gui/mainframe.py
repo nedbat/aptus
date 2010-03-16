@@ -75,12 +75,19 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
         self.Bind(wx.EVT_MENU, self.cmd_show_pointinfo, id=id_show_pointinfo)
         self.Bind(wx.EVT_MENU, self.cmd_show_julia, id=id_show_julia)
 
+        self.Bind(wx.EVT_ACTIVATE, self.on_activate)
+
         # Auxilliary frames.
         self.youarehere_tool = None
         self.palettes_tool = None
         self.stats_tool = None
         self.pointinfo_tool = None
         self.julia_tool = None
+
+    def on_activate(self, event):
+        print "Activating %r" % event.GetActive()
+        if event.GetActive():
+            self.panel.SetFocus()
 
     def Show(self, show=True):
         # Override Show so we can set the view properly.
