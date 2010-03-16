@@ -46,6 +46,7 @@ x Mac: fullscreen does nothing.
 x Mac: the gray checkerboard is randomly tinted other colors. (it was numpy 1.0.1's fault)
 - Ubuntu virtualbox: nothing is drawn until the whole calculation is finished.
 - Ubuntu virtualbox: keystrokes work at first, and then stop working.
+- Ubuntu virtualbox: resizing the window causes many paints (and therefore calcs).
 - Somehow I managed to zoom in then zoom out, and ended up outside the legal
     radius and the set disappeared.
 - Resizing a window larger, the background shows pixels left over from other windows?
@@ -104,7 +105,7 @@ x Optimize boundary.py so we can use it for high iterations
 - Palette editor.
 - Back button
     - with a list of places you've been (with thumbnails).
-- Open command to load aptus state files.
++ Open command to load aptus state files.
 -   and palette files
 - Mac: app icon  (if 'wxMac' in wx.PlatformInfo:)
 - Custom bookmarks (like the J key).
