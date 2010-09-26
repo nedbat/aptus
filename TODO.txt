@@ -36,6 +36,9 @@
     + YouAreHere is centered incorrectly for a Julia set.
     - Explorer, spawn a Julia, shift-hover in the Julia explorer window changes the mini julia.
 
+- Command line doesn't need to init the pixels with checkerboard, it just consumes extra memory.
+
+
 * Clean-up
 
 + Use PyMem_Malloc in the extension.
