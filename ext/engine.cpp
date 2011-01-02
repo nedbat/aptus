@@ -9,7 +9,7 @@
 // Py_BEGIN_ALLOW_THREADS produces a compiler warning (yuk).  Re-define it in
 // a way that doesn't.
 #undef Py_BEGIN_ALLOW_THREADS
-#define Py_BEGIN_ALLOW_THREADS { PyThreadState *_save = PyEval_SaveThread();
+#define Py_BEGIN_ALLOW_THREADS { PyThreadState *_save; _save = PyEval_SaveThread();
 
 // Type definitions.
 
@@ -39,6 +39,8 @@ typedef npy_uint64 u8int;
 #define likely(x)       (x)
 #define unlikely(x)     (x)
 #endif
+
+const u4int MIN_PROGRESS = 1000000;  // Don't call progress unless we've done this many iters.
 
 // Statistics about the computation (not exposed as a Python type).
 typedef struct {
@@ -315,7 +317,7 @@ fequal(AptEngine *self, aptfloat a, aptfloat b)
 // in the current array.  If continuous coloring, then the returned value is
 // scaled up (a fixed-point number essentially).
 
-static int
+static u4int
 compute_count(AptEngine *self, int xi, int yi, ComputeStats *stats)
 {
     u4int count = 0;
@@ -565,19 +567,22 @@ compute_array(AptEngine *self, PyObject *args)
 
     Py_BEGIN_ALLOW_THREADS
 
-    u4int num_pixels = 0;
+    u4int num_pixels;
+    num_pixels = 0;
 
     // points is an array of points on a boundary.
-    int ptsalloced = 10;
+    u4int ptsalloced;
+    u4int ptsstored;
+    ptsalloced = 10;
+    ptsstored = 0;
     points = PyMem_New(Point, ptsalloced);
-    u4int ptsstored = 0;
 
-    STATS_DECL(    
+    STATS_DECL(
     // Progress reporting stuff.
     char info[100];
     char uinfo[100];
-    u8int last_progress = 0;    // the totaliter the last time we called the progress function.
-    const int MIN_PROGRESS = 1000000;  // Don't call progress unless we've done this many iters.
+    u8int last_progress;    // the totaliter the last time we called the progress function.
+    last_progress = 0;
     )
 
 // Convenient accessors for our arrays
@@ -594,15 +599,18 @@ compute_array(AptEngine *self, PyObject *args)
 
     int xi, yi;
     u1int s;
-    int c = 0;
+    int c;// = 0;
     u4int pi;
     int ptx, pty;
 
     // Figure out if we can flip around the x-axis.
-    int flipping = 0;
-    aptfloat axisy = 0;
-    int fliplo = 0, fliphi = 0;
+    int flipping;
+    aptfloat axisy;
+    int fliplo, fliphi;
     
+    flipping = fliplo = fliphi = 0;
+    axisy = 0;
+
     if (!self->julia && self->ridx.r != 0 && self->ridx.i == 0 && self->ridy.r == 0 && self->ridy.i != 0) {
         // The symmetry axis is horizontal.
         axisy = self->ri0.i/-self->ridy.i;
@@ -622,8 +630,9 @@ compute_array(AptEngine *self, PyObject *args)
         }
     }
     
-    int flipped = 0, yflip = 0;
-    
+    int flipped, yflip;
+    flipped = yflip = 0;    
+
 // A macro to potentially flip a result across the x axis.
 // TODO: This macro checks the status of the flipped point to see that it is
 // UNCOMPUTED.  But I don't see why that's necessary: if the flipped point is
@@ -663,7 +672,8 @@ compute_array(AptEngine *self, PyObject *args)
     // to exist along one of the edges.  We can quickly find the minimum, and then
     // use that value in compute_count to quickly iterate to the minimum without
     // checking the bailout condition.
-    int miniteredge = INT_MAX;
+    int miniteredge;
+    miniteredge = INT_MAX;
     if (self->trace_boundary) {
         // Calc the left and right edges
         for (yi = ymin; yi < ymax; yi++) {
@@ -877,7 +887,7 @@ compute_array(AptEngine *self, PyObject *args)
 
                         // If this was a large boundary, call the progress function.
                         if (ptsstored > (u4int)(xmax-xmin)) {
-                            if (stats.totaliter - last_progress > MIN_PROGRESS) {
+                            if ((stats.totaliter - last_progress) > MIN_PROGRESS) {
                                 sprintf(info, "trace %d * %d, totaliter %s", c, ptsstored, human_u8int(stats.totaliter, uinfo));
                                 Py_BLOCK_THREADS
                                 ret = call_progress(self, progress, prog_arg, num_pixels, info);
@@ -915,7 +925,7 @@ compute_array(AptEngine *self, PyObject *args)
     
     // Clean up.
     ok = 1;
-    
+
 done:
     // Free allocated memory.
     if (points != NULL) {
@@ -966,7 +976,8 @@ apply_palette(AptEngine *self, PyObject *args)
     if (PyString_AsStringAndSize(colbytes_obj, (char**)&colbytes, &ncolbytes) < 0) {
         goto done;
     }
-    int ncolors = ncolbytes / 3;
+    int ncolors;
+    ncolors = ncolbytes / 3;
 
     u1int incolbytes[3];
     int i;
@@ -977,8 +988,10 @@ apply_palette(AptEngine *self, PyObject *args)
     }
     
     // A one-element cache of count and color.
-    npy_uint8 *plastpix = NULL;
-    npy_uint32 lastc = (*(npy_uint32 *)PyArray_GETPTR2(counts, 0, 0))+1;    // Something different than the first value.
+    npy_uint8 *plastpix;
+    npy_uint32 lastc;
+    plastpix = NULL;
+    lastc = (*(npy_uint32 *)PyArray_GETPTR2(counts, 0, 0))+1;    // Something different than the first value.
 
 // A macro to deal with out-of-range color indexes
 #define WRAP_COLOR(cindex)                      \
@@ -995,10 +1008,16 @@ apply_palette(AptEngine *self, PyObject *args)
         }
 
     // Walk the arrays
-    int h = PyArray_DIM(counts, 0);
-    int w = PyArray_DIM(counts, 1);
-    int count_stride = PyArray_STRIDE(counts, 1);
-    int pix_stride = PyArray_STRIDE(pix, 1);
+    int h;
+    int w;
+    int count_stride;
+    int pix_stride;
+
+    h = PyArray_DIM(counts, 0);
+    w = PyArray_DIM(counts, 1);
+    count_stride = PyArray_STRIDE(counts, 1);
+    pix_stride = PyArray_STRIDE(pix, 1);
+
     int x, y;
     for (y = 0; y < h; y++) {
         // The count for this pixel.
