@@ -42,13 +42,13 @@ typedef npy_uint64 u8int;
 
 // Statistics about the computation (not exposed as a Python type).
 typedef struct {
-    int     maxiter;            // Max iteration that isn't in the set.
+    u4int   maxiter;            // Max iteration that isn't in the set.
     u8int   totaliter;          // Total number of iterations.
     u4int   totalcycles;        // Number of cycles detected.
     u4int   minitercycle;       // Min iteration that was a cycle.
     u4int   maxitercycle;       // Max iteration that was finally a cycle.
-    int     miniter;            // Minimum iteration count.
-    int     miniteredge;        // Minimum iteration count on the edge.
+    u4int   miniter;            // Minimum iteration count.
+    u4int   miniteredge;        // Minimum iteration count on the edge.
     u4int   maxedpoints;        // Number of points that exceeded the maxiter.
     u4int   computedpoints;     // Number of points that were actually computed.
     u4int   filledpoints;       // Number of points that were filled.
@@ -132,7 +132,7 @@ typedef struct {
     aptcomplex ridy;        // delta per pixel in y direction (a pair of floats)
     aptcomplex rijulia;     // julia point.
     
-    int iter_limit;         // limit on iteration count.
+    u4int iter_limit;       // limit on iteration count.
     aptfloat bailout;       // escape radius.
     int check_cycles;       // should we check for cycles?
     aptfloat epsilon;       // the epsilon to use when checking for cycles.
@@ -318,7 +318,7 @@ fequal(AptEngine *self, aptfloat a, aptfloat b)
 static int
 compute_count(AptEngine *self, int xi, int yi, ComputeStats *stats)
 {
-    int count = 0;
+    u4int count = 0;
 
     // The complex point we're computing for.
     aptcomplex c;
@@ -443,7 +443,7 @@ compute_count(AptEngine *self, int xi, int yi, ComputeStats *stats)
             // Way outside the set, continuous mode acts weird.  Cut it off at 1.
             fcount = 1;
         }
-        count = fcount * self->cont_levels;
+        count = (u4int)(fcount * self->cont_levels);
     }
     
     STATS_CODE(stats->computedpoints++;)
@@ -501,7 +501,7 @@ call_debug(AptEngine *self, char *info)
 static char *
 human_u8int(u8int big, char *buf)
 {
-    float little = big;
+    float little = (float)big;
     if (big < 10000000) {   // 10 million
         sprintf(buf, "%lu", (u4int)big);
     }
@@ -570,7 +570,7 @@ compute_array(AptEngine *self, PyObject *args)
     // points is an array of points on a boundary.
     int ptsalloced = 10;
     points = PyMem_New(Point, ptsalloced);
-    int ptsstored = 0;
+    u4int ptsstored = 0;
 
     STATS_DECL(    
     // Progress reporting stuff.
@@ -595,7 +595,8 @@ compute_array(AptEngine *self, PyObject *args)
     int xi, yi;
     u1int s;
     int c = 0;
-    int pi, ptx, pty;
+    u4int pi;
+    int ptx, pty;
 
     // Figure out if we can flip around the x-axis.
     int flipping = 0;
@@ -615,7 +616,7 @@ compute_array(AptEngine *self, PyObject *args)
             if (ymin < axisy && axisy < ymax-1) {
                 // printf("Flipping!\n");
                 flipping = 1;
-                fliphi = floor(axisy);
+                fliphi = (int)floor(axisy);
                 fliplo = fliphi - (ymax - fliphi);
             }
         }
@@ -631,7 +632,7 @@ compute_array(AptEngine *self, PyObject *args)
 // status so we don't duplicate work.
 #define FLIP_POINT(xi, yi, c, s)                            \
         if (flipping && fliplo < yi && yi < fliphi) {       \
-            int yother = axisy + (axisy - yi);              \
+            int yother = (int)(axisy + (axisy - yi));       \
             if (STATUS(xi, yother) == STATUS_UNCOMPUTED) {  \
                 COUNTS(xi, yother) = c;                     \
                 STATUS(xi, yother) = s;                     \
@@ -686,7 +687,7 @@ compute_array(AptEngine *self, PyObject *args)
                 miniteredge = c;
             }
         }
-        stats.miniteredge = miniteredge / self->cont_levels;
+        stats.miniteredge = (u4int)(miniteredge / self->cont_levels);
     }
     else {
         stats.miniteredge = 0;
@@ -847,7 +848,7 @@ compute_array(AptEngine *self, PyObject *args)
                     // the points with the wrong color, so there's no chance that
                     // filling left from the left edge will flood outside the
                     // region.
-                    int num_filled = 0;
+                    u4int num_filled = 0;
                     for (pi = 0; pi < ptsstored; pi++) {
                         ptx = points[pi].x;
                         pty = points[pi].y;
@@ -875,7 +876,7 @@ compute_array(AptEngine *self, PyObject *args)
                         stats.boundariesfilled++;
 
                         // If this was a large boundary, call the progress function.
-                        if (ptsstored > (xmax-xmin)) {
+                        if (ptsstored > (u4int)(xmax-xmin)) {
                             if (stats.totaliter - last_progress > MIN_PROGRESS) {
                                 sprintf(info, "trace %d * %d, totaliter %s", c, ptsstored, human_u8int(stats.totaliter, uinfo));
                                 Py_BLOCK_THREADS
@@ -1001,7 +1002,7 @@ apply_palette(AptEngine *self, PyObject *args)
     int x, y;
     for (y = 0; y < h; y++) {
         // The count for this pixel.
-        void *pcount = PyArray_GETPTR2(counts, y, 0);
+        char *pcount = (char*)PyArray_GETPTR2(counts, y, 0);
         // The pointer to the pixel's RGB bytes.
         npy_uint8 *ppix = (npy_uint8 *)PyArray_GETPTR3(pix, y, 0, 0);
 
@@ -1025,8 +1026,8 @@ apply_palette(AptEngine *self, PyObject *args)
                         }
                         else {
                             double cf = c * scale / self->blend_colors;
-                            int cbase = cf;
-                            float cfrac = cf - cbase;
+                            int cbase = (int)cf;
+                            float cfrac = (float)(cf - cbase);
                             int c1index = cbase + phase;
                             int c2index = cbase + 1 + phase;
                             WRAP_COLOR(c1index)
