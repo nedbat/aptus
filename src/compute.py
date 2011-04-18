@@ -14,14 +14,14 @@ AptEngine = importer('AptEngine')
 
 numpy = importer('numpy')
 
-import copy, math, Queue, threading, time
+import copy, math, Queue, threading, time, multiprocessing
 
 
 class WorkerPool:
     def __init__(self):
         self.workers = []            # List of threads that will do work.
         self.work = Queue.Queue(0)   # The queue of work items.
-        self.num_threads = 2
+        self.num_threads = multiprocessing.cpu_count()
 
     def get_ready(self):
         """Call before adding work.  Prepares the pool."""
