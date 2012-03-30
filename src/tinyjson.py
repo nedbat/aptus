@@ -77,6 +77,8 @@ class JsonWriter:
             return '"' + v.replace('"', '\\"') + '"'
         elif isinstance(v, dict):
             return self.dumps_dict(v)
+        elif v is None:
+            return "null"
         else:
             raise Exception("Don't know how to serialize: %r" % v)
 
