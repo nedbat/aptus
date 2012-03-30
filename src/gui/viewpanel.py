@@ -171,7 +171,7 @@ class AptusViewPanel(ComputePanel):
             dc.DrawBitmap(self.bitmap, 0, 0, False)
 
     def on_left_down(self, event):
-        print wx.Window.FindFocus()
+        #print wx.Window.FindFocus()
         self.pt_down = event.GetPosition()
         self.rubberbanding = False
         if self.panning:
@@ -257,7 +257,7 @@ class AptusViewPanel(ComputePanel):
         shift = event.ShiftDown()
         cmd = event.CmdDown()
         keycode = event.KeyCode
-        print "Look:", keycode
+        #print "Look:", keycode
         if keycode == ord('A'):
             self.fire_command(id_set_angle)
         elif keycode == ord('C'):
@@ -327,7 +327,7 @@ class AptusViewPanel(ComputePanel):
             sym = revmap.get(keycode, "")
             if not sym:
                 sym = "ord(%r)" % chr(keycode)
-            print "Unmapped key: %r, %s, shift=%r, cmd=%r" % (keycode, sym, shift, cmd)
+            #print "Unmapped key: %r, %s, shift=%r, cmd=%r" % (keycode, sym, shift, cmd)
 
     def on_key_up(self, event):
         keycode = event.KeyCode
@@ -336,9 +336,10 @@ class AptusViewPanel(ComputePanel):
                 self.panning = False
             
     def on_set_focus(self, event):
-        print "Set focus"
+        pass #print "Set focus"
 
     def on_kill_focus(self, event):
+        return
         import traceback; traceback.print_stack()
         print "Kill focus to %r" % event.GetWindow()
         print "Parent: %r" % self.GetParent()
