@@ -4,7 +4,7 @@
 import time
 
 def duration(s):
-    """ Make a nice string representation of a number of seconds.
+    """ Make a nice string representation of a number of seconds `s`.
     """
     m, s = divmod(s, 60)
     h, m = divmod(m, 60)
@@ -24,10 +24,7 @@ def duration(s):
             dur.append("%ds" % s)
         else:
             dur.append("%.2fs" % s)
-    if dur:
-        return " ".join(dur)
-    else:
-        return "0s"
+    return " ".join(dur) or "0s"
 
 def future(secs):
     """ Make a nice string representation of a point in time in the future,
