@@ -166,7 +166,7 @@ class ComputePanel(wx.Panel):
         self.Refresh()
         bitmap = self.bitmap_from_compute()
         wx.EndBusyCursor()
-        print "Parent is active: %r" % self.GetParent().IsActive()
+        #print "Parent is active: %r" % self.GetParent().IsActive()
         return bitmap
 
     def draw_progress(self):
