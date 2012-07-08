@@ -9,3 +9,4 @@ syntax: glob
 
 # Stuff in the root.
 build
+MANIFEST
