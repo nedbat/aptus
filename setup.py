@@ -8,6 +8,7 @@ a computation extension in C for speed.
 import distutils, sys
 from distutils.core import setup, Extension
 from distutils.cygwinccompiler import Mingw32CCompiler
+import glob
 
 try:
     import numpy
@@ -31,13 +32,26 @@ Topic :: Artistic Software
 Topic :: Scientific/Engineering :: Mathematics
 """
 
+data_files = []
+options = {}
+
 # Most examples on the web seem to imply that O3 will be automatic,
 # but for me it wasn't, and I want all the speed I can get...
 extra_compile_args = ['-O3']
 
 if sys.platform == "win32":
     #if isinstance(self.compiler, Mingw32CCompiler):
-        extra_compile_args = ['-O2']
+    extra_compile_args = ['-O2']
+
+    import py2exe
+    data_files += [
+        ("Microsoft.VC90.CRT", glob.glob(r'C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\redist\x86\Microsoft.VC90.CRT\*.*')),
+        ]
+    options.update({
+        'py2exe': {
+            'bundle_files': 1,
+            },
+        })
 
 setup(
     # The metadata
@@ -82,4 +96,7 @@ setup(
         'scripts/aptuscmd.py',
         'scripts/aptusgui.py',
         ],
+
+    data_files = data_files,
+    options = options,
     )
