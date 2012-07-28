@@ -43,15 +43,20 @@ if sys.platform == "win32":
     #if isinstance(self.compiler, Mingw32CCompiler):
     extra_compile_args = ['-O2']
 
-    import py2exe
-    data_files += [
-        ("Microsoft.VC90.CRT", glob.glob(r'C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\redist\x86\Microsoft.VC90.CRT\*.*')),
-        ]
-    options.update({
-        'py2exe': {
-            'bundle_files': 1,
-            },
-        })
+    try:
+        import py2exe
+    except:
+        py2exe = None
+
+    if py2exe:
+        data_files += [
+            ("Microsoft.VC90.CRT", glob.glob(r'C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\redist\x86\Microsoft.VC90.CRT\*.*')),
+            ]
+        options.update({
+            'py2exe': {
+                'bundle_files': 1,
+                },
+            })
 
 setup(
     # The metadata
