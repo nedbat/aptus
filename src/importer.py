@@ -10,7 +10,7 @@ def importer(name):
         if not hasattr(wx, 'BitmapFromBuffer'):
             raise Exception("Need wxPython 2.8 or greater, from " + url)
         return wx
-    
+
     elif name == 'numpy':
         url = "http://numpy.scipy.org/"
         try:
@@ -18,13 +18,13 @@ def importer(name):
         except ImportError:
             raise Exception("Need numpy, from " + url)
         return numpy
-    
+
     elif name == 'Image':
-        url = "http://pythonware.com/products/pil/"
+        url = "https://pypi.python.org/pypi/Pillow"
         try:
-            import Image
+            from PIL import Image
         except ImportError:
-            raise Exception("Need PIL, from " + url)
+            raise Exception("Need Pillow, from " + url)
         if not hasattr(Image, 'fromarray'):
             raise Exception("Need PIL 1.1.6 or greater, from " + url)
         return Image
