@@ -69,7 +69,7 @@ setup(
     url = "http://nedbatchelder.com/code/aptus",
     license = "MIT",
     classifiers = filter(None, classifiers.split("\n")),
-    
+
     # The data
     packages = [
         'aptus',
@@ -79,7 +79,7 @@ setup(
     package_dir = {
         'aptus': 'src'
         },
-    
+
     package_data = {
         'aptus': [
             '*.ico',
@@ -87,11 +87,11 @@ setup(
             'palettes/*.ggr',
             ]
         },
-    
+
     ext_modules = [
         Extension(
             "aptus.engine",
-            sources=["ext/engine.cpp"],
+            sources=["ext/engine.c"],
             include_dirs=[numpy.get_include()],
             extra_compile_args=extra_compile_args,
             ),
