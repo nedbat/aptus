@@ -14,8 +14,7 @@ $(RESFILE): etc/crosshair.gif
 	python /Python25/Scripts/img2py -n Crosshair etc/crosshair.gif $(RESFILE)
 
 clean:
-	-rm -rf build
-	-rm -rf dist
+	-rm -rf build dist Aptus.egg-info
 	-rm -f MANIFEST
 	-rm -f doc/*.png
 	-rm -f *.pyc */*.pyc */*/*.pyc */*/*/*.pyc
