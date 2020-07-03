@@ -57,9 +57,9 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
 
         # Set the window icon
         ib = wx.IconBundle()
-        ib.AddIconFromFile(data_file("icon48.png"), wx.BITMAP_TYPE_ANY)
-        ib.AddIconFromFile(data_file("icon32.png"), wx.BITMAP_TYPE_ANY)
-        ib.AddIconFromFile(data_file("icon16.png"), wx.BITMAP_TYPE_ANY)
+        ib.AddIcon(data_file("icon48.png"), wx.BITMAP_TYPE_ANY)
+        ib.AddIcon(data_file("icon32.png"), wx.BITMAP_TYPE_ANY)
+        ib.AddIcon(data_file("icon16.png"), wx.BITMAP_TYPE_ANY)
         self.SetIcons(ib)
 
         # Bind commands
@@ -143,7 +143,7 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
     def cmd_save(self, event_unused):
         dlg = wx.FileDialog(
             self, message="Save", defaultDir=os.getcwd(), defaultFile="",
-            style=wx.SAVE|wx.OVERWRITE_PROMPT, wildcard=self.wildcards
+            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT, wildcard=self.wildcards
             )
 
         typ, pth = self.show_file_dialog(dlg)
@@ -158,7 +158,7 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
     def cmd_open(self, event_unused):
         dlg = wx.FileDialog(
             self, message="Open", defaultDir=os.getcwd(), defaultFile="",
-            style=wx.OPEN|wx.FILE_MUST_EXIST, wildcard=self.wildcards
+            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST, wildcard=self.wildcards
             )
         typ, pth = self.show_file_dialog(dlg)
         if typ:

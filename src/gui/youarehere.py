@@ -116,9 +116,9 @@ class YouAreHereWin(ParentComputePanel, ListeningWindowMixin):
         # Set the proper cursor:
         mouse_pt = event.GetPosition()
         if self.dragging or self.hererect.Contains(mouse_pt):
-            self.SetCursor(wx.StockCursor(wx.CURSOR_SIZING))
+            self.SetCursor(wx.Cursor(wx.CURSOR_SIZING))
         else:
-            self.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+            self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
 
     def on_coloring_changed(self, event_unused):
         if self.compute.copy_coloring(self.mainwin.compute):

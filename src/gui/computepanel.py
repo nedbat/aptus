@@ -152,7 +152,7 @@ class ComputePanel(wx.Panel):
 
     def bitmap_from_compute(self):
         pix = self.compute.color_mandel()
-        bitmap = wx.BitmapFromBuffer(pix.shape[1], pix.shape[0], pix)
+        bitmap = wx.Bitmap.FromBuffer(pix.shape[1], pix.shape[0], pix)
         return bitmap
 
     def draw_bitmap(self):
@@ -193,9 +193,9 @@ class ComputePanel(wx.Panel):
     def write_png(self, pth):
         """ Write the current image as a PNG to the path `pth`.
         """
-        image = wx.ImageFromBitmap(self.bitmap)
+        image = self.bitmap.ConvertToImage()
         im = Image.new('RGB', (image.GetWidth(), image.GetHeight()))
-        im.fromstring(image.GetData())
+        im.frombytes(bytes(image.GetData()))
         self.compute.write_image(im, pth)
 
     def write_aptus(self, pth):

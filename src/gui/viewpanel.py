@@ -99,19 +99,19 @@ class AptusViewPanel(ComputePanel):
 
         # Set the proper cursor:
         if self.rubberbanding:
-            self.SetCursor(wx.StockCursor(wx.CURSOR_MAGNIFIER))
+            self.SetCursor(wx.Cursor(wx.CURSOR_MAGNIFIER))
         elif self.panning:
-            self.SetCursor(wx.StockCursor(wx.CURSOR_SIZING))
+            self.SetCursor(wx.Cursor(wx.CURSOR_SIZING))
         elif self.indicating_pt:
             import aptus.gui.resources
             curimg = aptus.gui.resources.getCrosshairImage()
-            curimg.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 7)
-            curimg.SetOptionInt(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 7)
-            cur = wx.CursorFromImage(curimg)
+            curimg.SetOption(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 7)
+            curimg.SetOption(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 7)
+            cur = wx.Cursor(curimg)
             self.SetCursor(cur)
-            #self.SetCursor(wx.StockCursor(wx.CURSOR_CROSS))
+            #self.SetCursor(wx.Cursor(wx.CURSOR_CROSS))
         else:
-            self.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+            self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
 
     def indicate_point(self, event):
         """ Use the given event to indicate a point, maybe.

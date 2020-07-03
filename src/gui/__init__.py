@@ -8,6 +8,7 @@ from aptus.gui.mainframe import AptusMainFrame
 
 # Import third-party packages.
 wx = importer('wx')
+import wx.adv
 
 class AptusGuiApp(wx.PySimpleApp):
     def __init__(self, args):
@@ -25,14 +26,14 @@ class AptusGuiApp(wx.PySimpleApp):
         return frame
 
 
-class SplashScreen(wx.SplashScreen):
+class SplashScreen(wx.adv.SplashScreen):
     """ A nice splash screen.
     """
     def __init__(self, parent=None):
         bitmap = wx.Image(name=data_file("splash.png")).ConvertToBitmap()
-        splash_style = wx.SPLASH_TIMEOUT | wx.SPLASH_NO_CENTRE
+        splash_style = wx.adv.SPLASH_TIMEOUT | wx.adv.SPLASH_NO_CENTRE
         style = wx.FRAME_NO_TASKBAR | wx.STAY_ON_TOP | wx.NO_BORDER
-        wx.SplashScreen.__init__(self, bitmap, splash_style, 2000, parent, style=style)
+        wx.adv.SplashScreen.__init__(self, bitmap, splash_style, 2000, parent, style=style)
         self.Move(parent.ClientToScreen((0, 0)) + (50, 50))
         self.Bind(wx.EVT_CLOSE, self.on_exit)
 

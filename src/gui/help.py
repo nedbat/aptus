@@ -67,7 +67,7 @@ TERMS = {
     'python_version': sys.version,
     'wx_version': wx.__version__,
     'numpy_version': numpy.__version__,
-    'pil_version': Image.VERSION,
+    'pil_version': Image.__version__,
     }
     
 
