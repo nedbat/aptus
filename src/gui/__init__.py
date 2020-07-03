@@ -10,10 +10,10 @@ from aptus.gui.mainframe import AptusMainFrame
 wx = importer('wx')
 import wx.adv
 
-class AptusGuiApp(wx.PySimpleApp):
+class AptusGuiApp(wx.App):
     def __init__(self, args):
         self.args = args
-        wx.PySimpleApp.__init__(self)
+        wx.App.__init__(self)
             
     def OnInit(self):
         frame = self.new_window(self.args)

@@ -77,7 +77,7 @@ class PalettesPanel(ScrolledPanel, ListeningWindowMixin):
         self.selected = -1
         
         self.palwins = []
-        self.sizer = wx.FlexGridSizer(len(self.palettes), 1)
+        self.sizer = wx.FlexGridSizer(rows=len(self.palettes), cols=1, vgap=0, hgap=0)
         for i, pal in enumerate(self.palettes):
             palwin = PaletteWin(self, pal, i, viewwin, size=(200, self.pal_height))
             self.sizer.Add(palwin, flag=wx.EXPAND)

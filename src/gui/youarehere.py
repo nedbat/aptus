@@ -115,7 +115,7 @@ class YouAreHereWin(ParentComputePanel, ListeningWindowMixin):
     def set_cursor(self, event):
         # Set the proper cursor:
         mouse_pt = event.GetPosition()
-        if self.dragging or self.hererect.Contains(mouse_pt):
+        if self.dragging or (self.hererect and self.hererect.Contains(mouse_pt)):
             self.SetCursor(wx.Cursor(wx.CURSOR_SIZING))
         else:
             self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
@@ -176,7 +176,7 @@ class YouAreHereStack(ScrolledPanel, ListeningWindowMixin):
         self.stepfactor = float(self.winsize)/self.minrect
         
         self.viewwin = viewwin
-        self.sizer = wx.FlexGridSizer(cols=1, vgap=2)
+        self.sizer = wx.FlexGridSizer(cols=1, vgap=2, hgap=0)
         self.SetSizer(self.sizer)
         self.SetAutoLayout(1)
         self.SetupScrolling()
@@ -196,7 +196,7 @@ class YouAreHereStack(ScrolledPanel, ListeningWindowMixin):
         
         cur_wins = list(self.sizer.Children)
         last = None
-        for i in xrange(num_wins):
+        for i in range(num_wins):
             if i == 0:
                 # Don't recenter the topmost YouAreHere.
                 center = settings.center(mode)
