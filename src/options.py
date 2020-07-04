@@ -1,10 +1,12 @@
 """ Options handling for Aptus.
 """
 
-import optparse, re
+import json
+import optparse
+import re
+
 from aptus.palettes import Palette
 from aptus.importer import importer
-from aptus.tinyjson import JsonReader, JsonWriter
 
 Image = importer('Image')
 
@@ -168,7 +170,7 @@ class AptusState:
         if self.target.mode == 'julia':
             self.write_attrs(d, self.julia_attrs)
 
-        return JsonWriter().dumps_dict(d, comma=',\n', colon=': ', first_keys=['Aptus State'])
+        return json.dumps(d)
     
     def read_attrs(self, d, attrs):
         for a in attrs:
@@ -181,7 +183,7 @@ class AptusState:
         return self.read_string(f.read())
     
     def read_string(self, s):
-        d = JsonReader().loads(s)
+        d = json.loads(s)
         self.read_attrs(d, self.simple_attrs)
         self.target.palette = Palette().from_spec(d['palette'])
         self.target.size = d['size']

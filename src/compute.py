@@ -1,11 +1,12 @@
 """ Mandelbrot computation.
 """
 
+import json
+
 from aptus import __version__
 from aptus.importer import importer
 from aptus.options import AptusState
 from aptus.palettes import all_palettes
-from aptus.tinyjson import dumps
 from aptus.progress import NullProgressReporter
 from aptus import settings
 
@@ -464,7 +465,7 @@ class AptusCompute:
         info = PngImagePlugin.PngInfo()
         info.add_text("Software", "Aptus %s" % __version__)
         info.add_text("Aptus State", aptst.write_string())
-        info.add_text("Aptus Stats", dumps(self.stats))
+        info.add_text("Aptus Stats", json.dumps(self.stats))
         im.save(fpath, 'PNG', pnginfo=info)
 
 
