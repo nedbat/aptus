@@ -3,11 +3,10 @@
 """
 
 from aptus import data_file
-from aptus.importer import importer
 from aptus.gui.mainframe import AptusMainFrame
 
 # Import third-party packages.
-wx = importer('wx')
+import wx
 import wx.adv
 
 class AptusGuiApp(wx.App):

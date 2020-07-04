@@ -1,13 +1,12 @@
 """ YouAreHere stuff for Aptus.
 """
 
-from aptus.importer import importer
 from aptus.gui.computepanel import ComputePanel
 from aptus.gui.ids import *
 from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
 from aptus import settings
 
-wx = importer("wx")
+import wx
 from wx.lib.scrolledpanel import ScrolledPanel
 
 import math

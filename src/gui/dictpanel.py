@@ -1,8 +1,7 @@
 """ A panel for displaying information from a dictionary.
 """
 
-from aptus.importer import importer
-wx = importer("wx")
+import wx
 
 # Set the locale to the user's default.
 import locale

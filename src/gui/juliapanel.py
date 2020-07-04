@@ -5,23 +5,22 @@
 from aptus.gui.computepanel import MiniComputePanel
 from aptus.gui.ids import *
 from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
-from aptus.importer import importer
 
-wx = importer("wx")
+import wx
 
 class JuliaPanel(MiniComputePanel, ListeningWindowMixin):
     """ A panel displaying the Julia set for the current point in another window.
     """
-    
+
     def __init__(self, parent, viewwin, size=wx.DefaultSize):
         """ Create a JuliaPanel, with `parent` as its parent, and `viewwin` as
             the window to track.
         """
         MiniComputePanel.__init__(self, parent, size=size)
         ListeningWindowMixin.__init__(self)
-        
+
         self.viewwin = viewwin
-        
+
         self.register_listener(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.viewwin)
         self.register_listener(self.draw_julia, EVT_APTUS_INDICATEPOINT, self.viewwin)
 
@@ -50,10 +49,10 @@ class JuliaPanel(MiniComputePanel, ListeningWindowMixin):
             self.compute.rijulia = 0,0
         self.compute.create_mandel()
         self.computation_changed()
-        
+
         # Need to let the main window handle the event too.
         if event:
-            event.Skip()    
+            event.Skip()
 
     def on_coloring_changed(self, event_unused):
         if self.compute.copy_coloring(self.viewwin.compute):

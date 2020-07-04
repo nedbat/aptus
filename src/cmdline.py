@@ -2,10 +2,9 @@
 
 from aptus.compute import AptusCompute
 from aptus.progress import IntervalProgressReporter, ConsoleProgressReporter
-from aptus.importer import importer
 from aptus.options import AptusOptions
 
-Image = importer('Image')
+from PIL import Image
 
 import sys
 

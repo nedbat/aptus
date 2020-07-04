@@ -1,13 +1,12 @@
 from aptus import data_file
 
-from aptus.importer import importer
 from aptus.options import AptusOptions
 
 from aptus.gui.ids import *
 from aptus.gui.viewpanel import AptusViewPanel
 from aptus.gui.misc import AptusToolableFrameMixin
 
-wx = importer("wx")
+import wx
 import wx.aui
 
 import os, os.path, re

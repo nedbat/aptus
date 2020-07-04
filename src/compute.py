@@ -4,16 +4,15 @@
 import json
 
 from aptus import __version__
-from aptus.importer import importer
 from aptus.options import AptusState
 from aptus.palettes import all_palettes
 from aptus.progress import NullProgressReporter
 from aptus import settings
 
 # Import our extension engine.
-AptEngine = importer('AptEngine')
+from aptus.engine import AptEngine
 
-numpy = importer('numpy')
+import numpy
 
 import copy, math, Queue, threading, time, multiprocessing
 

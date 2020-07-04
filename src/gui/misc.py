@@ -1,8 +1,7 @@
 """ Miscellaneous stuff for the Aptus GUI.
 """
 
-from aptus.importer import importer
-wx = importer("wx")
+import wx
 from wx.lib.evtmgr import eventManager
 
 

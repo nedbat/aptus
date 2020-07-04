@@ -1,8 +1,7 @@
 """ Ids and events for Aptus.
 """
 
-from aptus.importer import importer
-wx = importer('wx')
+import wx
 import wx.lib.newevent
 
 ## Custom events

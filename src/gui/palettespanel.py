@@ -1,11 +1,10 @@
 """ Palette visualization for Aptus.
 """
 
-from aptus.importer import importer
 from aptus.gui.ids import *
 from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
 
-wx = importer("wx")
+import wx
 from wx.lib.scrolledpanel import ScrolledPanel
 
 class PaletteWin(wx.Window):

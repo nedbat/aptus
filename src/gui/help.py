@@ -2,13 +2,11 @@
 """
 
 from aptus import data_file, __version__
-from aptus.importer import importer
 from aptus.options import AptusOptions
 
-wx = importer('wx')
-numpy = importer('numpy')
-Image = importer('Image')
-
+import numpy
+from PIL import Image
+import wx
 import wx.lib.layoutf
 import wx.html 
 
