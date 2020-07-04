@@ -1,16 +1,17 @@
 """ Help dialog for Aptus.
 """
 
-from aptus import data_file, __version__
-from aptus.options import AptusOptions
+import webbrowser
+import sys
 
 import numpy
-from PIL import Image
 import wx
-import wx.lib.layoutf
 import wx.html 
+import wx.lib.layoutf
+from PIL import Image
 
-import webbrowser, sys
+from aptus import data_file, __version__
+from aptus.options import AptusOptions
 
 
 class HtmlDialog(wx.Dialog):

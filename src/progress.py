@@ -1,37 +1,39 @@
 """ Progress reporters for Aptus.
 """
 
-from aptus.timeutil import duration, future
 import time
+
+from aptus.timeutil import duration, future
+
 
 class NullProgressReporter:
     """ Basic interface for reporting rendering progress.
     """
-    
+
     def begin(self):
         """ Called once at the beginning of a render.
         """
         pass
-    
+
     def progress(self, arg, num_done, info=''):
         """ Called repeatedly to report progress.
-        
+
         `arg` is an opaque argument, the caller can use it for whatever they want.
-        
+
         `num_done` is a int indicating the count of progress.  There is no
         defined range for `num_done`, it is assumed that the caller knows what
         work is being done, and what the number mean.
-        
+
         `info` is a string giving some information about what's been done.
-        
+
         """
         pass
-    
+
     def end(self):
         """ Called once at the end of a render.
         """
         pass
-    
+
 
 class IntervalProgressReporter:
     """ A progress reporter decorator that only calls its wrapped reporter
@@ -40,17 +42,17 @@ class IntervalProgressReporter:
     def __init__(self, nsec, reporter):
         self.nsec = nsec
         self.reporter = reporter
-        
+
     def begin(self):
         self.latest = time.time()
         self.reporter.begin()
-        
+
     def progress(self, arg, num_done, info=''):
         now = time.time()
         if now - self.latest > self.nsec:
             self.reporter.progress(arg, num_done, info)
             self.latest = now
-            
+
     def end(self):
         self.reporter.end()
 
@@ -60,18 +62,18 @@ class AggregateProgressReporter:
     """
     def __init__(self):
         self.kids = []
-        
+
     def add(self, reporter):
         self.kids.append(reporter)
-    
+
     def begin(self):
         for kid in self.kids:
             kid.begin()
-            
+
     def progress(self, arg, num_done, info=''):
         for kid in self.kids:
             kid.progress(arg, num_done, info)
-    
+
     def end(self):
         for kid in self.kids:
             kid.end()
@@ -83,10 +85,10 @@ totaltotal = 0
 
 class ConsoleProgressReporter:
     """ A progress reporter that writes lines to the console.
-    
+
     This `progress` function interprets the `num_done` arg as a fraction, in
     millionths.
-    
+
     """
     def begin(self):
         self.start = time.time()

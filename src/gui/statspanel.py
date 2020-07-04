@@ -1,12 +1,12 @@
 """ A panel to display computation statistics.
 """
 
+import wx
+
 from aptus.compute import ComputeStats
+from aptus.gui.dictpanel import DictPanel
 from aptus.gui.ids import *
 from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
-from aptus.gui.dictpanel import DictPanel
-
-import wx
 
 import locale
 locale.setlocale(locale.LC_ALL, "")

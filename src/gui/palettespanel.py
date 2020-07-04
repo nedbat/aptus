@@ -1,11 +1,12 @@
 """ Palette visualization for Aptus.
 """
 
+import wx
+from wx.lib.scrolledpanel import ScrolledPanel
+
 from aptus.gui.ids import *
 from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
 
-import wx
-from wx.lib.scrolledpanel import ScrolledPanel
 
 class PaletteWin(wx.Window):
     """ A window for displaying a single palette.  Handles click events to

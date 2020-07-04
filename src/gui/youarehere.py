@@ -1,15 +1,15 @@
 """ YouAreHere stuff for Aptus.
 """
 
-from aptus.gui.computepanel import ComputePanel
-from aptus.gui.ids import *
-from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
-from aptus import settings
+import math
 
 import wx
 from wx.lib.scrolledpanel import ScrolledPanel
 
-import math
+from aptus import settings
+from aptus.gui.computepanel import ComputePanel
+from aptus.gui.ids import *
+from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
 
 
 MIN_RECT = 20

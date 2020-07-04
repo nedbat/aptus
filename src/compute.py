@@ -1,20 +1,21 @@
 """ Mandelbrot computation.
 """
 
+import copy
 import json
-
-from aptus import __version__
-from aptus.options import AptusState
-from aptus.palettes import all_palettes
-from aptus.progress import NullProgressReporter
-from aptus import settings
-
-# Import our extension engine.
-from aptus.engine import AptEngine
+import math
+import multiprocessing
+import Queue
+import threading
+import time
 
 import numpy
 
-import copy, math, Queue, threading, time, multiprocessing
+from aptus import __version__, settings
+from aptus.engine import AptEngine
+from aptus.options import AptusState
+from aptus.palettes import all_palettes
+from aptus.progress import NullProgressReporter
 
 
 class WorkerPool:

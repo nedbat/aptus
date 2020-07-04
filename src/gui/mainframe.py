@@ -1,15 +1,15 @@
-from aptus import data_file
-
-from aptus.options import AptusOptions
-
-from aptus.gui.ids import *
-from aptus.gui.viewpanel import AptusViewPanel
-from aptus.gui.misc import AptusToolableFrameMixin
+import os
+import os.path
+import re
 
 import wx
 import wx.aui
 
-import os, os.path, re
+from aptus import data_file
+from aptus.gui.ids import *
+from aptus.gui.viewpanel import AptusViewPanel
+from aptus.gui.misc import AptusToolableFrameMixin
+from aptus.options import AptusOptions
 
 
 class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):

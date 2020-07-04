@@ -1,13 +1,13 @@
+from PIL import Image
+import wx
+
+from aptus import settings
 from aptus.compute import AptusCompute
+from aptus.gui.ids import *
 from aptus.options import AptusState
 from aptus.palettes import all_palettes
 from aptus.progress import NullProgressReporter
-from aptus import settings
 
-from aptus.gui.ids import *
-
-import wx
-from PIL import Image
 
 class ComputePanel(wx.Panel):
     """ A panel capable of drawing a Mandelbrot.

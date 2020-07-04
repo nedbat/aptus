@@ -2,8 +2,9 @@
     http://nedbatchelder.com/code/aptus
 """
 
-from aptus import data_file
 import colorsys
+
+from aptus import data_file
 
 # Pure data-munging functions
 def _255(*vals):
@@ -28,16 +29,16 @@ def _clip(val, lo, hi):
 class Palette:
     """ A palette is a list of colors for coloring the successive bands of the
         Mandelbrot set.
-        
+
         colors is a list of RGB triples, 0-255, for display.
         fcolors is a list of RGB triples, 0.0-1.0, for computation.
         incolor is the RGB255 color for the interior of the set.
         _spec is a value that can be passed to from_spec to reconstitute the
             palette. It's returned by the spec property.
     """
-    
+
     default_adjusts = {'hue': 0, 'saturation': 0}
-    
+
     def __init__(self):
         self.incolor = (0,0,0)
         self.fcolors = [(0.0,0.0,0.0), (1.0,1.0,1.0)]
@@ -46,13 +47,13 @@ class Palette:
         self.wrap = True
 
         self._colors_from_fcolors()
-    
+
     def __len__(self):
         return len(self.fcolors)
 
     def __eq__(self, other):
         return self.colors == other.colors
-    
+
     def __ne__(self, other):
         return not self.__eq__(other)
 
@@ -61,10 +62,10 @@ class Palette:
             in the process.
         """
         self.colors = []
-        
+
         hue_adj = self.adjusts['hue']/360.0
         sat_adj = self.adjusts['saturation']/255.0
-        
+
         for r, g, b in self.fcolors:
             h, l, s = colorsys.rgb_to_hls(r, g, b)
             h = (h + hue_adj) % 1.0
@@ -72,7 +73,7 @@ class Palette:
             r, g, b = colorsys.hls_to_rgb(h, l, s)
             self.colors.append(_255(r, g, b))
         self._colorbytes = None
-    
+
     def color_bytes(self):
         """ Compute a string of RGB bytes for use in the engine.
         """
@@ -93,7 +94,7 @@ class Palette:
         if not self.wrap:
             s.append(['wrapping', {'wrap': 0}])
         return s
-    
+
     def rgb_colors(self, colors):
         """ Use an explicit list of RGB colors as the palette.
         """
@@ -110,11 +111,11 @@ class Palette:
             l = (int(l), int(l))
         if isinstance(s, (int, float)):
             s = (int(s), int(s))
-        
+
         hlo, hhi = h
         llo, lhi = l
         slo, shi = s
-        
+
         fcolors = []
         for pt in range(ncolors//2):
             hfrac = (pt*1.0/(ncolors/2))
@@ -126,7 +127,7 @@ class Palette:
             fcolors.append(colorsys.hls_to_rgb(hue/360.0, lhi/255.0, shi/255.0))
         self.fcolors = fcolors
         self._colors_from_fcolors()
-        
+
         args = {'ncolors':ncolors}
         if h != (0,360):
             if hlo == hhi:
@@ -145,7 +146,7 @@ class Palette:
                 args['s'] = s
         self._spec.append(['spectrum', args])
         return self
-    
+
     def stretch(self, steps, hsl=False):
         """ Interpolate between colors in the palette, stretching it out.
             Works in either RGB or HSL space.
@@ -173,7 +174,7 @@ class Palette:
         self._colors_from_fcolors()
         self._spec.append(['stretch', {'steps':steps, 'hsl':hsl}])
         return self
-    
+
     def adjust(self, hue=0, saturation=0):
         """ Make adjustments to various aspects of the display of the palette.
             0 <= hue <= 360
@@ -217,7 +218,7 @@ class Palette:
         self._colors_from_fcolors()
         self._spec.append(['gradient', {'ggr_file':ggr_file, 'ncolors':ncolors}])
         return self
-    
+
     def xaos(self):
         # Colors taken from Xaos, to get the same rendering.
         xaos_colors = [
@@ -260,12 +261,12 @@ class Palette:
         del self._spec[-1]
         self._spec.append(['xaos', {}])
         return self
-    
+
     def from_spec(self, spec):
         for op, args in spec:
             getattr(self, op)(**args)
         return self
-    
+
 all_palettes = [
     Palette().spectrum(12).stretch(10, hsl=True),
     Palette().spectrum(12, l=(50,150), s=150).stretch(25, hsl=True),

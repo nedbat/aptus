@@ -2,11 +2,12 @@
     window.
 """
 
+import wx
+
 from aptus.gui.computepanel import MiniComputePanel
 from aptus.gui.ids import *
 from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
 
-import wx
 
 class JuliaPanel(MiniComputePanel, ListeningWindowMixin):
     """ A panel displaying the Julia set for the current point in another window.

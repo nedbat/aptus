@@ -5,9 +5,9 @@ import json
 import optparse
 import re
 
-from aptus.palettes import Palette
-
 from PIL import Image
+
+from aptus.palettes import Palette
 
 description = """\
 Aptus renders Mandelbrot set images. Two flavors are available:

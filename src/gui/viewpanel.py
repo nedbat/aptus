@@ -1,12 +1,10 @@
-from aptus.palettes import all_palettes
-from aptus.progress import ConsoleProgressReporter, IntervalProgressReporter
-from aptus import settings
+import wx
 
+from aptus import settings
 from aptus.gui.computepanel import ComputePanel
 from aptus.gui.ids import *
-
-# Import third-party packages.
-import wx
+from aptus.palettes import all_palettes
+from aptus.progress import ConsoleProgressReporter, IntervalProgressReporter
 
 
 # A pre-set list of places to visit, with the j command.

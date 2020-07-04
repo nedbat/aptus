@@ -5,7 +5,9 @@
 
 __version__ = '1.0.20070915'
 
-import colorsys, math
+import colorsys
+import math
+
 
 class GimpGradient:
     """ Read and interpret a Gimp .ggr gradient file.

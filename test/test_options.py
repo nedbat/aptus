@@ -1,4 +1,5 @@
 import unittest
+
 from aptus.options import *
 
 class OptionsTestTarget:
@@ -8,9 +9,9 @@ class OptionsTestTarget:
         self.iter_limit = 10
         self.outfile = None
         self.size = [100, 100]
-        
+
 class OptionsTest(unittest.TestCase):
-    
+
     def try_read_args(self, cmdline):
         argv = cmdline.split()
         target = OptionsTestTarget()

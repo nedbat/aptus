@@ -2,11 +2,12 @@
     window.
 """
 
+import wx
+
+from aptus.gui.dictpanel import DictPanel
 from aptus.gui.ids import *
 from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
-from aptus.gui.dictpanel import DictPanel
 
-import wx
 
 class PointInfoPanel(DictPanel, ListeningWindowMixin):
     """ A panel displaying information about the current point in the main window.

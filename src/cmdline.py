@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
+import sys
+
+from PIL import Image
+
 from aptus.compute import AptusCompute
 from aptus.progress import IntervalProgressReporter, ConsoleProgressReporter
 from aptus.options import AptusOptions
 
-from PIL import Image
-
-import sys
 
 class AptusCmdApp():
     def main(self, args):
