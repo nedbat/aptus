@@ -222,9 +222,17 @@ class YouAreHereStack(ScrolledPanel, ListeningWindowMixin):
         last.set_ref_window(self.viewwin)
 
         # Remove windows we no longer need.
-        for child in cur_wins[num_wins:]:
-            self.sizer.Remove(child.Window)
-            child.Window.Destroy()
+        if 0:
+            for child in cur_wins[num_wins:]:
+                self.sizer.Remove(child.Window)
+                child.Window.Destroy()
+
+        for i in reversed(range(num_wins, len(cur_wins))):
+            print("Thing to delete:", cur_wins[i])
+            print("the window:", cur_wins[i].Window)
+            win = cur_wins[i].Window
+            self.sizer.Remove(i)
+            win.Destroy()
 
         self.sizer.Layout()
         self.SetupScrolling()
