@@ -8,9 +8,6 @@ from aptus.gui.dictpanel import DictPanel
 from aptus.gui.ids import *
 from aptus.gui.misc import AptusToolFrame, ListeningWindowMixin
 
-import locale
-locale.setlocale(locale.LC_ALL, "")
-
 
 class StatsPanel(DictPanel, ListeningWindowMixin):
     """ A panel displaying the statistics from a view window.  It listens for
