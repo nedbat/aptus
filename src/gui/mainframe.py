@@ -25,13 +25,13 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
 
         # Make the panel
         self.panel = AptusViewPanel(self)
-        
+
         if args:
             opts = AptusOptions(self.panel.compute)
             opts.read_args(args)
         if compute:
             self.panel.compute.copy_all(compute)
-            
+
         if size:
             self.panel.compute.size = size
 
@@ -41,17 +41,17 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
             # Experimental AUI support
             self.auimgr = wx.aui.AuiManager()
             self.auimgr.SetManagedWindow(self)
-    
+
             self.auimgr.AddPane(self.panel, wx.aui.AuiPaneInfo().Name("grid_content").
                               PaneBorder(False).CenterPane())
-            
+
             from aptus.gui import pointinfo
             self.pointinfo_tool = pointinfo.PointInfoPanel(self, self.panel)
-    
+
             self.auimgr.AddPane(self.pointinfo_tool, wx.aui.AuiPaneInfo().
                               Name("pointinfo").Caption("Point info").
                               Right().Layer(1).Position(1).CloseButton(True))
-                          
+
             self.auimgr.Update()
 
         # Set the window icon
@@ -68,18 +68,12 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
         self.Bind(wx.EVT_MENU, self.cmd_help, id=id_help)
         self.Bind(wx.EVT_MENU, self.cmd_fullscreen, id=id_fullscreen)
         self.Bind(wx.EVT_MENU, self.cmd_window_size, id=id_window_size)
-        self.Bind(wx.EVT_MENU, self.cmd_show_youarehere, id=id_show_youarehere)
-        self.Bind(wx.EVT_MENU, self.cmd_show_palettes, id=id_show_palettes)
         self.Bind(wx.EVT_MENU, self.cmd_show_stats, id=id_show_stats)
         self.Bind(wx.EVT_MENU, self.cmd_show_pointinfo, id=id_show_pointinfo)
-        self.Bind(wx.EVT_MENU, self.cmd_show_julia, id=id_show_julia)
 
         # Auxilliary frames.
-        self.youarehere_tool = None
-        self.palettes_tool = None
         self.stats_tool = None
         self.pointinfo_tool = None
-        self.julia_tool = None
 
         # Files can be dropped here.
         self.SetDropTarget(MainFrameFileDropTarget(self))
@@ -100,7 +94,7 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
         dlg.Destroy()
 
     # Command handlers.
-    
+
     def show_file_dialog(self, dlg):
         """ Show a file dialog, and do some post-processing on the result.
             Returns a pair: type, path.
@@ -131,10 +125,10 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
 
     def cmd_new(self, event_unused):
         return wx.GetApp().new_window()
-        
+
     # Files we can open and save.
     wildcards = (
-        "PNG image (*.png)|*.png|"     
+        "PNG image (*.png)|*.png|"
         "Aptus state (*.aptus)|*.aptus|"
         "All files (*.*)|*.*"
         )
@@ -162,7 +156,7 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
         typ, pth = self.show_file_dialog(dlg)
         if typ:
             self.open_file(pth)
-            
+
     def open_file(self, pth):
         opts = AptusOptions(self.panel.compute)
         opts.opts_from_file(pth)
@@ -176,7 +170,7 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
 
     def cmd_fullscreen(self, event_unused):
         self.ShowFullScreen(not self.IsFullScreen())
-    
+
     def cmd_window_size(self, event_unused):
         cur_size = "%d x %d" % tuple(self.GetClientSize())
         dlg = wx.TextEntryDialog(self.GetTopLevelParent(), "Window size",
@@ -194,27 +188,6 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
                     w, h = int(m.group('w')), int(m.group('h'))
                 self.SetClientSize((w,h))
         dlg.Destroy()
-
-    def cmd_show_youarehere(self, event_unused):
-        """ Toggle the presence of the YouAreHere tool.
-        """
-        if self.youarehere_tool:
-            self.youarehere_tool.Destroy()
-        else:
-            from aptus.gui import youarehere
-            self.youarehere_tool = youarehere.YouAreHereFrame(self, self.panel)
-            self.youarehere_tool.Show()
-
-    def cmd_show_palettes(self, event_unused):
-        """ Toggle the presence of the Palettes tool.
-        """
-        if self.palettes_tool:
-            self.palettes_tool.Destroy()
-        else:
-            from aptus.gui import palettespanel
-            from aptus.palettes import all_palettes
-            self.palettes_tool = palettespanel.PalettesFrame(self, all_palettes, self.panel)
-            self.palettes_tool.Show()
 
     def cmd_show_stats(self, event_unused):
         """ Toggle the presence of the Stats tool.
@@ -236,23 +209,12 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
             self.pointinfo_tool = pointinfo.PointInfoFrame(self, self.panel)
             self.pointinfo_tool.Show()
 
-    def cmd_show_julia(self, event_unused):
-        """ Toggle the presence of the Julia tool.
-        """
-        if self.panel.compute.mode == 'mandelbrot':
-            if self.julia_tool:
-                self.julia_tool.Destroy()
-            else:
-                from aptus.gui import juliapanel
-                self.julia_tool = juliapanel.JuliaFrame(self, self.panel)
-                self.julia_tool.Show()
-
 
 class MainFrameFileDropTarget(wx.FileDropTarget):
     """A drop target so files can be opened by dragging them to the Aptus window.
-    
+
     The first file opens in the current window, the rest open new windows.
-    
+
     """
     def __init__(self, frame):
         wx.FileDropTarget.__init__(self)

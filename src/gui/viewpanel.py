@@ -267,17 +267,13 @@ class AptusViewPanel(ComputePanel):
             self.fire_command(id_set_iter_limit)
         elif keycode == ord('J'):
             if shift:
-                self.fire_command(id_show_julia)
+                pass
             else:
                 self.fire_command(id_jump)
-        elif keycode == ord('L'):
-            self.fire_command(id_show_youarehere)
         elif keycode == ord('N'):
             self.fire_command(id_new)
         elif keycode == ord('O'):
             self.fire_command(id_open)
-        elif keycode == ord('P'):
-            self.fire_command(id_show_palettes)
         elif keycode == ord('Q'):
             self.fire_command(id_show_pointinfo)
         elif keycode == ord('R'):

@@ -204,18 +204,3 @@ class ComputePanel(wx.Panel):
         """
         aptst = AptusState(self.compute)
         aptst.write(pth)
-
-
-class MiniComputePanel(ComputePanel):
-    """ A compute panel for use as a minor pane.
-    """
-    def __init__(self, *args, **kwargs):
-        ComputePanel.__init__(self, *args, **kwargs)
-
-        self.Bind(wx.EVT_LEFT_DCLICK, self.on_left_dclick)
-
-    def on_left_dclick(self, event_unused):
-        """ Double-clicking on a mini compute panel opens a new window to the same
-            view.
-        """
-        wx.GetApp().new_window(compute=self.compute, size=settings.explorer_size)
