@@ -88,15 +88,6 @@ setup(
             ]
         },
 
-    ext_modules = [
-        Extension(
-            "aptus.engine",
-            sources=["ext/engine.c"],
-            include_dirs=[numpy.get_include()],
-            extra_compile_args=extra_compile_args,
-            ),
-        ],
-
     scripts = [
         'scripts/aptuscmd.py',
         'scripts/aptusgui.py',

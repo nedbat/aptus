@@ -12,7 +12,6 @@ import time
 import numpy
 
 from aptus import __version__, settings
-from aptus.engine import AptEngine
 from aptus.options import AptusState
 from aptus.palettes import all_palettes
 from aptus.progress import NullProgressReporter
@@ -111,7 +110,8 @@ class AptusCompute:
         self.quiet = False
 
         # The C extension for doing the heavy lifting.
-        self.eng = AptEngine()
+        import types
+        self.eng = types.SimpleNamespace()
 
         # counts is a numpy array of 32bit ints: the iteration counts at each pixel.
         self.counts = None
@@ -318,7 +318,8 @@ class AptusCompute:
         color_bytes = self.palette.color_bytes()
         if self.palette.wrap:
             phase %= len(color_bytes)
-        self.eng.apply_palette(
+        if 0:
+            self.eng.apply_palette(
             self.counts, self.status, color_bytes, phase, self.palette_scale,
             self.palette.incolor, self.palette.wrap, self.pix
             )
@@ -346,8 +347,6 @@ class AptusCompute:
 
         self.bucket_progress.begin()
         self.refresh_rate = .5
-
-        #self.eng.debug_callback = self.debug_callback
 
         if self.worker_pool:
             # Start the threads going.
@@ -418,13 +417,8 @@ class AptusCompute:
         return x, y
 
     def compute_some(self, n_tile, coords):
-        xmin, xmax, ymin, ymax = coords
-        stats = self.eng.compute_array(
-            self.counts, self.status,
-            xmin, xmax, ymin, ymax,
-            n_tile, self.bucket_progress.progress
-            )
-        self.stats += stats
+        print(f"compute_some({n_tile}, {coords})")
+        time.sleep(10 if self.iter_limit > 1000 else 1)
 
     def debug_callback(self, info):
         print(info)

@@ -174,11 +174,13 @@ class ComputePanel(wx.Panel):
         Repaints the window.
 
         """
+        print("into draw_progress")
         self.bitmap = self.bitmap_from_compute()
         self.Refresh()
         self.Update()
         wx.CallAfter(self.fire_event, AptusRecomputedEvent)
         wx.SafeYield(onlyIfNeeded=True)
+        print("out of draw_progress")
 
     def set_view(self):
         self.bitmap = None
