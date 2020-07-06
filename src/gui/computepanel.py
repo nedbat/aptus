@@ -1,5 +1,6 @@
 from PIL import Image
 import wx
+import numpy
 
 from aptus import settings
 from aptus.compute import AptusCompute
@@ -152,7 +153,15 @@ class ComputePanel(wx.Panel):
     def bitmap_from_compute(self):
         print("bitmap_from_compute")
         pix = self.compute.color_mandel()
-        bitmap = wx.Bitmap.FromBuffer(pix.shape[1], pix.shape[0], pix)
+        w, h = pix.shape[1], pix.shape[0]
+        sq = 10
+        c = numpy.fromfunction(lambda x,y: ((x//sq) + (y//sq)) % 2, (w,h))
+        chex = numpy.empty((w,h,3), dtype=numpy.uint8)
+        chex[c == 0] = (0xAA, 0x00, 0x00)
+        chex[c == 1] = (0x99, 0x99, 0x00)
+        bitmap = wx.Bitmap.FromBuffer(pix.shape[1], pix.shape[0], chex)
+
+        print("bitmap_from_compute done")
         return bitmap
 
     def draw_bitmap(self):
