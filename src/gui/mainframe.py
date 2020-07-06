@@ -63,13 +63,9 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
 
         # Bind commands
         self.Bind(wx.EVT_MENU, self.cmd_new, id=id_new)
-        self.Bind(wx.EVT_MENU, self.cmd_save, id=id_save)
-        self.Bind(wx.EVT_MENU, self.cmd_open, id=id_open)
         self.Bind(wx.EVT_MENU, self.cmd_help, id=id_help)
         self.Bind(wx.EVT_MENU, self.cmd_fullscreen, id=id_fullscreen)
         self.Bind(wx.EVT_MENU, self.cmd_window_size, id=id_window_size)
-        self.Bind(wx.EVT_MENU, self.cmd_show_stats, id=id_show_stats)
-        self.Bind(wx.EVT_MENU, self.cmd_show_pointinfo, id=id_show_pointinfo)
 
         # Auxilliary frames.
         self.stats_tool = None
@@ -126,43 +122,6 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
     def cmd_new(self, event_unused):
         return wx.GetApp().new_window()
 
-    # Files we can open and save.
-    wildcards = (
-        "PNG image (*.png)|*.png|"
-        "Aptus state (*.aptus)|*.aptus|"
-        "All files (*.*)|*.*"
-        )
-
-    def cmd_save(self, event_unused):
-        dlg = wx.FileDialog(
-            self, message="Save", defaultDir=os.getcwd(), defaultFile="",
-            style=wx.FD_SAVE | wx.FD_OVERWRITE_PROMPT, wildcard=self.wildcards
-            )
-
-        typ, pth = self.show_file_dialog(dlg)
-        if typ:
-            if typ == 'png':
-                self.panel.write_png(pth)
-            elif typ == 'aptus':
-                self.panel.write_aptus(pth)
-            else:
-                self.message("Don't understand how to write file '%s'" % pth)
-
-    def cmd_open(self, event_unused):
-        dlg = wx.FileDialog(
-            self, message="Open", defaultDir=os.getcwd(), defaultFile="",
-            style=wx.FD_OPEN | wx.FD_FILE_MUST_EXIST, wildcard=self.wildcards
-            )
-        typ, pth = self.show_file_dialog(dlg)
-        if typ:
-            self.open_file(pth)
-
-    def open_file(self, pth):
-        opts = AptusOptions(self.panel.compute)
-        opts.opts_from_file(pth)
-        self.SetClientSize(self.panel.compute.size)
-        self.panel.fire_command(id_redraw)
-
     def cmd_help(self, event_unused):
         from aptus.gui.help import HelpDlg
         dlg = HelpDlg(self)
@@ -188,26 +147,6 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
                     w, h = int(m.group('w')), int(m.group('h'))
                 self.SetClientSize((w,h))
         dlg.Destroy()
-
-    def cmd_show_stats(self, event_unused):
-        """ Toggle the presence of the Stats tool.
-        """
-        if self.stats_tool:
-            self.stats_tool.Destroy()
-        else:
-            from aptus.gui import statspanel
-            self.stats_tool = statspanel.StatsFrame(self, self.panel)
-            self.stats_tool.Show()
-
-    def cmd_show_pointinfo(self, event_unused):
-        """ Toggle the presence of the PointInfo tool.
-        """
-        if self.pointinfo_tool:
-            self.pointinfo_tool.Destroy()
-        else:
-            from aptus.gui import pointinfo
-            self.pointinfo_tool = pointinfo.PointInfoFrame(self, self.panel)
-            self.pointinfo_tool.Show()
 
 
 class MainFrameFileDropTarget(wx.FileDropTarget):

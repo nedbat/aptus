@@ -198,19 +198,3 @@ class ComputePanel(wx.Panel):
         self.compute.create_mandel()
         self.check_size = False
         self.Refresh()
-
-    # Output-writing methods
-
-    def write_png(self, pth):
-        """ Write the current image as a PNG to the path `pth`.
-        """
-        image = self.bitmap.ConvertToImage()
-        im = Image.new('RGB', (image.GetWidth(), image.GetHeight()))
-        im.frombytes(bytes(image.GetData()))
-        self.compute.write_image(im, pth)
-
-    def write_aptus(self, pth):
-        """ Write the current Aptus state of the panel to the path `pth`.
-        """
-        aptst = AptusState(self.compute)
-        aptst.write(pth)
