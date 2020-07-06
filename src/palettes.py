@@ -10,12 +10,12 @@ from aptus import data_file
 def _255(*vals):
     """ Convert all arguments from 0-1.0 to 0-255.
     """
-    return map(lambda x:int(round(x*255)), vals)
+    return [int(round(x * 255)) for x in vals]
 
 def _1(*vals):
     """ Convert all arguments from 0-255 to 0-1.0.
     """
-    return map(lambda x:x/255.0, vals)
+    return [x/255.0 for x in vals]
 
 def _clip(val, lo, hi):
     """ Clip a val to staying between lo and hi.

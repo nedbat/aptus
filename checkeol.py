@@ -5,7 +5,7 @@ import fnmatch, os
 def check_file(fname):
     for n, line in enumerate(open(fname, "rb")):
         if "\r" in line:
-            print "%s@%d: CR found" % (fname, n)
+            print("%s@%d: CR found" % (fname, n))
             return
 
 def check_files(root, patterns):

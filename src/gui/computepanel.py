@@ -18,8 +18,8 @@ class ComputePanel(wx.Panel):
 
         self.compute = AptusCompute()
         self.compute.quiet = True     # default to quiet.
-        
-        # AptusCompute default values        
+
+        # AptusCompute default values
         self.compute.palette = all_palettes[0]
 
         # Bind events
@@ -27,7 +27,7 @@ class ComputePanel(wx.Panel):
         self.Bind(wx.EVT_PAINT, self.on_paint)
         self.Bind(wx.EVT_SIZE, self.on_size)
         self.Bind(wx.EVT_IDLE, self.on_idle)
-        
+
     def set_geometry(self, center=None, diam=None, corners=None):
         """ Change the panel to display a new place in the Set.
             `center` is the ri coords of the new center, `diam` is the r and i
@@ -45,11 +45,11 @@ class ComputePanel(wx.Panel):
             compute.center = center
         if diam:
             compute.diam = diam
-            
+
         self.geometry_changed()
 
     # GUI helpers
-    
+
     def fire_command(self, cmdid, data=None):
         # I'm not entirely sure about why this is the right event type to use,
         # but it works...
@@ -57,15 +57,15 @@ class ComputePanel(wx.Panel):
         evt.SetId(cmdid)
         evt.SetClientData(data)
         wx.PostEvent(self, evt)
-    
+
     def fire_event(self, evclass, **kwargs):
         evt = evclass(**kwargs)
         self.GetEventHandler().ProcessEvent(evt)
-        
+
     def message(self, msg):
         top = self.GetTopLevelParent()
         top.message(msg)
-        
+
     def coloring_changed(self):
         self.bitmap = None
         self.Refresh()
@@ -74,19 +74,19 @@ class ComputePanel(wx.Panel):
     def computation_changed(self):
         self.set_view()
         self.fire_event(AptusComputationChangedEvent)
-        
+
     def geometry_changed(self):
         self.set_view()
         self.fire_event(AptusGeometryChangedEvent)
-        
+
     # Event handlers
-    
+
     def on_window_create(self, event):
         self.on_idle(event)
-        
+
     def on_size(self, event_unused):
         self.check_size = True
-        
+
     def on_idle(self, event_unused):
         if self.check_size and self.GetClientSize() != self.compute.size:
             if self.GetClientSize() != (0,0):
@@ -99,7 +99,7 @@ class ComputePanel(wx.Panel):
         dc = wx.AutoBufferedPaintDC(self)
         dc.DrawBitmap(self.bitmap, 0, 0, False)
         self.on_paint_extras(dc)
-        
+
     def on_paint_extras(self, dc):
         """ An overridable method so that derived classes can paint extra stuff
             on top of the fractal.
@@ -107,7 +107,7 @@ class ComputePanel(wx.Panel):
         pass
 
     # Information methods
-    
+
     def get_stats(self):
         """ Return a dictionary full of statistics about the latest computation.
         """
@@ -119,7 +119,7 @@ class ComputePanel(wx.Panel):
         """
         if not self.GetRect().Contains(pt):
             return None
-        
+
         x, y = pt
         r, i = self.compute.coords_from_pixel(x, y)
 
@@ -128,22 +128,22 @@ class ComputePanel(wx.Panel):
             color = "#%02x%02x%02x" % (rgb[0], rgb[1], rgb[2])
         else:
             color = None
-        
+
         count = self.compute.counts[y, x]
         if self.compute.eng.cont_levels != 1:
             count /= self.compute.eng.cont_levels
-        
+
         point_info = {
             'x': x, 'y': y,
             'r': r, 'i': i,
             'count': count,
             'color': color,
             }
-        
+
         return point_info
-    
+
     # Output methods
-    
+
     def make_progress_reporter(self):
         """ Create a progress reporter for use when this panel computes.
         """
@@ -165,21 +165,21 @@ class ComputePanel(wx.Panel):
         self.Refresh()
         bitmap = self.bitmap_from_compute()
         wx.EndBusyCursor()
-        #print "Parent is active: %r" % self.GetParent().IsActive()
+        #print("Parent is active: %r" % self.GetParent().IsActive())
         return bitmap
 
     def draw_progress(self):
         """ Called from the GUI thread periodically during computation.
-        
+
         Repaints the window.
-        
+
         """
         self.bitmap = self.bitmap_from_compute()
         self.Refresh()
         self.Update()
         wx.CallAfter(self.fire_event, AptusRecomputedEvent)
         wx.SafeYield(onlyIfNeeded=True)
-        
+
     def set_view(self):
         self.bitmap = None
         self.compute.size = self.GetClientSize()
@@ -188,7 +188,7 @@ class ComputePanel(wx.Panel):
         self.Refresh()
 
     # Output-writing methods
-    
+
     def write_png(self, pth):
         """ Write the current image as a PNG to the path `pth`.
         """

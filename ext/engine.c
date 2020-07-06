@@ -189,7 +189,7 @@ AptEngine_init(AptEngine *self, PyObject *args, PyObject *kwds)
 static void
 AptEngine_dealloc(AptEngine *self)
 {
-    self->ob_type->tp_free((PyObject*)self);
+    Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 // ri0 property methods
@@ -971,9 +971,10 @@ apply_palette(AptEngine *self, PyObject *args)
     }
 
     // Unpack the palette a bit.
-    u1int * colbytes;
+    const char * colbytes;
     Py_ssize_t ncolbytes;
-    if (PyString_AsStringAndSize(colbytes_obj, (char**)&colbytes, &ncolbytes) < 0) {
+    colbytes = PyUnicode_AsUTF8AndSize(colbytes_obj, &ncolbytes);
+    if (colbytes == NULL) {
         goto done;
     }
     int ncolors;
@@ -983,7 +984,7 @@ apply_palette(AptEngine *self, PyObject *args)
     int i;
     for (i = 0; i < 3; i++) {
         pint = PySequence_GetItem(incolor_obj, i);
-        incolbytes[i] = (u1int)PyInt_AsLong(pint);
+        incolbytes[i] = (u1int)PyLong_AsLong(pint);
         Py_CLEAR(pint);
     }
 
@@ -1139,8 +1140,7 @@ AptEngine_methods[] = {
 
 static PyTypeObject
 AptEngineType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                         /*ob_size*/
+    PyVarObject_HEAD_INIT(NULL, 0)
     "AptEngine.AptEngine",     /*tp_name*/
     sizeof(AptEngine),         /*tp_basicsize*/
     0,                         /*tp_itemsize*/
@@ -1183,30 +1183,49 @@ AptEngineType = {
 
 // Module definition
 
+#define MODULE_DOC PyDoc_STR("Fast Aptus Mandelbrot engine.")
+
 static PyMethodDef
 AptEngine_functions[] = {
     { "type_check", type_check, METH_VARARGS, type_check_doc },
     { NULL }
 };
 
-void
-initengine(void)
+static PyModuleDef
+moduledef = {
+    PyModuleDef_HEAD_INIT,
+    "aptus.engine",
+    MODULE_DOC,
+    -1,
+    AptEngine_functions,    /* methods */
+    NULL,                   /* slots */
+    NULL,                   /* traverse */
+    NULL,                   /* clear */
+    NULL                    /* free */
+};
+
+PyObject *
+PyInit_engine(void)
 {
     import_array();
 
-    PyObject* m;
+    PyObject * mod = PyModule_Create(&moduledef);
+    if (mod == NULL) {
+        return NULL;
+    }
 
     AptEngineType.tp_new = PyType_GenericNew;
     if (PyType_Ready(&AptEngineType) < 0) {
-        return;
-    }
-
-    m = Py_InitModule3("aptus.engine", AptEngine_functions, "Fast Aptus Mandelbrot engine.");
-
-    if (m == NULL) {
-        return;
+        Py_DECREF(mod);
+        return NULL;
     }
 
     Py_INCREF(&AptEngineType);
-    PyModule_AddObject(m, "AptEngine", (PyObject *)&AptEngineType);
+    if (PyModule_AddObject(mod, "AptEngine", (PyObject *)&AptEngineType) < 0) {
+        Py_DECREF(mod);
+        Py_DECREF(&AptEngineType);
+        return NULL;
+    }
+
+    return mod;
 }

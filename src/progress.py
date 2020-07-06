@@ -100,14 +100,14 @@ class ConsoleProgressReporter:
         to_go = int(so_far / frac_done * (1-frac_done))
         if info:
             info = '  ' + info
-        print "%5.2f%%: %11s done, %11s to go, eta %10s%s" % (
+        print("%5.2f%%: %11s done, %11s to go, eta %10s%s" % (
             frac_done*100, duration(so_far), duration(to_go), future(to_go), info
-            )
+            ))
 
     def end(self):
         total = time.time() - self.start
         global totaltotal, nruns
         totaltotal += total
         nruns += 1
-        print "Total: %s (%.4fs)" % (duration(total), total)
-        #print "Running average: %.6fs over %d runs" % (totaltotal/nruns, nruns)
+        print("Total: %s (%.4fs)" % (duration(total), total))
+        #print("Running average: %.6fs over %d runs" % (totaltotal/nruns, nruns))

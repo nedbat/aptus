@@ -57,7 +57,7 @@ class AptusViewPanel(ComputePanel):
         self.zoom = 2.0             # A constant zoom amt per click.
 
     # Input methods
-    
+
     def reset_mousing(self):
         """ Set all the mousing variables to turn off rubberbanding and panning.
         """
@@ -68,11 +68,11 @@ class AptusViewPanel(ComputePanel):
         self.panning = False
         self.pt_pan = None
         self.pan_locked = False
-        
+
         # When shift is down, then we're indicating points.
         self.indicating_pt = False
         self.indicated_pt = (-1, -1)
- 
+
     def finish_panning(self, mx, my):
         if not self.pt_down:
             return
@@ -81,7 +81,7 @@ class AptusViewPanel(ComputePanel):
         cy -= my - self.pt_down[1]
         self.compute.center = self.compute.coords_from_pixel(cx, cy)
         self.geometry_changed()
-        
+
     def xor_rectangle(self, rect):
         dc = wx.ClientDC(self)
         dc.SetLogicalFunction(wx.XOR)
@@ -141,23 +141,23 @@ class AptusViewPanel(ComputePanel):
         self.compute.center = self.compute.coords_from_pixel(cx, cy)
         self.compute.diam = (self.compute.diam[0]*scale, self.compute.diam[1]*scale)
         self.geometry_changed()
-        
+
     def make_progress_reporter(self):
         # Construct a progress reporter that suits us.  Write to the console,
         # but only once a second.
         return IntervalProgressReporter(1, ConsoleProgressReporter())
-    
+
     # Event handlers
-    
+
     def on_idle(self, event):
         self.indicate_point(event)
         self.set_cursor(event)
         ComputePanel.on_idle(self, event)
-        
+
     def on_paint(self, event_unused):
         if not self.bitmap:
             self.bitmap = self.draw_bitmap()
-        
+
         dc = wx.AutoBufferedPaintDC(self)
         if self.panning:
             dc.SetBrush(wx.Brush(wx.Colour(224,224,128), wx.SOLID))
@@ -168,28 +168,28 @@ class AptusViewPanel(ComputePanel):
             dc.DrawBitmap(self.bitmap, 0, 0, False)
 
     def on_left_down(self, event):
-        #print wx.Window.FindFocus()
+        #print(wx.Window.FindFocus())
         self.pt_down = event.GetPosition()
         self.rubberbanding = False
         if self.panning:
             self.pt_pan = self.pt_down
             self.pan_locked = False
-            
+
     def on_middle_down(self, event):
         self.pt_down = event.GetPosition()
         self.rubberbanding = False
         self.panning = True
         self.pt_pan = self.pt_down
         self.pan_locked = False
-        
+
     def on_motion(self, event):
         self.indicate_point(event)
         self.set_cursor(event)
-        
+
         # We do nothing with mouse moves that aren't dragging.
         if not self.pt_down:
             return
-        
+
         mx, my = event.GetPosition()
 
         if self.panning:
@@ -203,15 +203,15 @@ class AptusViewPanel(ComputePanel):
                 # Start rubberbanding when we have a 10-pixel rectangle at least.
                 if abs(self.pt_down[0] - mx) > 10 or abs(self.pt_down[1] - my) > 10:
                     self.rubberbanding = True
-    
+
             if self.rubberbanding:
                 if self.rubberrect:
                     # Erase the old rectangle.
                     self.xor_rectangle(self.rubberrect)
-                    
-                self.rubberrect = (self.pt_down[0], self.pt_down[1], mx-self.pt_down[0], my-self.pt_down[1]) 
+
+                self.rubberrect = (self.pt_down[0], self.pt_down[1], mx-self.pt_down[0], my-self.pt_down[1])
                 self.xor_rectangle(self.rubberrect)
-                
+
     def on_left_up(self, event):
         mx, my = event.GetPosition()
         if self.rubberbanding:
@@ -229,11 +229,11 @@ class AptusViewPanel(ComputePanel):
                 scale = (scale - 1.0)/10 + 1.0
             self.dilate_view((mx, my), 1.0/scale)
 
-        self.reset_mousing()        
+        self.reset_mousing()
 
     def on_middle_up(self, event):
         self.finish_panning(*event.GetPosition())
-        self.reset_mousing()        
+        self.reset_mousing()
 
     def on_right_up(self, event):
         scale = self.zoom
@@ -241,20 +241,20 @@ class AptusViewPanel(ComputePanel):
             scale = (scale - 1.0)/10 + 1.0
         self.dilate_view(event.GetPosition(), scale)
         self.reset_mousing()
-        
+
     def on_leave_window(self, event):
         if self.rubberrect:
             self.xor_rectangle(self.rubberrect)
         if self.panning:
             self.finish_panning(*event.GetPosition())
         self.reset_mousing()
-        
+
     def on_key_down(self, event):
         # Turn keystrokes into commands.
         shift = event.ShiftDown()
         cmd = event.CmdDown()
         keycode = event.KeyCode
-        #print "Look:", keycode
+        #print("Look:", keycode)
         if keycode == ord('A'):
             self.fire_command(id_set_angle)
         elif keycode == ord('C'):
@@ -324,24 +324,24 @@ class AptusViewPanel(ComputePanel):
             sym = revmap.get(keycode, "")
             if not sym:
                 sym = "ord(%r)" % chr(keycode)
-            #print "Unmapped key: %r, %s, shift=%r, cmd=%r" % (keycode, sym, shift, cmd)
+            #print("Unmapped key: %r, %s, shift=%r, cmd=%r" % (keycode, sym, shift, cmd))
 
     def on_key_up(self, event):
         keycode = event.KeyCode
         if keycode == ord(' '):
             if not self.pan_locked:
                 self.panning = False
-            
+
     def on_set_focus(self, event):
-        pass #print "Set focus"
+        pass #print("Set focus")
 
     def on_kill_focus(self, event):
         return
         import traceback; traceback.print_stack()
-        print "Kill focus to %r" % event.GetWindow()
-        print "Parent: %r" % self.GetParent()
+        print("Kill focus to %r" % event.GetWindow())
+        print("Parent: %r" % self.GetParent())
         if self.GetParent():
-            print "Isactive: %r" % self.GetParent().IsActive()
+            print("Isactive: %r" % self.GetParent().IsActive())
 
     # Command helpers
 
@@ -353,7 +353,7 @@ class AptusViewPanel(ComputePanel):
             try:
                 setattr(self.compute, attr, caster(dlg.GetValue()))
                 when_done()
-            except ValueError, e:
+            except ValueError as e:
                 self.message("Couldn't set %s: %s" % (attr, e))
 
         dlg.Destroy()
@@ -367,13 +367,13 @@ class AptusViewPanel(ComputePanel):
         self.coloring_changed()
 
     # Commands
-    
+
     def cmd_set_angle(self, event_unused):
         self.set_value('Angle:', 'Set the angle of rotation', 'angle', float, self.geometry_changed)
-        
+
     def cmd_set_iter_limit(self, event_unused):
         self.set_value('Iteration limit:', 'Set the iteration limit', 'iter_limit', int, self.computation_changed)
-        
+
     def cmd_toggle_continuous(self, event_unused):
         self.compute.continuous = not self.compute.continuous
         self.computation_changed()
@@ -381,34 +381,34 @@ class AptusViewPanel(ComputePanel):
     def cmd_redraw(self, event_unused):
         self.compute.clear_results()
         self.set_view()
-        
+
     def cmd_jump(self, event_unused):
         self.jump_index += 1
         self.jump_index %= len(JUMPS)
         self.compute.center, self.compute.diam = JUMPS[self.jump_index]
         self.geometry_changed()
-        
+
     def cmd_cycle_palette(self, event):
         delta = event.GetClientData()
         self.compute.palette_phase += delta
         self.coloring_changed()
-        
+
     def cmd_scale_palette(self, event):
         factor = event.GetClientData()
         if self.compute.continuous:
             self.compute.palette_scale *= factor
             self.coloring_changed()
-        
+
     def cmd_change_palette(self, event):
         delta = event.GetClientData()
         self.palette_index += delta
         self.palette_index %= len(all_palettes)
         self.palette_changed()
-        
+
     def cmd_set_palette(self, event):
         self.palette_index = event.GetClientData()
         self.palette_changed()
-        
+
     def cmd_adjust_palette(self, event):
         self.compute.palette.adjust(**event.GetClientData())
         self.coloring_changed()

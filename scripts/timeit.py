@@ -11,12 +11,12 @@ def timeit(args):
 
     nruns = 100
     grandtotal = 0
-    
+
     if not args:
         case = 'a'
     else:
         case = args[0]
-        
+
     if case == 'a':
         compute.center = settings.mandelbrot_center
         compute.diam = settings.mandelbrot_diam, settings.mandelbrot_diam
@@ -31,20 +31,20 @@ def timeit(args):
         compute.iter_limit = 99999
         nruns = 5
     else:
-        print "huh?"
+        print("huh?")
         return
-    
+
     for i in range(nruns):
         compute.clear_results()
         compute.create_mandel()
         start = time.time()
         compute.compute_pixels()
         total = time.time() - start
-        print "%.4f" % total
+        print("%.4f" % total)
         grandtotal += total
-        
-    print "Average %.5f over %d runs" % (grandtotal/nruns, nruns)
-    
+
+    print("Average %.5f over %d runs" % (grandtotal/nruns, nruns))
+
 
 if __name__ == '__main__':
     timeit(sys.argv[1:])

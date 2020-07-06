@@ -15,15 +15,15 @@ class GimpGradient:
     def __init__(self, f=None):
         if f:
             self.read(f)
-        
+
     class _segment:
         pass
-    
+
     def read(self, f):
         """ Read a .ggr file from f (either an open file or a file path).
         """
-        if isinstance(f, basestring):
-            f = file(f)
+        if isinstance(f, str):
+            f = open(f)
         if f.readline().strip() != "GIMP Gradient":
             raise IOError("Not a GIMP gradient file")
         line = f.readline().strip()
@@ -40,7 +40,7 @@ class GimpGradient:
                 seg.rr, seg.gr, seg.br, _,
                 seg.fn, seg.space) = map(float, line.split())
             self.segs.append(seg)
-            
+
     def color(self, x):
         """ Get the color for the point x in the range [0..1).
             The color is returned as an rgb triple, with all values in the range
@@ -58,7 +58,7 @@ class GimpGradient:
         # Normalize the segment geometry.
         mid = (seg.m - seg.l)/(seg.r - seg.l)
         pos = (x - seg.l)/(seg.r - seg.l)
-        
+
         # Assume linear (most common, and needed by most others).
         if pos <= mid:
             f = pos/mid/2
@@ -98,7 +98,7 @@ class GimpGradient:
                 vl + (vr-vl) * f
                 )
         return c
-    
+
 def test_it():
     import sys, wx
 
@@ -124,18 +124,18 @@ def test_it():
                 self.paint_some(dc, self.chunks, ch/2, ch)
             else:
                 self.paint_some(dc, 0, 0, ch)
-                
+
         def paint_some(self, dc, chunks, y0, y1):
             cw, ch_unused = self.GetClientSize()
             chunkw = 1
             if chunks:
                 chunkw = (cw // chunks) or 1
             for x in range(0, cw, chunkw):
-                c = map(lambda x:int(255*x), ggr.color(float(x)/cw))
+                c = [int(255*x) for x in ggr.color(float(x)/cw)]
                 dc.SetPen(wx.Pen(wx.Colour(*c), 1))
                 dc.SetBrush(wx.Brush(wx.Colour(*c), wx.SOLID))
                 dc.DrawRectangle(x, y0, chunkw, y1-y0)
-        
+
         def on_size(self, event_unused):
             self.Refresh()
 

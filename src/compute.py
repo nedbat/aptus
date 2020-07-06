@@ -5,7 +5,7 @@ import copy
 import json
 import math
 import multiprocessing
-import Queue
+import queue
 import threading
 import time
 
@@ -21,7 +21,7 @@ from aptus.progress import NullProgressReporter
 class WorkerPool:
     def __init__(self):
         self.workers = []            # List of threads that will do work.
-        self.work = Queue.Queue(0)   # The queue of work items.
+        self.work = queue.Queue(0)   # The queue of work items.
         self.num_threads = multiprocessing.cpu_count()
 
     def get_ready(self):
@@ -32,7 +32,7 @@ class WorkerPool:
                 t.setDaemon(True)
                 t.start()
                 self.workers.append(t)
-        
+
     def put(self, work_item):
         """Add a work item, which should be (q, compute, coords)."""
         self.work.put(work_item)
@@ -55,13 +55,13 @@ class BucketCountingProgressReporter:
 
     def begin(self):
         self.reporter.begin()
-    
+
     def progress(self, arg, num_done, info=''):
         """Bucket-counting progress.
-        
+
         `arg` is the number of the tile.  `num_done` is the number of pixels
         computed so far in that tile.
-        
+
         """
         self.buckets[arg] = num_done
         # Compute a fraction, in millionths.
@@ -76,14 +76,14 @@ class BucketCountingProgressReporter:
 class AptusCompute:
     """ The Mandelbrot compute class.  It wraps the AptEngine to provide pythonic
         convenience.
-        
+
         There are two coordinate systems at work here: the ri plane is the
         fractal plane, real and imaginary floats.  The xy plane are screen coordinates,
         in pixels, usually integers.
     """
 
     worker_pool = WorkerPool()
-    
+
     def __init__(self):
         # geometry
         self.center = settings.mandelbrot_center
@@ -91,7 +91,7 @@ class AptusCompute:
         self.size = settings.explorer_size
         self.angle = 0.0
         self._geometry_attributes = ['center', 'diam', 'size', 'angle']
-        
+
         # computation
         self.iter_limit = 999
         self.continuous = False
@@ -99,13 +99,13 @@ class AptusCompute:
         self.mode = 'mandelbrot'
         self.rijulia = 0.0, 0.0
         self._computation_attributes = ['iter_limit', 'continuous', 'supersample', 'mode', 'rijulia']
-        
+
         # coloring
         self.palette = all_palettes[0]
         self.palette_phase = 0
         self.palette_scale = 1.0
         self._coloring_attributes = ['palette', 'palette_phase', 'palette_scale']
-        
+
         # other
         self.outfile = 'Aptus.png'
         self.quiet = False
@@ -123,10 +123,10 @@ class AptusCompute:
         self.pix = None
         # A gray checkerboard
         self.chex = None
-        
+
         self.pixels_computed = False
         self._clear_old_geometry()
-        
+
     def _record_old_geometry(self):
         """ Call this before any of the geometry settings change, to possibly
             optimize the next computation.
@@ -137,7 +137,7 @@ class AptusCompute:
         self.old_angle = self.angle
         for a in self._computation_attributes:
             setattr(self, 'old_'+a, getattr(self, a))
-        
+
     def _clear_old_geometry(self):
         self.old_ssize = (0,0)
         self.old_pixsize = 0
@@ -145,7 +145,7 @@ class AptusCompute:
         self.old_angle = 0
         for a in self._computation_attributes:
             setattr(self, 'old_'+a, 0)
-    
+
     def computation_changed(self):
         for a in self._computation_attributes:
             if getattr(self, 'old_'+a) != getattr(self, a):
@@ -155,10 +155,10 @@ class AptusCompute:
     def create_mandel(self):
         # ssize is the dimensions of the sample array, in samples across and down.
         self.ssize = self.size[0]*self.supersample, self.size[1]*self.supersample
-        
+
         # pixsize is the size of a single sample, in real units.
         self.pixsize = max(self.diam[0] / self.ssize[0], self.diam[1] / self.ssize[1])
-        
+
         rad = math.radians(self.angle)
         dx = math.cos(rad) * self.pixsize
         dy = math.sin(rad) * self.pixsize
@@ -177,7 +177,7 @@ class AptusCompute:
         ri0y -= pix_offset * self.pixsize
 
         self.eng.ri0 = ri0x, ri0y
-    
+
         self.eng.iter_limit = self.iter_limit
         self.progress = NullProgressReporter()
         self.while_waiting = None
@@ -187,10 +187,10 @@ class AptusCompute:
             self.eng.bailout = 100.0
         else:
             self.eng.bailout = 2.0
-        
+
         # Continuous is really two different controls in the engine.
         self.eng.cont_levels = self.eng.blend_colors = 256 if self.continuous else 1
-        
+
         # Different modes require different settings.
         if self.mode == 'mandelbrot':
             self.eng.julia = 0
@@ -204,7 +204,7 @@ class AptusCompute:
             self.eng.check_cycles = 0
         else:
             raise Exception("Unknown mode: %r" % (self.mode,))
-        
+
         # Create new workspaces for the compute engine.
         old_counts = self.counts
         self.counts = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint32)
@@ -219,12 +219,12 @@ class AptusCompute:
             dx, dy = self.pixel_from_coords(*self.old_ri0)
             dx = int(round(dx))
             dy = int(round(dy))
-            
+
             # Figure out what rectangle is still valid, keep in mind the old
             # and new rectangles could be different sizes.
             nc = min(self.counts.shape[1] - abs(dx), old_counts.shape[1])
             nr = min(self.counts.shape[0] - abs(dy), old_counts.shape[0])
-            
+
             if nc > 0 and nr > 0:
                 # Some rows and columns are shared between old and new.
                 if dx >= 0:
@@ -240,7 +240,7 @@ class AptusCompute:
                 # and status gets the common rectangle filled with 3's.
                 self.counts[newy:newy+nr,newx:newx+nc] = old_counts[oldy:oldy+nr,oldx:oldx+nc]
                 self.status[newy:newy+nr,newx:newx+nc] = 3  # 3 == Fully computed and filled
-        
+
         # In desperate times, printing the counts and status might help...
         if 0:
             for y in range(self.ssize[1]):
@@ -250,11 +250,11 @@ class AptusCompute:
                         "_-=@"[self.status[y,x]],
                         "0123456789"[self.counts[y,x]%10]
                         )
-                print l
+                print(l)
 
         self.pixels_computed = False
         self._clear_old_geometry()
-    
+
     def clear_results(self):
         """ Discard any results held.
         """
@@ -284,7 +284,7 @@ class AptusCompute:
             any of them actually changed.
         """
         return self._copy_attributes(other, self._computation_attributes)
-    
+
     def _copy_attributes(self, other, attrs):
         """ Copy a list of attributes from other to self, returning True if
             any of them actually changed.
@@ -299,7 +299,7 @@ class AptusCompute:
             otherval = copy.deepcopy(getattr(other, attr))
             setattr(self, attr, otherval)
         return changed
-    
+
     def color_mandel(self):
         w, h = self.counts.shape
         if (self.chex is None) or (self.chex.shape[:2] != self.counts.shape):
@@ -323,17 +323,17 @@ class AptusCompute:
             self.palette.incolor, self.palette.wrap, self.pix
             )
         return self.pix
-    
+
     def compute_pixels(self):
         if self.pixels_computed:
             return
 
         if not self.quiet:
-            print "ri %r step %r, angle %.1f, iter_limit %r, size %r" % (
+            print("ri %r step %r, angle %.1f, iter_limit %r, size %r" % (
                 self.eng.ri0, self.pixsize, self.angle, self.eng.iter_limit, self.ssize
-                )
-            print "center %r, diam %r" % (self.center, self.diam)
-    
+                ))
+            print("center %r, diam %r" % (self.center, self.diam))
+
         self.stats = ComputeStats()
 
         # Figure out how many pixels have to be computed: make a histogram of
@@ -354,7 +354,7 @@ class AptusCompute:
             self.worker_pool.get_ready()
 
             # Create work items with the tiles to compute
-            result_queue = Queue.Queue(0)
+            result_queue = queue.Queue(0)
             n_todo = 0
             xcuts = self.cuts(0, self.counts.shape[1], x_side_cuts)
             ycuts = self.cuts(0, self.counts.shape[0], y_side_cuts)
@@ -376,7 +376,7 @@ class AptusCompute:
                         result_queue.get(timeout=self.refresh_rate)
                         n_todo -= 1
                         break
-                    except Queue.Empty:
+                    except queue.Empty:
                         pass
 
         else:
@@ -397,9 +397,9 @@ class AptusCompute:
 
     def slice_tiles(self):
         """Decide how to divide the current view into tiles for workers.
-        
+
         Returns two numbers, the number of tiles in the x and y directions.
-        
+
         """
         # Slice into roughly 200-pixel tiles.
         x, y = max(self.ssize[0]//200, 1), max(self.ssize[1]//200, 1)
@@ -427,10 +427,10 @@ class AptusCompute:
         self.stats += stats
 
     def debug_callback(self, info):
-        print info
+        print(info)
 
     # Information methods
-    
+
     def coords_from_pixel(self, x, y):
         """ Get the coords of a pixel in the grid. Note that x and y can be
             fractional.
@@ -455,7 +455,7 @@ class AptusCompute:
         return x, y
 
     # Output-writing methods
-    
+
     def write_image(self, im, fpath):
         """ Write the image `im` to the path `fpath`.
         """
@@ -471,7 +471,7 @@ class AptusCompute:
 
 class ComputeStats(dict):
     """Collected statistics about the computation."""
-    
+
     # This statmap is also used by gui.StatsPanel
     statmap = [
         { 'label': 'Min iteration', 'key': 'miniter', 'sum': min },
@@ -490,7 +490,7 @@ class ComputeStats(dict):
         { 'label': 'Largest fill', 'key': 'largestfilled', 'sum': max },
         { 'label': 'Min edge iter', 'key': 'miniteredge', 'sum': min },
         ]
-        
+
     def __init__(self):
         for stat in self.statmap:
             self[stat['key']] = None
