@@ -14,7 +14,6 @@ import numpy
 from aptus import __version__, settings
 from aptus.options import AptusState
 from aptus.palettes import all_palettes
-from aptus.progress import NullProgressReporter
 
 
 class WorkerPool:
@@ -42,34 +41,6 @@ class WorkerPool:
             result_queue, apt_compute, n_tile, coords = self.work.get()
             apt_compute.compute_some(n_tile, coords)
             result_queue.put(coords)
-
-
-class BucketCountingProgressReporter:
-    """ A progress reporter for parallel tiles.
-    """
-    def __init__(self, num_buckets, expected_total, reporter):
-        self.buckets = [0] * num_buckets
-        self.expected_total = expected_total
-        self.reporter = reporter
-
-    def begin(self):
-        self.reporter.begin()
-
-    def progress(self, arg, num_done, info=''):
-        """Bucket-counting progress.
-
-        `arg` is the number of the tile.  `num_done` is the number of pixels
-        computed so far in that tile.
-
-        """
-        self.buckets[arg] = num_done
-        # Compute a fraction, in millionths.
-        total = sum(self.buckets)
-        frac_done = int(total * 1000000.0 / self.expected_total)
-        self.reporter.progress(0, frac_done, "[%2d] %s" % (arg, info))
-
-    def end(self):
-        self.reporter.end()
 
 
 class AptusCompute:
@@ -179,7 +150,6 @@ class AptusCompute:
         self.eng.ri0 = ri0x, ri0y
 
         self.eng.iter_limit = self.iter_limit
-        self.progress = NullProgressReporter()
         self.while_waiting = None
 
         # Set bailout differently based on continuous or discrete coloring.
@@ -343,9 +313,6 @@ class AptusCompute:
         num_compute = buckets[0]
         x_side_cuts, y_side_cuts = self.slice_tiles()
 
-        self.bucket_progress = BucketCountingProgressReporter(x_side_cuts*y_side_cuts, num_compute, self.progress)
-
-        self.bucket_progress.begin()
         self.refresh_rate = .5
 
         if self.worker_pool:
@@ -383,7 +350,6 @@ class AptusCompute:
             self.compute_some(0, (0, self.counts.shape[1], 0, self.counts.shape[0]))
 
         # Clean up
-        self.bucket_progress.end()
         self._record_old_geometry()
         self.pixels_computed = True
         # Once compute_array is done, the status array is all 3's, so there's no
