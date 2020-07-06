@@ -99,49 +99,6 @@ class ComputePanel(wx.Panel):
 
         dc = wx.AutoBufferedPaintDC(self)
         dc.DrawBitmap(self.bitmap, 0, 0, False)
-        self.on_paint_extras(dc)
-
-    def on_paint_extras(self, dc):
-        """ An overridable method so that derived classes can paint extra stuff
-            on top of the fractal.
-        """
-        pass
-
-    # Information methods
-
-    def get_stats(self):
-        """ Return a dictionary full of statistics about the latest computation.
-        """
-        return self.compute.stats
-
-    def get_point_info(self, pt):
-        """ Return a dictionary of information about the specified point (in client pixels).
-            If the point is outside the window, None is returned.
-        """
-        if not self.GetRect().Contains(pt):
-            return None
-
-        x, y = pt
-        r, i = self.compute.coords_from_pixel(x, y)
-
-        if self.compute.pix is not None:
-            rgb = self.compute.pix[y, x]
-            color = "#%02x%02x%02x" % (rgb[0], rgb[1], rgb[2])
-        else:
-            color = None
-
-        count = self.compute.counts[y, x]
-        if self.compute.eng.cont_levels != 1:
-            count /= self.compute.eng.cont_levels
-
-        point_info = {
-            'x': x, 'y': y,
-            'r': r, 'i': i,
-            'count': count,
-            'color': color,
-            }
-
-        return point_info
 
     # Output methods
 
