@@ -150,6 +150,7 @@ class ComputePanel(wx.Panel):
         return NullProgressReporter()
 
     def bitmap_from_compute(self):
+        print("bitmap_from_compute")
         pix = self.compute.color_mandel()
         bitmap = wx.Bitmap.FromBuffer(pix.shape[1], pix.shape[0], pix)
         return bitmap
