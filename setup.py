@@ -68,7 +68,7 @@ setup(
     author_email = "ned@nedbatchelder.com",
     url = "http://nedbatchelder.com/code/aptus",
     license = "MIT",
-    classifiers = filter(None, classifiers.split("\n")),
+    classifiers = list(filter(None, classifiers.split("\n"))),
 
     # The data
     packages = [
@@ -96,7 +96,7 @@ setup(
             extra_compile_args=extra_compile_args,
             ),
         ],
-    
+
     scripts = [
         'scripts/aptuscmd.py',
         'scripts/aptusgui.py',
