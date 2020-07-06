@@ -104,7 +104,7 @@ ComputeStats_AsDict(ComputeStats *stats)
         "longestboundary", stats->longestboundary,
         "largestfilled", stats->largestfilled
         );
-    
+
     // Clean up sentinel values for stats that could have no actual value.
     if (stats->miniter == INT_MAX) {
         if (PyDict_SetItemString(statdict, "miniter", Py_None) < 0) {
@@ -133,7 +133,7 @@ typedef struct {
     aptcomplex ridx;        // delta per pixel in x direction (a pair of floats)
     aptcomplex ridy;        // delta per pixel in y direction (a pair of floats)
     aptcomplex rijulia;     // julia point.
-    
+
     u4int iter_limit;       // limit on iteration count.
     aptfloat bailout;       // escape radius.
     int check_cycles;       // should we check for cycles?
@@ -150,11 +150,11 @@ typedef struct {
         int     factor;         // to get a new period, multiply by this,
         int     delta;          //  .. and add this.
     } cycle_params;
-    
+
     PyObject * debug_callback;  // Maybe defined.
 } AptEngine;
 
-    
+
 // Class methods
 
 static int
@@ -207,7 +207,7 @@ set_ri0(AptEngine *self, PyObject *value, void *closure)
         PyErr_SetString(PyExc_TypeError, "Cannot delete the ri0 attribute");
         return -1;
     }
-  
+
     if (!PyArg_ParseTuple(value, "dd", &self->ri0.r, &self->ri0.i)) {
         return -1;
     }
@@ -230,14 +230,14 @@ set_ridxdy(AptEngine *self, PyObject *value, void *closure)
         PyErr_SetString(PyExc_TypeError, "Cannot delete the ridxdy attribute");
         return -1;
     }
-  
+
     if (!PyArg_ParseTuple(value, "dddd", &self->ridx.r, &self->ridx.i, &self->ridy.r, &self->ridy.i)) {
         return -1;
     }
 
     // Make a crude estimate of an epsilon to use for cycle checking.
     self->epsilon = (self->ridx.r+self->ridx.i)/2;
-    
+
     return 0;
 }
 
@@ -256,7 +256,7 @@ set_rijulia(AptEngine *self, PyObject *value, void *closure)
         PyErr_SetString(PyExc_TypeError, "Cannot delete the rijulia attribute");
         return -1;
     }
-  
+
     if (!PyArg_ParseTuple(value, "dd", &self->rijulia.r, &self->rijulia.i)) {
         return -1;
     }
@@ -284,7 +284,7 @@ set_cycle_params(AptEngine *self, PyObject *value, void *closure)
         PyErr_SetString(PyExc_TypeError, "Cannot delete the cycle_params attribute");
         return -1;
     }
-  
+
     if (!PyArg_ParseTuple(value, "iiii",
         &self->cycle_params.initial_period,
         &self->cycle_params.tries,
@@ -342,7 +342,7 @@ compute_count(AptEngine *self, int xi, int yi, ComputeStats *stats)
         z.r = 0.0;
         z.i = 0.0;
     }
-    
+
     // Cycle checking bookkeeping variables.
     aptcomplex cycle_check = z;
 
@@ -351,7 +351,7 @@ compute_count(AptEngine *self, int xi, int yi, ComputeStats *stats)
     int cycle_countdown = cycle_period;
 
     aptfloat bail2 = self->bailout * self->bailout;
-    
+
     // Macros for the meat of the iterations, since we need to do them in a few
     // places.
 #define ITER1                               \
@@ -371,7 +371,7 @@ compute_count(AptEngine *self, int xi, int yi, ComputeStats *stats)
         ITER1; ITER2;
     }
     count = stats->miniteredge;
-    
+
     // Second phase: iterate more carefully, looking for bailout, cycles, etc.
     while (likely(count <= self->iter_limit)) {
         ITER1;
@@ -406,7 +406,7 @@ compute_count(AptEngine *self, int xi, int yi, ComputeStats *stats)
                 count = 0;
                 break;
             }
-            
+
             if (--cycle_countdown == 0) {
                 // Take a new cycle_check point.
                 cycle_check = z;
@@ -426,7 +426,7 @@ compute_count(AptEngine *self, int xi, int yi, ComputeStats *stats)
         STATS_CODE(stats->maxedpoints++;)
         count = 0;
     }
-    
+
     // Smooth coloring.
     if (count > 0 && self->cont_levels != 1) {
         // http://linas.org/art-gallery/escape/smooth.html
@@ -447,9 +447,9 @@ compute_count(AptEngine *self, int xi, int yi, ComputeStats *stats)
         }
         count = (u4int)(fcount * self->cont_levels);
     }
-    
+
     STATS_CODE(stats->computedpoints++;)
-    
+
     return count;
 }
 
@@ -515,7 +515,7 @@ human_u8int(u8int big, char *buf)
         little /= 1e9;
         sprintf(buf, "%.1fB", little);
     }
-    
+
     return buf;
 }
 
@@ -542,11 +542,11 @@ compute_array(AptEngine *self, PyObject *args)
     // takes three arguments: the opaque argument, the number of pixels
     // finished, and a string of information.
     PyObject * progress;
-    
+
     // Malloc'ed buffers.
     typedef struct { int x, y; } Point;
     Point * points = NULL;
-    
+
     int ok = 0;
     int ret;
 
@@ -556,7 +556,7 @@ compute_array(AptEngine *self, PyObject *args)
             &prog_arg, &progress)) {
         goto done;
     }
-    
+
     if (!PyCallable_Check(progress)) {
         PyErr_SetString(PyExc_TypeError, "progress must be callable");
         goto done;
@@ -607,7 +607,7 @@ compute_array(AptEngine *self, PyObject *args)
     int flipping;
     aptfloat axisy;
     int fliplo, fliphi;
-    
+
     flipping = fliplo = fliphi = 0;
     axisy = 0;
 
@@ -615,7 +615,7 @@ compute_array(AptEngine *self, PyObject *args)
         // The symmetry axis is horizontal.
         axisy = self->ri0.i/-self->ridy.i;
         aptfloat above, below;
-        
+
         above = self->ri0.i + floor(axisy)*self->ridy.i;
         below = self->ri0.i + ceil(axisy)*self->ridy.i;
         // printf("above = %f, below = %f\n", above, below);
@@ -629,9 +629,9 @@ compute_array(AptEngine *self, PyObject *args)
             }
         }
     }
-    
+
     int flipped, yflip;
-    flipped = yflip = 0;    
+    flipped = yflip = 0;
 
 // A macro to potentially flip a result across the x axis.
 // TODO: This macro checks the status of the flipped point to see that it is
@@ -719,7 +719,7 @@ compute_array(AptEngine *self, PyObject *args)
             else if (s == STATUS_UNTRACED && self->trace_boundary) {
                 c = COUNTS(xi, yi);
             }
-            
+
             // A pixel that's been calculated but not traced needs to be traced.
             if (s == STATUS_UNTRACED && self->trace_boundary) {
                 const char FIRST_DIR = DIR_UP;
@@ -728,20 +728,20 @@ compute_array(AptEngine *self, PyObject *args)
                 int origx = xi, origy = yi;
                 int lastx = xi, lasty = yi;
                 int start = 1;
-                
+
                 STATUS(xi, yi) = STATUS_TRACING;
 
                 points[0].x = curx;
                 points[0].y = cury;
                 ptsstored = 1;
-                
+
                 // Walk the boundary
                 for (;;) {
                     // Eventually, we reach our starting point. Stop.
                     if (unlikely(!start && curx == origx && cury == origy && curdir == FIRST_DIR)) {
                         break;
                     }
-                    
+
                     // Move to the next position. If we're off the field, turn
                     // left (same as if the pixel off-field were a different color
                     // than us).
@@ -761,7 +761,7 @@ compute_array(AptEngine *self, PyObject *args)
                         }
                         curx--;
                         break;
-                    
+
                     case DIR_UP:
                         if (unlikely(cury <= ymin)) {
                             curdir = DIR_LEFT;
@@ -769,7 +769,7 @@ compute_array(AptEngine *self, PyObject *args)
                         }
                         cury--;
                         break;
-                    
+
                     case DIR_RIGHT:
                         if (unlikely(curx >= xmax-1)) {
                             curdir = DIR_UP;
@@ -778,7 +778,7 @@ compute_array(AptEngine *self, PyObject *args)
                         curx++;
                         break;
                     }
-                    
+
                     // Get the count of the next position.
                     int c2 = 0;
                     flipped = 0;
@@ -792,15 +792,15 @@ compute_array(AptEngine *self, PyObject *args)
                         FLIP_POINT(curx, cury, c2, STATUS_UNTRACED);
                         CALL_DEBUG("point");
                         break;
-                
+
                     case STATUS_UNTRACED:
                         c2 = COUNTS(curx, cury);
                         break;
-                    
+
                     case STATUS_TRACING:
                         c2 = c; // Should be...
                         break;
-                    
+
                     case STATUS_FILLED:
                         // Don't wander into filled territory.
                         c2 = c+1;
@@ -837,17 +837,17 @@ compute_array(AptEngine *self, PyObject *args)
                         cury = lasty;
                         curdir = (curdir+3) % 4;    // Turn left
                     }
-                    
+
                     start = 0;
                 } // end for boundary points
-                
+
                 STATS_CODE(
                 stats.boundaries++;
                 if (ptsstored > stats.longestboundary) {
                     stats.longestboundary = ptsstored;
                 }
                 )
-                
+
                 // If we saved enough boundary points, then we flood fill. The
                 // points are orthogonally connected, so we need at least eight
                 // to enclose a fillable point.
@@ -879,7 +879,7 @@ compute_array(AptEngine *self, PyObject *args)
                             CALL_DEBUG("fill");
                         }
                     } // end for points to fill
-                
+
                     STATS_CODE(
                     if (num_filled > 0) {
                         stats.filledpoints += num_filled;
@@ -898,7 +898,7 @@ compute_array(AptEngine *self, PyObject *args)
                                 last_progress = stats.totaliter;
                             }
                         }
-                        
+
                         if (num_filled > stats.largestfilled) {
                             stats.largestfilled = num_filled;
                         }
@@ -922,7 +922,7 @@ compute_array(AptEngine *self, PyObject *args)
         }
         )
     } // end for yi
-    
+
     // Clean up.
     ok = 1;
 
@@ -958,11 +958,11 @@ apply_palette(AptEngine *self, PyObject *args)
     // Objects we get during the function.
     PyObject * pint = NULL;
     int ok = 0;
-    
+
     if (!PyArg_ParseTuple(args, "O!OOidOiO!:apply_palette", &PyArray_Type, &counts, &status_obj, &colbytes_obj, &phase, &scale, &incolor_obj, &wrap, &PyArray_Type, &pix)) {
         goto done;
     }
-    
+
     if (status_obj != Py_None) {
         status = (PyArrayObject*)status_obj;
     }
@@ -986,7 +986,7 @@ apply_palette(AptEngine *self, PyObject *args)
         incolbytes[i] = (u1int)PyInt_AsLong(pint);
         Py_CLEAR(pint);
     }
-    
+
     // A one-element cache of count and color.
     npy_uint8 *plastpix;
     npy_uint32 lastc;
@@ -1062,7 +1062,7 @@ apply_palette(AptEngine *self, PyObject *args)
                         // The pixel is in the set, color it with the incolor.
                         memcpy(ppix, incolbytes, 3);
                     }
-                    
+
                     // Save this value in our one-element cache.
                     lastc = c;
                     plastpix = ppix;
@@ -1076,10 +1076,10 @@ apply_palette(AptEngine *self, PyObject *args)
     }
 
     ok = 1;
-    
+
 done:
     Py_XDECREF(pint);
-    
+
     return ok ? Py_BuildValue("") : NULL;
 }
 
@@ -1095,7 +1095,7 @@ type_check(PyObject *self, PyObject *args)
     u8int big = 1;
     big <<= 40;
     sprintf(info, "Big 1<<40 = %s", human_u8int(big, uinfo));
-    
+
     return Py_BuildValue(
         "{si,si,si,si,ss}",
         "double", sizeof(double),
@@ -1193,7 +1193,7 @@ void
 initengine(void)
 {
     import_array();
-    
+
     PyObject* m;
 
     AptEngineType.tp_new = PyType_GenericNew;
