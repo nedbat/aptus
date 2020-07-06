@@ -78,7 +78,7 @@ class Palette:
         """ Compute a string of RGB bytes for use in the engine.
         """
         if not self._colorbytes:
-            colbytes = "".join([ chr(r)+chr(g)+chr(b) for r,g,b in self.colors ])
+            colbytes = b"".join([ bytes([r, g, b]) for r,g,b in self.colors ])
             self._colorbytes = colbytes
         return self._colorbytes
 

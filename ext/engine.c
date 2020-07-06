@@ -973,8 +973,7 @@ apply_palette(AptEngine *self, PyObject *args)
     // Unpack the palette a bit.
     const char * colbytes;
     Py_ssize_t ncolbytes;
-    colbytes = PyUnicode_AsUTF8AndSize(colbytes_obj, &ncolbytes);
-    if (colbytes == NULL) {
+    if (PyBytes_AsStringAndSize(colbytes_obj, &colbytes, &ncolbytes) < 0) {
         goto done;
     }
     int ncolors;
