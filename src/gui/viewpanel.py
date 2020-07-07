@@ -21,29 +21,7 @@ class AptusViewPanel(ComputePanel):
         self.Bind(wx.EVT_MENU, self.cmd_set_iter_limit, id=id_set_iter_limit)
         self.Bind(wx.EVT_MENU, self.cmd_redraw, id=id_redraw)
 
-        # Gui state values
-        self.palette_index = 0      # The index of the currently displayed palette
-        self.zoom = 2.0             # A constant zoom amt per click.
-
     # Input methods
-
-    def indicate_point(self, event):
-        """ Use the given event to indicate a point, maybe.
-        """
-        if hasattr(event, 'ShiftDown'):
-            self.indicating_pt = event.ShiftDown()
-        else:
-            self.indicating_pt = wx.GetMouseState().shiftDown
-
-        if self.indicating_pt:
-            if hasattr(event, 'GetPosition'):
-                pt = event.GetPosition()
-            else:
-                ms = wx.GetMouseState()
-                pt = self.ScreenToClient((ms.x, ms.y))
-            if self.GetRect().Contains(pt) and pt != self.indicated_pt:
-                self.indicated_pt = pt
-                self.fire_event(AptusIndicatePointEvent, point=pt)
 
     def make_progress_reporter(self):
         # Construct a progress reporter that suits us.  Write to the console,
@@ -51,10 +29,6 @@ class AptusViewPanel(ComputePanel):
         return IntervalProgressReporter(1, ConsoleProgressReporter())
 
     # Event handlers
-
-    def on_idle(self, event):
-        self.indicate_point(event)
-        ComputePanel.on_idle(self, event)
 
     def on_paint(self, event_unused):
         if not self.bitmap:
