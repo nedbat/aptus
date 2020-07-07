@@ -16,80 +16,16 @@ class AptusViewPanel(ComputePanel):
         self.compute.quiet = False
 
         # Bind input events.
-        self.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
-        self.Bind(wx.EVT_MIDDLE_DOWN, self.on_middle_down)
-        self.Bind(wx.EVT_MOTION, self.on_motion)
-        self.Bind(wx.EVT_LEFT_UP, self.on_left_up)
-        self.Bind(wx.EVT_MIDDLE_UP, self.on_middle_up)
-        self.Bind(wx.EVT_RIGHT_UP, self.on_right_up)
-        self.Bind(wx.EVT_LEAVE_WINDOW, self.on_leave_window)
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
-        self.Bind(wx.EVT_KEY_UP, self.on_key_up)
-        self.Bind(wx.EVT_KILL_FOCUS, self.on_kill_focus)
-        self.Bind(wx.EVT_SET_FOCUS, self.on_set_focus)
 
         self.Bind(wx.EVT_MENU, self.cmd_set_iter_limit, id=id_set_iter_limit)
         self.Bind(wx.EVT_MENU, self.cmd_redraw, id=id_redraw)
-
-        self.reset_mousing()
 
         # Gui state values
         self.palette_index = 0      # The index of the currently displayed palette
         self.zoom = 2.0             # A constant zoom amt per click.
 
     # Input methods
-
-    def reset_mousing(self):
-        """ Set all the mousing variables to turn off rubberbanding and panning.
-        """
-        self.pt_down = None
-        self.rubberbanding = False
-        self.rubberrect = None
-        # Panning information.
-        self.panning = False
-        self.pt_pan = None
-        self.pan_locked = False
-
-        # When shift is down, then we're indicating points.
-        self.indicating_pt = False
-        self.indicated_pt = (-1, -1)
-
-    def finish_panning(self, mx, my):
-        if not self.pt_down:
-            return
-        cx, cy = self.compute.size[0]/2.0, self.compute.size[1]/2.0
-        cx -= mx - self.pt_down[0]
-        cy -= my - self.pt_down[1]
-        self.compute.center = self.compute.coords_from_pixel(cx, cy)
-        self.geometry_changed()
-
-    def xor_rectangle(self, rect):
-        dc = wx.ClientDC(self)
-        dc.SetLogicalFunction(wx.XOR)
-        dc.SetBrush(wx.Brush(wx.WHITE, wx.TRANSPARENT))
-        dc.SetPen(wx.Pen(wx.WHITE, 1, wx.SOLID))
-        dc.DrawRectangle(*rect)
-
-    def set_cursor(self, event_unused):
-        # If we aren't taking input, then we shouldn't change the cursor.
-        if not self.GetTopLevelParent().IsActive():
-            return
-
-        # Set the proper cursor:
-        if self.rubberbanding:
-            self.SetCursor(wx.Cursor(wx.CURSOR_MAGNIFIER))
-        elif self.panning:
-            self.SetCursor(wx.Cursor(wx.CURSOR_SIZING))
-        elif self.indicating_pt:
-            import aptus.gui.resources
-            curimg = aptus.gui.resources.getCrosshairImage()
-            curimg.SetOption(wx.IMAGE_OPTION_CUR_HOTSPOT_X, 7)
-            curimg.SetOption(wx.IMAGE_OPTION_CUR_HOTSPOT_Y, 7)
-            cur = wx.Cursor(curimg)
-            self.SetCursor(cur)
-            #self.SetCursor(wx.Cursor(wx.CURSOR_CROSS))
-        else:
-            self.SetCursor(wx.Cursor(wx.CURSOR_DEFAULT))
 
     def indicate_point(self, event):
         """ Use the given event to indicate a point, maybe.
@@ -109,20 +45,6 @@ class AptusViewPanel(ComputePanel):
                 self.indicated_pt = pt
                 self.fire_event(AptusIndicatePointEvent, point=pt)
 
-    def dilate_view(self, center, scale):
-        """ Change the view by a certain scale factor, keeping the center in the
-            same spot.
-        """
-        # Refuse to zoom out so that the whole escape circle is visible: it makes
-        # boundary tracing erase the entire thing!
-        if self.compute.diam[0] * scale >= 3.9:
-            return
-        cx = center[0] + (self.compute.size[0]/2 - center[0]) * scale
-        cy = center[1] + (self.compute.size[1]/2 - center[1]) * scale
-        self.compute.center = self.compute.coords_from_pixel(cx, cy)
-        self.compute.diam = (self.compute.diam[0]*scale, self.compute.diam[1]*scale)
-        self.geometry_changed()
-
     def make_progress_reporter(self):
         # Construct a progress reporter that suits us.  Write to the console,
         # but only once a second.
@@ -132,7 +54,6 @@ class AptusViewPanel(ComputePanel):
 
     def on_idle(self, event):
         self.indicate_point(event)
-        self.set_cursor(event)
         ComputePanel.on_idle(self, event)
 
     def on_paint(self, event_unused):
@@ -140,95 +61,7 @@ class AptusViewPanel(ComputePanel):
             self.bitmap = self.draw_bitmap()
 
         dc = wx.AutoBufferedPaintDC(self)
-        if self.panning:
-            dc.SetBrush(wx.Brush(wx.Colour(224,224,128), wx.SOLID))
-            dc.SetPen(wx.Pen(wx.Colour(224,224,128), 1, wx.SOLID))
-            dc.DrawRectangle(0, 0, self.compute.size[0], self.compute.size[1])
-            dc.DrawBitmap(self.bitmap, self.pt_pan[0]-self.pt_down[0], self.pt_pan[1]-self.pt_down[1], False)
-        else:
-            dc.DrawBitmap(self.bitmap, 0, 0, False)
-
-    def on_left_down(self, event):
-        #print(wx.Window.FindFocus())
-        self.pt_down = event.GetPosition()
-        self.rubberbanding = False
-        if self.panning:
-            self.pt_pan = self.pt_down
-            self.pan_locked = False
-
-    def on_middle_down(self, event):
-        self.pt_down = event.GetPosition()
-        self.rubberbanding = False
-        self.panning = True
-        self.pt_pan = self.pt_down
-        self.pan_locked = False
-
-    def on_motion(self, event):
-        self.indicate_point(event)
-        self.set_cursor(event)
-
-        # We do nothing with mouse moves that aren't dragging.
-        if not self.pt_down:
-            return
-
-        mx, my = event.GetPosition()
-
-        if self.panning:
-            if self.pt_pan != (mx, my):
-                # We've moved the image: redraw it.
-                self.pt_pan = (mx, my)
-                self.pan_locked = True
-                self.Refresh()
-        else:
-            if not self.rubberbanding:
-                # Start rubberbanding when we have a 10-pixel rectangle at least.
-                if abs(self.pt_down[0] - mx) > 10 or abs(self.pt_down[1] - my) > 10:
-                    self.rubberbanding = True
-
-            if self.rubberbanding:
-                if self.rubberrect:
-                    # Erase the old rectangle.
-                    self.xor_rectangle(self.rubberrect)
-
-                self.rubberrect = (self.pt_down[0], self.pt_down[1], mx-self.pt_down[0], my-self.pt_down[1])
-                self.xor_rectangle(self.rubberrect)
-
-    def on_left_up(self, event):
-        mx, my = event.GetPosition()
-        if self.rubberbanding:
-            # Set a new view that encloses the rectangle.
-            px, py = self.pt_down
-            ulr, uli = self.compute.coords_from_pixel(px, py)
-            lrr, lri = self.compute.coords_from_pixel(mx, my)
-            self.set_geometry(corners=(ulr, uli, lrr, lri))
-        elif self.panning:
-            self.finish_panning(mx, my)
-        elif self.pt_down:
-            # Single-click: zoom in.
-            scale = self.zoom
-            if event.CmdDown():
-                scale = (scale - 1.0)/10 + 1.0
-            self.dilate_view((mx, my), 1.0/scale)
-
-        self.reset_mousing()
-
-    def on_middle_up(self, event):
-        self.finish_panning(*event.GetPosition())
-        self.reset_mousing()
-
-    def on_right_up(self, event):
-        scale = self.zoom
-        if event.CmdDown():
-            scale = (scale - 1.0)/10 + 1.0
-        self.dilate_view(event.GetPosition(), scale)
-        self.reset_mousing()
-
-    def on_leave_window(self, event):
-        if self.rubberrect:
-            self.xor_rectangle(self.rubberrect)
-        if self.panning:
-            self.finish_panning(*event.GetPosition())
-        self.reset_mousing()
+        dc.DrawBitmap(self.bitmap, 0, 0, False)
 
     def on_key_down(self, event):
         # Turn keystrokes into commands.
@@ -252,9 +85,6 @@ class AptusViewPanel(ComputePanel):
             self.fire_command(id_show_stats)
         elif keycode == ord('W'):
             self.fire_command(id_window_size)
-
-        elif keycode == ord(' '):
-            self.panning = True
         elif 0:
             # Debugging aid: find the symbol for the key we didn't handle.
             revmap = dict([(getattr(wx,n), n) for n in dir(wx) if n.startswith('WXK')])
@@ -262,23 +92,6 @@ class AptusViewPanel(ComputePanel):
             if not sym:
                 sym = "ord(%r)" % chr(keycode)
             #print("Unmapped key: %r, %s, shift=%r, cmd=%r" % (keycode, sym, shift, cmd))
-
-    def on_key_up(self, event):
-        keycode = event.KeyCode
-        if keycode == ord(' '):
-            if not self.pan_locked:
-                self.panning = False
-
-    def on_set_focus(self, event):
-        pass #print("Set focus")
-
-    def on_kill_focus(self, event):
-        return
-        import traceback; traceback.print_stack()
-        print("Kill focus to %r" % event.GetWindow())
-        print("Parent: %r" % self.GetParent())
-        if self.GetParent():
-            print("Isactive: %r" % self.GetParent().IsActive())
 
     # Command helpers
 
@@ -296,9 +109,6 @@ class AptusViewPanel(ComputePanel):
         dlg.Destroy()
 
     # Commands
-
-    def cmd_set_angle(self, event_unused):
-        self.set_value('Angle:', 'Set the angle of rotation', 'angle', float, self.geometry_changed)
 
     def cmd_set_iter_limit(self, event_unused):
         self.set_value('Iteration limit:', 'Set the iteration limit', 'iter_limit', int, self.computation_changed)
