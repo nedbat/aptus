@@ -63,8 +63,6 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
 
         # Bind commands
         self.Bind(wx.EVT_MENU, self.cmd_new, id=id_new)
-        self.Bind(wx.EVT_MENU, self.cmd_help, id=id_help)
-        self.Bind(wx.EVT_MENU, self.cmd_fullscreen, id=id_fullscreen)
         self.Bind(wx.EVT_MENU, self.cmd_window_size, id=id_window_size)
 
         # Auxilliary frames.
@@ -121,14 +119,6 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
 
     def cmd_new(self, event_unused):
         return wx.GetApp().new_window()
-
-    def cmd_help(self, event_unused):
-        from aptus.gui.help import HelpDlg
-        dlg = HelpDlg(self)
-        dlg.ShowModal()
-
-    def cmd_fullscreen(self, event_unused):
-        self.ShowFullScreen(not self.IsFullScreen())
 
     def cmd_window_size(self, event_unused):
         cur_size = "%d x %d" % tuple(self.GetClientSize())

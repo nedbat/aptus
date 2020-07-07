@@ -67,11 +67,6 @@ class ComputePanel(wx.Panel):
         top = self.GetTopLevelParent()
         top.message(msg)
 
-    def coloring_changed(self):
-        self.bitmap = None
-        self.Refresh()
-        self.fire_event(AptusColoringChangedEvent)
-
     def computation_changed(self):
         self.set_view()
         self.fire_event(AptusComputationChangedEvent)
