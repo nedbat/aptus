@@ -8,11 +8,10 @@ import wx.aui
 from aptus import data_file
 from aptus.gui.ids import *
 from aptus.gui.viewpanel import AptusViewPanel
-from aptus.gui.misc import AptusToolableFrameMixin
 from aptus.options import AptusOptions
 
 
-class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
+class AptusMainFrame(wx.Frame):
     """ The main window frame of the Aptus app.
     """
     def __init__(self, args=None, compute=None, size=None):
@@ -21,7 +20,6 @@ class AptusMainFrame(wx.Frame, AptusToolableFrameMixin):
             copy settings from.
         """
         wx.Frame.__init__(self, None, -1, 'Aptus')
-        AptusToolableFrameMixin.__init__(self)
 
         # Make the panel
         self.panel = AptusViewPanel(self)

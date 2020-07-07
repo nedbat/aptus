@@ -6,6 +6,7 @@ import json
 import math
 import multiprocessing
 import queue
+import random
 import threading
 import time
 
@@ -384,7 +385,8 @@ class AptusCompute:
 
     def compute_some(self, n_tile, coords):
         print(f"compute_some({n_tile}, {coords})")
-        time.sleep(10 if self.iter_limit > 1000 else 1)
+        if self.iter_limit > 1000:
+            time.sleep(random.randint(2, 10))
 
     def debug_callback(self, info):
         print(info)
