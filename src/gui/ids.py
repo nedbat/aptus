@@ -18,6 +18,3 @@ AptusRecomputedEvent, EVT_APTUS_RECOMPUTED = wx.lib.newevent.NewEvent()
 ## Command ids
 
 id_set_iter_limit = wx.NewId()
-id_redraw = wx.NewId()
-id_new = wx.NewId()
-id_window_size = wx.NewId()
