@@ -6,7 +6,7 @@ import sys
 
 import numpy
 import wx
-import wx.html 
+import wx.html2
 import wx.lib.layoutf
 from PIL import Image
 
@@ -27,32 +27,35 @@ class HtmlDialog(wx.Dialog):
 
         self.pages = pages
         self.subs = subs or {}
-        self.html = wx.html.HtmlWindow(self, -1)
-        self.html.Bind(wx.html.EVT_HTML_LINK_CLICKED, self.on_link_clicked)
+        self.html = wx.html2.WebView.New(self)
+        self.html.Bind(wx.html2.EVT_WEBVIEW_NAVIGATING, self.on_navigating)
         ok = wx.Button(self, wx.ID_OK, "OK")
         ok.SetDefault()
-        
+
         lc = wx.lib.layoutf.Layoutf('t=t#1;b=t5#2;l=l#1;r=r#1', (self,ok))
         self.html.SetConstraints(lc)
         self.set_page('interactive')
-        
+
         lc = wx.lib.layoutf.Layoutf('b=b5#1;r=r5#1;w!80;h*', (self,))
         ok.SetConstraints(lc)
-        
+
         self.SetAutoLayout(1)
         self.Layout()
 
-    def on_link_clicked(self, event):
-        url = event.GetLinkInfo().GetHref()
-        if url.startswith('http:'):
+    def on_navigating(self, event):
+        url = event.GetURL()
+        if url == "":
+            event.Veto()
+        elif url.startswith(("http:", "https:")):
             webbrowser.open(url)
+            event.Veto()
         elif url.startswith('internal:'):
             self.set_page(url.split(':')[1])
 
     def set_page(self, pagename):
         html = self.pages['head'] + self.pages[pagename]
         html = html % self.subs
-        self.html.SetPage(html)
+        self.html.SetPage(html, "")
 
 
 # The help text
@@ -68,7 +71,7 @@ TERMS = {
     'numpy_version': numpy.__version__,
     'pil_version': Image.__version__,
     }
-    
+
 
 HELP_PAGES = {
     'head': """\
@@ -78,11 +81,11 @@ HELP_PAGES = {
             <td valign='top'>
                 <b>Aptus %(version)s</b>, Mandelbrot set explorer.<br>
                 Copyright 2007-2010, Ned Batchelder.<br>
-                <a href='http://nedbatchelder.com/code/aptus'>http://nedbatchelder.com/code/aptus</a>
+                <a href='https://nedbatchelder.com/code/aptus'>http://nedbatchelder.com/code/aptus</a>
             </td>
         </tr>
         </table>
-        
+
         <p>
             <a href='internal:interactive'>Interactive</a> |
             <a href='internal:command'>Command line</a> |
@@ -92,7 +95,7 @@ HELP_PAGES = {
 
     'interactive': """
         <p><b>Interactive controls:</b></p>
-        
+
         <blockquote>
         <b>a</b>: set the angle of rotation.<br>
         <b>c</b>: toggle continuous coloring.<br>
@@ -118,9 +121,9 @@ HELP_PAGES = {
         <b>middle-drag</b>: drag the image to a new position.<br>
         <b>shift</b>: indicate a point of interest for Julia set and point info.
         </blockquote>
-        
+
         <p><b>Tool windows: press a key to toggle on and off:</b></p>
-        
+
         <blockquote>
         <b>shift-j</b>: Show a Julia set for the current (shift-hovered) point.<br>
         <b>l (ell)</b>: Show zoom snapshots indicating the current position.<br>
@@ -133,15 +136,15 @@ HELP_PAGES = {
     'command': """
         <p>On the command line, use <tt><b>--help</b></tt> to see options:</p>
         <pre>""" + AptusOptions(None).options_help() + "</pre>",
-        
+
     'about': """
         <p>Built with
         <a href='http://python.org'>Python</a>, <a href='http://wxpython.org'>wxPython</a>,
         <a href='http://numpy.scipy.org/'>numpy</a>, and
         <a href='http://www.pythonware.com/library/pil/handbook/index.htm'>PIL</a>.</p>
-        
+
         <p>Thanks to Rob McMullen and Paul Ollis for help with the drawing code.</p>
-        
+
         <hr>
         <p>Installed versions:</p>
         <p>
