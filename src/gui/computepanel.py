@@ -5,7 +5,6 @@ import numpy
 from aptus import settings
 from aptus.compute import AptusCompute
 from aptus.gui.ids import *
-from aptus.options import AptusState
 from aptus.palettes import all_palettes
 
 
@@ -63,17 +62,14 @@ class ComputePanel(wx.Panel):
     # Output methods
 
     def bitmap_from_compute(self):
-        print("bitmap_from_compute")
-        pix = self.compute.color_mandel()
-        w, h = pix.shape[1], pix.shape[0]
+        #pix = self.compute.color_mandel()
+        w, h = 600, 600 #pix.shape[1], pix.shape[0]
         sq = 10
         c = numpy.fromfunction(lambda x,y: ((x//sq) + (y//sq)) % 2, (w,h))
         chex = numpy.empty((w,h,3), dtype=numpy.uint8)
         chex[c == 0] = (0xAA, 0x00, 0x00)
         chex[c == 1] = (0x99, 0x99, 0x00)
-        bitmap = wx.Bitmap.FromBuffer(pix.shape[1], pix.shape[0], chex)
-
-        print("bitmap_from_compute done")
+        bitmap = wx.Bitmap.FromBuffer(600, 600, chex)
         return bitmap
 
     def draw_bitmap(self):
@@ -87,7 +83,6 @@ class ComputePanel(wx.Panel):
         self.Refresh()
         bitmap = self.bitmap_from_compute()
         wx.EndBusyCursor()
-        #print("Parent is active: %r" % self.GetParent().IsActive())
         return bitmap
 
     def draw_progress(self):

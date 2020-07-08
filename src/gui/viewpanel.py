@@ -43,13 +43,6 @@ class AptusViewPanel(ComputePanel):
         #print("Look:", keycode)
         if keycode == ord('I'):
             self.fire_command(id_set_iter_limit)
-        elif 0:
-            # Debugging aid: find the symbol for the key we didn't handle.
-            revmap = dict([(getattr(wx,n), n) for n in dir(wx) if n.startswith('WXK')])
-            sym = revmap.get(keycode, "")
-            if not sym:
-                sym = "ord(%r)" % chr(keycode)
-            #print("Unmapped key: %r, %s, shift=%r, cmd=%r" % (keycode, sym, shift, cmd))
 
     # Command helpers
 

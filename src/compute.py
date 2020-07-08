@@ -1,19 +1,16 @@
 """ Mandelbrot computation.
 """
 
-import copy
-import json
-import math
 import multiprocessing
 import queue
 import random
 import threading
 import time
+import types
 
 import numpy
 
-from aptus import __version__, settings
-from aptus.options import AptusState
+from aptus import settings
 from aptus.palettes import all_palettes
 
 
@@ -57,14 +54,10 @@ class AptusCompute:
 
     def __init__(self):
         # geometry
-        self.center = settings.mandelbrot_center
-        self.diam = settings.mandelbrot_diam, settings.mandelbrot_diam
-        self.size = settings.explorer_size
-        self.angle = 0.0
+        self.size = (600, 600)
 
         # computation
         self.iter_limit = 999
-        self.rijulia = 0.0, 0.0
 
         # coloring
         self.palette = all_palettes[0]
@@ -76,7 +69,6 @@ class AptusCompute:
         self.quiet = False
 
         # The C extension for doing the heavy lifting.
-        import types
         self.eng = types.SimpleNamespace()
 
         # counts is a numpy array of 32bit ints: the iteration counts at each pixel.
@@ -92,27 +84,7 @@ class AptusCompute:
 
     def create_mandel(self):
         # ssize is the dimensions of the sample array, in samples across and down.
-        self.ssize = self.size[0]*self.supersample, self.size[1]*self.supersample
-
-        # pixsize is the size of a single sample, in real units.
-        self.pixsize = max(self.diam[0] / self.ssize[0], self.diam[1] / self.ssize[1])
-
-        rad = math.radians(self.angle)
-        dx = math.cos(rad) * self.pixsize
-        dy = math.sin(rad) * self.pixsize
-
-        # The upper-left corner is computed from the center, minus the radii,
-        # plus half a pixel, so that we're sampling the center of the pixel.
-        self.eng.ridxdy = (dx, dy, dy, -dx)
-        halfsizew = self.ssize[0]/2.0 - 0.5
-        halfsizeh = self.ssize[1]/2.0 - 0.5
-        ri0x = self.center[0] - halfsizew * self.eng.ridxdy[0] - halfsizeh * self.eng.ridxdy[2]
-        ri0y = self.center[1] - halfsizew * self.eng.ridxdy[1] - halfsizeh * self.eng.ridxdy[3]
-
-        # In order for x-axis symmetry to apply, the x axis has to fall between
-        # pixels or through the center of a pixel.
-        pix_offset, _ = math.modf(ri0y / self.pixsize)
-        ri0y -= pix_offset * self.pixsize
+        self.ssize = self.size[0], self.size[1]
 
         self.while_waiting = None
 
@@ -121,8 +93,8 @@ class AptusCompute:
         self.status = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint8)
 
     def color_mandel(self):
-        w, h = self.counts.shape
         if (self.chex is None) or (self.chex.shape[:2] != self.counts.shape):
+            w, h = self.counts.shape
             # Make a checkerboard
             sq = 15
             c = numpy.fromfunction(lambda x,y: ((x//sq) + (y//sq)) % 2, (w,h))

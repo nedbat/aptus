@@ -8,7 +8,6 @@ import wx.aui
 from aptus import data_file
 from aptus.gui.ids import *
 from aptus.gui.viewpanel import AptusViewPanel
-from aptus.options import AptusOptions
 
 
 class AptusMainFrame(wx.Frame):
@@ -24,14 +23,8 @@ class AptusMainFrame(wx.Frame):
         # Make the panel
         self.panel = AptusViewPanel(self)
 
-        if args:
-            opts = AptusOptions(self.panel.compute)
-            opts.read_args(args)
-
         if size:
             self.panel.compute.size = size
-
-        self.panel.compute.supersample = 1
 
     def Show(self, show=True):
         # Override Show so we can set the view properly.
