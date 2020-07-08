@@ -10,8 +10,6 @@ import types
 
 import numpy
 
-from aptus.palettes import all_palettes
-
 
 class WorkerPool:
     def __init__(self):
@@ -52,20 +50,8 @@ class AptusCompute:
     worker_pool = WorkerPool()
 
     def __init__(self):
-        # geometry
         self.size = (600, 600)
-
-        # computation
         self.iter_limit = 999
-
-        # coloring
-        self.palette = all_palettes[0]
-        self.palette_phase = 0
-        self.palette_scale = 1.0
-
-        # other
-        self.outfile = 'Aptus.png'
-        self.quiet = False
 
         # The C extension for doing the heavy lifting.
         self.eng = types.SimpleNamespace()

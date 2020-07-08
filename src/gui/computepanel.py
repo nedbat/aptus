@@ -4,7 +4,6 @@ import numpy
 
 from aptus.compute import AptusCompute
 from aptus.gui.ids import *
-from aptus.palettes import all_palettes
 
 
 class ComputePanel(wx.Panel):
@@ -15,10 +14,6 @@ class ComputePanel(wx.Panel):
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
 
         self.compute = AptusCompute()
-        self.compute.quiet = True     # default to quiet.
-
-        # AptusCompute default values
-        self.compute.palette = all_palettes[0]
 
         # Bind events
         self.Bind(wx.EVT_PAINT, self.on_paint)

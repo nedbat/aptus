@@ -2,7 +2,6 @@ import wx
 
 from aptus.gui.computepanel import ComputePanel
 from aptus.gui.ids import *
-from aptus.palettes import all_palettes
 from aptus.progress import ConsoleProgressReporter, IntervalProgressReporter
 
 
@@ -11,8 +10,6 @@ class AptusViewPanel(ComputePanel):
     """
     def __init__(self, parent):
         ComputePanel.__init__(self, parent)
-
-        self.compute.quiet = False
 
         # Bind input events.
         self.Bind(wx.EVT_KEY_DOWN, self.on_key_down)
