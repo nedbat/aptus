@@ -7,7 +7,6 @@ from aptus.compute import AptusCompute
 from aptus.gui.ids import *
 from aptus.options import AptusState
 from aptus.palettes import all_palettes
-from aptus.progress import NullProgressReporter
 
 
 class ComputePanel(wx.Panel):
@@ -96,11 +95,6 @@ class ComputePanel(wx.Panel):
         dc.DrawBitmap(self.bitmap, 0, 0, False)
 
     # Output methods
-
-    def make_progress_reporter(self):
-        """ Create a progress reporter for use when this panel computes.
-        """
-        return NullProgressReporter()
 
     def bitmap_from_compute(self):
         print("bitmap_from_compute")

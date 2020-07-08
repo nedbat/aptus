@@ -6,35 +6,6 @@ import time
 from aptus.timeutil import duration, future
 
 
-class NullProgressReporter:
-    """ Basic interface for reporting rendering progress.
-    """
-
-    def begin(self):
-        """ Called once at the beginning of a render.
-        """
-        pass
-
-    def progress(self, arg, num_done, info=''):
-        """ Called repeatedly to report progress.
-
-        `arg` is an opaque argument, the caller can use it for whatever they want.
-
-        `num_done` is a int indicating the count of progress.  There is no
-        defined range for `num_done`, it is assumed that the caller knows what
-        work is being done, and what the number mean.
-
-        `info` is a string giving some information about what's been done.
-
-        """
-        pass
-
-    def end(self):
-        """ Called once at the end of a render.
-        """
-        pass
-
-
 class IntervalProgressReporter:
     """ A progress reporter decorator that only calls its wrapped reporter
         every N seconds.
