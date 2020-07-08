@@ -20,12 +20,11 @@ class ComputePanel(wx.Panel):
 
     # GUI helpers
 
-    def fire_command(self, cmdid, data=None):
+    def fire_command(self, cmdid):
         # I'm not entirely sure about why this is the right event type to use,
         # but it works...
         evt = wx.CommandEvent(wx.wxEVT_COMMAND_TOOL_CLICKED)
         evt.SetId(cmdid)
-        evt.SetClientData(data)
         wx.PostEvent(self, evt)
 
     def computation_changed(self):
