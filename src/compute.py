@@ -61,7 +61,6 @@ class AptusCompute:
         self.diam = settings.mandelbrot_diam, settings.mandelbrot_diam
         self.size = settings.explorer_size
         self.angle = 0.0
-        self._geometry_attributes = ['center', 'diam', 'size', 'angle']
 
         # computation
         self.iter_limit = 999
@@ -69,13 +68,11 @@ class AptusCompute:
         self.supersample = 1
         self.mode = 'mandelbrot'
         self.rijulia = 0.0, 0.0
-        self._computation_attributes = ['iter_limit', 'continuous', 'supersample', 'mode', 'rijulia']
 
         # coloring
         self.palette = all_palettes[0]
         self.palette_phase = 0
         self.palette_scale = 1.0
-        self._coloring_attributes = ['palette', 'palette_phase', 'palette_scale']
 
         # other
         self.outfile = 'Aptus.png'
@@ -212,64 +209,8 @@ class AptusCompute:
                 self.counts[newy:newy+nr,newx:newx+nc] = old_counts[oldy:oldy+nr,oldx:oldx+nc]
                 self.status[newy:newy+nr,newx:newx+nc] = 3  # 3 == Fully computed and filled
 
-        # In desperate times, printing the counts and status might help...
-        if 0:
-            for y in range(self.ssize[1]):
-                l = ""
-                for x in range(self.ssize[0]):
-                    l += "%s%s" % (
-                        "_-=@"[self.status[y,x]],
-                        "0123456789"[self.counts[y,x]%10]
-                        )
-                print(l)
-
         self.pixels_computed = False
         self._clear_old_geometry()
-
-    def clear_results(self):
-        """ Discard any results held.
-        """
-        self.counts = None
-
-    def copy_all(self, other):
-        """ Copy the important attributes from other to self.
-        """
-        self.copy_geometry(other)
-        self.copy_coloring(other)
-        self.copy_computation(other)
-
-    def copy_geometry(self, other):
-        """ Copy the geometry attributes from other to self, returning True if
-            any of them actually changed.
-        """
-        return self._copy_attributes(other, self._geometry_attributes)
-
-    def copy_coloring(self, other):
-        """ Copy the coloring attributes from other to self, returning True if
-            any of them actually changed.
-        """
-        return self._copy_attributes(other, self._coloring_attributes)
-
-    def copy_computation(self, other):
-        """ Copy the computation attributes from other to self, returning True if
-            any of them actually changed.
-        """
-        return self._copy_attributes(other, self._computation_attributes)
-
-    def _copy_attributes(self, other, attrs):
-        """ Copy a list of attributes from other to self, returning True if
-            any of them actually changed.
-        """
-        changed = False
-        for attr in attrs:
-            # Detect if changed, then copy the attribute regardless.  This makes
-            # the .palette copy every time, which guarantees proper drawing at
-            # the expense of a lot of palette copying.
-            if getattr(self, attr) != getattr(other, attr):
-                changed = True
-            otherval = copy.deepcopy(getattr(other, attr))
-            setattr(self, attr, otherval)
-        return changed
 
     def color_mandel(self):
         w, h = self.counts.shape

@@ -27,8 +27,6 @@ class AptusMainFrame(wx.Frame):
         if args:
             opts = AptusOptions(self.panel.compute)
             opts.read_args(args)
-        if compute:
-            self.panel.compute.copy_all(compute)
 
         if size:
             self.panel.compute.size = size
