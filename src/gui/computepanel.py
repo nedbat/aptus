@@ -28,17 +28,11 @@ class ComputePanel(wx.Panel):
         evt.SetClientData(data)
         wx.PostEvent(self, evt)
 
-    def fire_event(self, evclass, **kwargs):
-        evt = evclass(**kwargs)
-        self.GetEventHandler().ProcessEvent(evt)
-
     def computation_changed(self):
         self.set_view()
-        self.fire_event(AptusComputationChangedEvent)
 
     def geometry_changed(self):
         self.set_view()
-        self.fire_event(AptusGeometryChangedEvent)
 
     # Event handlers
 
@@ -69,7 +63,6 @@ class ComputePanel(wx.Panel):
         self.compute.progress = self.make_progress_reporter()
         self.compute.while_waiting = self.draw_progress
         self.compute.compute_pixels()
-        wx.CallAfter(self.fire_event, AptusRecomputedEvent)
         self.Refresh()
         bitmap = self.bitmap_from_compute()
         wx.EndBusyCursor()
@@ -85,7 +78,6 @@ class ComputePanel(wx.Panel):
         self.bitmap = self.bitmap_from_compute()
         self.Refresh()
         self.Update()
-        wx.CallAfter(self.fire_event, AptusRecomputedEvent)
         wx.SafeYield(onlyIfNeeded=True)
         print("out of draw_progress")
 
