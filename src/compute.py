@@ -94,32 +94,6 @@ class AptusCompute:
         self.chex = None
 
         self.pixels_computed = False
-        self._clear_old_geometry()
-
-    def _record_old_geometry(self):
-        """ Call this before any of the geometry settings change, to possibly
-            optimize the next computation.
-        """
-        self.old_ssize = self.ssize
-        self.old_pixsize = self.pixsize
-        self.old_ri0 = self.eng.ri0
-        self.old_angle = self.angle
-        for a in self._computation_attributes:
-            setattr(self, 'old_'+a, getattr(self, a))
-
-    def _clear_old_geometry(self):
-        self.old_ssize = (0,0)
-        self.old_pixsize = 0
-        self.old_ri0 = (0,0)
-        self.old_angle = 0
-        for a in self._computation_attributes:
-            setattr(self, 'old_'+a, 0)
-
-    def computation_changed(self):
-        for a in self._computation_attributes:
-            if getattr(self, 'old_'+a) != getattr(self, a):
-                return True
-        return False
 
     def create_mandel(self):
         # ssize is the dimensions of the sample array, in samples across and down.
@@ -178,39 +152,7 @@ class AptusCompute:
         self.counts = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint32)
         self.status = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint8)
 
-        # Figure out if we can keep any of our old counts or not.
-        if (old_counts is not None and
-            self.pixsize == self.old_pixsize and
-            self.angle == self.old_angle and
-            not self.computation_changed()):
-            # All the params are compatible, see how much we shifted.
-            dx, dy = self.pixel_from_coords(*self.old_ri0)
-            dx = int(round(dx))
-            dy = int(round(dy))
-
-            # Figure out what rectangle is still valid, keep in mind the old
-            # and new rectangles could be different sizes.
-            nc = min(self.counts.shape[1] - abs(dx), old_counts.shape[1])
-            nr = min(self.counts.shape[0] - abs(dy), old_counts.shape[0])
-
-            if nc > 0 and nr > 0:
-                # Some rows and columns are shared between old and new.
-                if dx >= 0:
-                    oldx, newx = 0, dx
-                else:
-                    oldx, newx = -dx, 0
-                if dy >= 0:
-                    oldy, newy = 0, dy
-                else:
-                    oldy, newy = -dy, 0
-
-                # Copy the common rectangles.  Old_counts gets copied to counts,
-                # and status gets the common rectangle filled with 3's.
-                self.counts[newy:newy+nr,newx:newx+nc] = old_counts[oldy:oldy+nr,oldx:oldx+nc]
-                self.status[newy:newy+nr,newx:newx+nc] = 3  # 3 == Fully computed and filled
-
         self.pixels_computed = False
-        self._clear_old_geometry()
 
     def color_mandel(self):
         w, h = self.counts.shape
@@ -290,7 +232,6 @@ class AptusCompute:
             self.compute_some(0, (0, self.counts.shape[1], 0, self.counts.shape[0]))
 
         # Clean up
-        self._record_old_geometry()
         self.pixels_computed = True
         # Once compute_array is done, the status array is all 3's, so there's no
         # point in keeping it around.
