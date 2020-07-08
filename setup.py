@@ -89,7 +89,6 @@ setup(
         },
 
     scripts = [
-        'scripts/aptuscmd.py',
         'scripts/aptusgui.py',
         ],
 

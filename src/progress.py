@@ -57,28 +57,6 @@ class IntervalProgressReporter:
         self.reporter.end()
 
 
-class AggregateProgressReporter:
-    """ Collect a number of progress reporters into a single unified front.
-    """
-    def __init__(self):
-        self.kids = []
-
-    def add(self, reporter):
-        self.kids.append(reporter)
-
-    def begin(self):
-        for kid in self.kids:
-            kid.begin()
-
-    def progress(self, arg, num_done, info=''):
-        for kid in self.kids:
-            kid.progress(arg, num_done, info)
-
-    def end(self):
-        for kid in self.kids:
-            kid.end()
-
-
 # Cheap way to measure and average a number of runs.
 nruns = 0
 totaltotal = 0
