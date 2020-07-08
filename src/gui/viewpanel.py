@@ -1,6 +1,5 @@
 import wx
 
-from aptus import settings
 from aptus.gui.computepanel import ComputePanel
 from aptus.gui.ids import *
 from aptus.palettes import all_palettes

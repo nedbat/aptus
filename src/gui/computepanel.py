@@ -2,7 +2,6 @@ from PIL import Image
 import wx
 import numpy
 
-from aptus import settings
 from aptus.compute import AptusCompute
 from aptus.gui.ids import *
 from aptus.palettes import all_palettes

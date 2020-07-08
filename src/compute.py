@@ -10,7 +10,6 @@ import types
 
 import numpy
 
-from aptus import settings
 from aptus.palettes import all_palettes
 
 
