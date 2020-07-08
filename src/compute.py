@@ -64,9 +64,6 @@ class AptusCompute:
 
         # computation
         self.iter_limit = 999
-        self.continuous = False
-        self.supersample = 1
-        self.mode = 'mandelbrot'
         self.rijulia = 0.0, 0.0
 
         # coloring
@@ -124,28 +121,14 @@ class AptusCompute:
         self.eng.iter_limit = self.iter_limit
         self.while_waiting = None
 
-        # Set bailout differently based on continuous or discrete coloring.
-        if self.continuous:
-            self.eng.bailout = 100.0
-        else:
-            self.eng.bailout = 2.0
-
-        # Continuous is really two different controls in the engine.
-        self.eng.cont_levels = self.eng.blend_colors = 256 if self.continuous else 1
+        self.eng.bailout = 2.0
+        self.eng.cont_levels = self.eng.blend_colors = 1
 
         # Different modes require different settings.
-        if self.mode == 'mandelbrot':
-            self.eng.julia = 0
-            self.eng.rijulia = (0, 0)
-            self.eng.trace_boundary = 1
-            self.eng.check_cycles = 1
-        elif self.mode == 'julia':
-            self.eng.julia = 1
-            self.eng.rijulia = tuple(self.rijulia)
-            self.eng.trace_boundary = 0
-            self.eng.check_cycles = 0
-        else:
-            raise Exception("Unknown mode: %r" % (self.mode,))
+        self.eng.julia = 0
+        self.eng.rijulia = (0, 0)
+        self.eng.trace_boundary = 1
+        self.eng.check_cycles = 1
 
         # Create new workspaces for the compute engine.
         old_counts = self.counts
