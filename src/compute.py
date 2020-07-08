@@ -306,8 +306,6 @@ class AptusCompute:
                 ))
             print("center %r, diam %r" % (self.center, self.diam))
 
-        self.stats = ComputeStats()
-
         # Figure out how many pixels have to be computed: make a histogram of
         # the buckets of values: 0,1,2,3.
         buckets, _ = numpy.histogram(self.status, 4, (0, 3))
@@ -393,19 +391,6 @@ class AptusCompute:
 
     # Information methods
 
-    def coords_from_pixel(self, x, y):
-        """ Get the coords of a pixel in the grid. Note that x and y can be
-            fractional.
-        """
-        # The .5 adjustment is because the grid is aligned to the center of the
-        # pixels, but we need to return the upper-left of the pixel so that other
-        # math comes out right.
-        x = float(x) - 0.5
-        y = float(y) - 0.5
-        r = self.eng.ri0[0] + self.eng.ridxdy[0]*x + self.eng.ridxdy[2]*y
-        i = self.eng.ri0[1] + self.eng.ridxdy[1]*x + self.eng.ridxdy[3]*y
-        return r, i
-
     def pixel_from_coords(self, r, i):
         """ Get the pixel coords containing the fractal coordinates.
         """
@@ -415,56 +400,3 @@ class AptusCompute:
         x = (d2*(i-ri01)+d3*ri00-d3*r)/(d1*d2-d0*d3)
         y = -(d0*(i-ri01)+d1*ri00-d1*r)/(d1*d2-d0*d3)
         return x, y
-
-    # Output-writing methods
-
-    def write_image(self, im, fpath):
-        """ Write the image `im` to the path `fpath`.
-        """
-        # PNG info mojo from: http://blog.modp.com/2007/08/python-pil-and-png-metadata-take-2.html
-        from PIL import PngImagePlugin
-        aptst = AptusState(self)
-        info = PngImagePlugin.PngInfo()
-        info.add_text("Software", "Aptus %s" % __version__)
-        info.add_text("Aptus State", aptst.write_string())
-        info.add_text("Aptus Stats", json.dumps(self.stats))
-        im.save(fpath, 'PNG', pnginfo=info)
-
-
-class ComputeStats(dict):
-    """Collected statistics about the computation."""
-
-    # This statmap is also used by gui.StatsPanel
-    statmap = [
-        { 'label': 'Min iteration', 'key': 'miniter', 'sum': min },
-        { 'label': 'Max iteration', 'key': 'maxiter', 'sum': max },
-        { 'label': 'Total iterations', 'key': 'totaliter', 'sum': sum },
-        { 'label': 'Total cycles', 'key': 'totalcycles', 'sum': sum },
-        { 'label': 'Shortest cycle', 'key': 'minitercycle', 'sum': min },
-        { 'label': 'Longest cycle', 'key': 'maxitercycle', 'sum': max },
-        { 'label': 'Maxed points', 'key': 'maxedpoints', 'sum': sum },
-        { 'label': 'Computed points', 'key': 'computedpoints', 'sum': sum },
-        { 'label': 'Filled points', 'key': 'filledpoints', 'sum': sum },
-        { 'label': 'Flipped points', 'key': 'flippedpoints', 'sum': sum },
-        { 'label': 'Boundaries traced', 'key': 'boundaries', 'sum': sum },
-        { 'label': 'Boundaries filled', 'key': 'boundariesfilled', 'sum': sum },
-        { 'label': 'Longest boundary', 'key': 'longestboundary', 'sum': max },
-        { 'label': 'Largest fill', 'key': 'largestfilled', 'sum': max },
-        { 'label': 'Min edge iter', 'key': 'miniteredge', 'sum': min },
-        ]
-
-    def __init__(self):
-        for stat in self.statmap:
-            self[stat['key']] = None
-
-    def __iadd__(self, other):
-        """Accumulate a dict of stats to ourselves."""
-        for stat in self.statmap:
-            k = stat['key']
-            if self[k] is None:
-                self[k] = other[k]
-            elif other[k] is None:
-                pass
-            else:
-                self[k] = stat['sum']([self[k], other[k]])
-        return self
