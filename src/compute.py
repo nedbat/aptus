@@ -90,8 +90,6 @@ class AptusCompute:
         # A gray checkerboard
         self.chex = None
 
-        self.pixels_computed = False
-
     def create_mandel(self):
         # ssize is the dimensions of the sample array, in samples across and down.
         self.ssize = self.size[0]*self.supersample, self.size[1]*self.supersample
@@ -116,26 +114,11 @@ class AptusCompute:
         pix_offset, _ = math.modf(ri0y / self.pixsize)
         ri0y -= pix_offset * self.pixsize
 
-        self.eng.ri0 = ri0x, ri0y
-
-        self.eng.iter_limit = self.iter_limit
         self.while_waiting = None
 
-        self.eng.bailout = 2.0
-        self.eng.cont_levels = self.eng.blend_colors = 1
-
-        # Different modes require different settings.
-        self.eng.julia = 0
-        self.eng.rijulia = (0, 0)
-        self.eng.trace_boundary = 1
-        self.eng.check_cycles = 1
-
         # Create new workspaces for the compute engine.
-        old_counts = self.counts
         self.counts = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint32)
         self.status = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint8)
-
-        self.pixels_computed = False
 
     def color_mandel(self):
         w, h = self.counts.shape
@@ -148,37 +131,12 @@ class AptusCompute:
             self.chex[c == 1] = (0x99, 0x99, 0x99)
 
         self.pix = numpy.copy(self.chex)
-
-        # Modulo in C is ill-defined if anything is negative, so make sure the
-        # phase is positive if we're going to wrap.
-        phase = self.palette_phase
-        color_bytes = self.palette.color_bytes()
-        if self.palette.wrap:
-            phase %= len(color_bytes)
-        if 0:
-            self.eng.apply_palette(
-            self.counts, self.status, color_bytes, phase, self.palette_scale,
-            self.palette.incolor, self.palette.wrap, self.pix
-            )
         return self.pix
 
     def compute_pixels(self):
-        if self.pixels_computed:
-            return
+        x_side_cuts, y_side_cuts = 2, 2
 
-        if not self.quiet:
-            print("ri %r step %r, angle %.1f, iter_limit %r, size %r" % (
-                self.eng.ri0, self.pixsize, self.angle, self.eng.iter_limit, self.ssize
-                ))
-            print("center %r, diam %r" % (self.center, self.diam))
-
-        # Figure out how many pixels have to be computed: make a histogram of
-        # the buckets of values: 0,1,2,3.
-        buckets, _ = numpy.histogram(self.status, 4, (0, 3))
-        num_compute = buckets[0]
-        x_side_cuts, y_side_cuts = self.slice_tiles()
-
-        self.refresh_rate = .5
+        refresh_rate = .5
 
         if self.worker_pool:
             # Start the threads going.
@@ -197,14 +155,14 @@ class AptusCompute:
 
             # Wait for the workers to finish, calling our while_waiting function
             # periodically.
-            next_time = time.time() + self.refresh_rate
+            next_time = time.time() + refresh_rate
             while n_todo:
                 while True:
                     if self.while_waiting and time.time() > next_time:
                         self.while_waiting()
-                        next_time = time.time() + self.refresh_rate
+                        next_time = time.time() + refresh_rate
                     try:
-                        result_queue.get(timeout=self.refresh_rate)
+                        result_queue.get(timeout=refresh_rate)
                         n_todo -= 1
                         break
                     except queue.Empty:
@@ -215,7 +173,6 @@ class AptusCompute:
             self.compute_some(0, (0, self.counts.shape[1], 0, self.counts.shape[0]))
 
         # Clean up
-        self.pixels_computed = True
         # Once compute_array is done, the status array is all 3's, so there's no
         # point in keeping it around.
         self.status = None
@@ -224,44 +181,7 @@ class AptusCompute:
         """Return a list of n+1 evenly spaced numbers between `lo` and `hi`."""
         return [int(round(lo+float(i)*(hi-lo)/n)) for i in range(n+1)]
 
-    def slice_tiles(self):
-        """Decide how to divide the current view into tiles for workers.
-
-        Returns two numbers, the number of tiles in the x and y directions.
-
-        """
-        # Slice into roughly 200-pixel tiles.
-        x, y = max(self.ssize[0]//200, 1), max(self.ssize[1]//200, 1)
-
-        # If the xaxis is horizontal, and is in the middle third of the image,
-        # then slice the window into vertical slices to maximize the benefit of
-        # the axis symmetry.
-        top = self.eng.ri0[1]
-        height = self.ssize[1]*self.pixsize
-        if self.angle == 0 and top > 0 and height > top:
-            axis_frac = top / height
-            if .25 < axis_frac < .75:
-                # Use tall slices to get axis symmetry
-                y = 1
-
-        return x, y
-
     def compute_some(self, n_tile, coords):
         print(f"compute_some({n_tile}, {coords})")
         if self.iter_limit > 1000:
             time.sleep(random.randint(2, 10))
-
-    def debug_callback(self, info):
-        print(info)
-
-    # Information methods
-
-    def pixel_from_coords(self, r, i):
-        """ Get the pixel coords containing the fractal coordinates.
-        """
-        d0, d1, d2, d3 = self.eng.ridxdy
-        ri00, ri01 = self.eng.ri0
-        # Thanks, Maxima!
-        x = (d2*(i-ri01)+d3*ri00-d3*r)/(d1*d2-d0*d3)
-        y = -(d0*(i-ri01)+d1*ri00-d1*r)/(d1*d2-d0*d3)
-        return x, y
