@@ -35,8 +35,3 @@ class AptusMainFrame(wx.Frame):
             self.panel.SetFocus()
         else:
             wx.Frame.Show(self, False)
-
-    def message(self, msg):
-        dlg = wx.MessageDialog(self, msg, 'Aptus', wx.OK | wx.ICON_WARNING)
-        dlg.ShowModal()
-        dlg.Destroy()

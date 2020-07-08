@@ -32,10 +32,6 @@ class ComputePanel(wx.Panel):
         evt = evclass(**kwargs)
         self.GetEventHandler().ProcessEvent(evt)
 
-    def message(self, msg):
-        top = self.GetTopLevelParent()
-        top.message(msg)
-
     def computation_changed(self):
         self.set_view()
         self.fire_event(AptusComputationChangedEvent)
