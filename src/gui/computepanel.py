@@ -23,30 +23,7 @@ class ComputePanel(wx.Panel):
         self.compute.palette = all_palettes[0]
 
         # Bind events
-        self.Bind(wx.EVT_WINDOW_CREATE, self.on_window_create)
         self.Bind(wx.EVT_PAINT, self.on_paint)
-        self.Bind(wx.EVT_SIZE, self.on_size)
-        self.Bind(wx.EVT_IDLE, self.on_idle)
-
-    def set_geometry(self, center=None, diam=None, corners=None):
-        """ Change the panel to display a new place in the Set.
-            `center` is the ri coords of the new center, `diam` is the r and i
-            size of the view, `corners` is a 4-tuple (ulr, uli, lrr, lri) of the
-            four corners of the view.  Only specify a subset of these.
-        """
-        compute = self.compute
-        if corners:
-            ulr, uli, lrr, lri = corners
-            compute.center = ((ulr+lrr)/2, (uli+lri)/2)
-            ulx, uly = compute.pixel_from_coords(ulr, uli)
-            lrx, lry = compute.pixel_from_coords(lrr, lri)
-            compute.diam = (abs(compute.pixsize*(lrx-ulx)), abs(compute.pixsize*(lry-uly)))
-        if center:
-            compute.center = center
-        if diam:
-            compute.diam = diam
-
-        self.geometry_changed()
 
     # GUI helpers
 
@@ -75,17 +52,6 @@ class ComputePanel(wx.Panel):
         self.fire_event(AptusGeometryChangedEvent)
 
     # Event handlers
-
-    def on_window_create(self, event):
-        self.on_idle(event)
-
-    def on_size(self, event_unused):
-        self.check_size = True
-
-    def on_idle(self, event_unused):
-        if self.check_size and self.GetClientSize() != self.compute.size:
-            if self.GetClientSize() != (0,0):
-                self.geometry_changed()
 
     def on_paint(self, event_unused):
         if not self.bitmap:
@@ -142,5 +108,4 @@ class ComputePanel(wx.Panel):
         self.bitmap = None
         self.compute.size = self.GetClientSize()
         self.compute.create_mandel()
-        self.check_size = False
         self.Refresh()
