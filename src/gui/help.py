@@ -75,12 +75,24 @@ TERMS = {
 
 HELP_PAGES = {
     'head': """\
+        <style>
+        kbd {
+            display: inline-block;
+            background: #f0f0f0;
+            border: 2px solid #888;
+            border-color: #888 #333 #333 #888;
+            border-radius: .25em;
+            padding: .1em .25em;
+            margin: .1em;
+        }
+        </style>
+
         <table width='100%%'>
         <tr>
             <td width='50' valign='top'><img src='%(iconsrc)s'/></td>
             <td valign='top'>
                 <b>Aptus %(version)s</b>, Mandelbrot set explorer.<br>
-                Copyright 2007-2010, Ned Batchelder.<br>
+                Copyright 2007-2020, Ned Batchelder.<br>
                 <a href='https://nedbatchelder.com/code/aptus'>http://nedbatchelder.com/code/aptus</a>
             </td>
         </tr>
@@ -97,39 +109,39 @@ HELP_PAGES = {
         <p><b>Interactive controls:</b></p>
 
         <blockquote>
-        <b>a</b>: set the angle of rotation.<br>
-        <b>c</b>: toggle continuous coloring.<br>
-        <b>f</b>: toggle full-screen display.<br>
-        <b>h</b> or <b>?</b>: show this help.<br>
-        <b>i</b>: set the limit on iterations.<br>
-        <b>j</b>: jump among a few pre-determined locations.<br>
-        <b>n</b>: create a new window.<br>
-        <b>o</b>: open a saved settings or image file.<br>
-        <b>r</b>: redraw the current image.<br>
-        <b>s</b>: save the current image or settings.<br>
-        <b>w</b>: set the window size.<br>
-        <b>&lt;</b> or <b>&gt;</b>: switch to the next palette.<br>
-        <b>,</b> or <b>.</b>: cycle the current palette one color.<br>
-        <b>;</b> or <b>'</b>: stretch the palette colors (+%(ctrl)s: just a little), if continuous.<br>
-        <b>[</b> or <b>]</b>: adjust the hue of the palette (+%(ctrl)s: just a little).<br>
-        <b>{</b> or <b>}</b>: adjust the saturation of the palette (+%(ctrl)s: just a little).<br>
-        <b>0</b> (zero): reset all palette adjustments.<br>
-        <b>space</b>: drag mode: click to drag the image to a new position.<br>
+        <kbd>a</kbd>: set the angle of rotation.<br>
+        <kbd>c</kbd>: toggle continuous coloring.<br>
+        <kbd>f</kbd>: toggle full-screen display.<br>
+        <kbd>h</kbd> or <kbd>?</kbd>: show this help.<br>
+        <kbd>i</kbd>: set the limit on iterations.<br>
+        <kbd>j</kbd>: jump among a few pre-determined locations.<br>
+        <kbd>n</kbd>: create a new window.<br>
+        <kbd>o</kbd>: open a saved settings or image file.<br>
+        <kbd>r</kbd>: redraw the current image.<br>
+        <kbd>s</kbd>: save the current image or settings.<br>
+        <kbd>w</kbd>: set the window size.<br>
+        <kbd>&lt;</kbd> or <kbd>&gt;</kbd>: switch to the next palette.<br>
+        <kbd>,</kbd> or <kbd>.</kbd>: cycle the current palette one color.<br>
+        <kbd>;</kbd> or <kbd>'</kbd>: stretch the palette colors (+%(ctrl)s: just a little), if continuous.<br>
+        <kbd>[</kbd> or <kbd>]</kbd>: adjust the hue of the palette (+%(ctrl)s: just a little).<br>
+        <kbd>{</kbd> or <kbd>}</kbd>: adjust the saturation of the palette (+%(ctrl)s: just a little).<br>
+        <kbd>0</kbd> (zero): reset all palette adjustments.<br>
+        <kbd>space</kbd>: drag mode: click to drag the image to a new position.<br>
+        <kbd>shift</kbd>: indicate a point of interest for Julia set and point info.<br>
         <b>left-click</b>: zoom in (+%(ctrl)s: just a little).<br>
         <b>right-click</b>: zoom out (+%(ctrl)s: just a little).<br>
         <b>left-drag</b>: select a new rectangle to display.<br>
         <b>middle-drag</b>: drag the image to a new position.<br>
-        <b>shift</b>: indicate a point of interest for Julia set and point info.
         </blockquote>
 
         <p><b>Tool windows: press a key to toggle on and off:</b></p>
 
         <blockquote>
-        <b>shift-j</b>: Show a Julia set for the current (shift-hovered) point.<br>
-        <b>l (ell)</b>: Show zoom snapshots indicating the current position.<br>
-        <b>p</b>: Show a list of palettes that can be applied to the current view.<br>
-        <b>q</b>: Show point info for the current (shift-hovered) point.<br>
-        <b>v</b>: Show statistics for the latest calculation.
+        <kbd>J</kbd> (shift-j): Show a Julia set for the current (shift-hovered) point.<br>
+        <kbd>l</kbd> (ell): Show zoom snapshots indicating the current position.<br>
+        <kbd>p</kbd>: Show a list of palettes that can be applied to the current view.<br>
+        <kbd>q</kbd>: Show point info for the current (shift-hovered) point.<br>
+        <kbd>v</kbd>: Show statistics for the latest calculation.
         </blockquote>
         """,
 
