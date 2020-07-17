@@ -971,7 +971,7 @@ apply_palette(AptEngine *self, PyObject *args)
     }
 
     // Unpack the palette a bit.
-    const char * colbytes;
+    const u1int * colbytes;
     Py_ssize_t ncolbytes;
     if (PyBytes_AsStringAndSize(colbytes_obj, &colbytes, &ncolbytes) < 0) {
         goto done;
