@@ -549,18 +549,16 @@ compute_array(AptEngine *self, PyObject *args)
             &PyArray_Type, &counts, &PyArray_Type, &status,
             &xmin, &xmax, &ymin, &ymax,
             &prog_arg, &progress)) {
-        goto done;
+        goto early_done;
     }
 
     if (!PyCallable_Check(progress)) {
         PyErr_SetString(PyExc_TypeError, "progress must be callable");
-        goto done;
+        goto early_done;
     }
 
     ComputeStats stats;
     ComputeStats_clear(&stats);
-
-    Py_BEGIN_ALLOW_THREADS
 
     u4int num_pixels;
     num_pixels = 0;
@@ -571,6 +569,8 @@ compute_array(AptEngine *self, PyObject *args)
     ptsalloced = 10;
     ptsstored = 0;
     points = PyMem_New(Point, ptsalloced);
+
+    Py_BEGIN_ALLOW_THREADS
 
     STATS_DECL(
     // Progress reporting stuff.
@@ -812,10 +812,14 @@ compute_array(AptEngine *self, PyObject *args)
                         // if we have to.
                         if (unlikely(ptsstored == ptsalloced)) {
                             Point * newpts = points;
+                            Py_BLOCK_THREADS
                             PyMem_Resize(newpts, Point, ptsalloced*2);
+                            Py_UNBLOCK_THREADS
                             if (newpts == NULL) {
+                                Py_BLOCK_THREADS
                                 PyErr_SetString(PyExc_MemoryError, "couldn't allocate points");
-                                goto done;
+                                Py_UNBLOCK_THREADS
+                                goto late_done;
                             }
                             points = newpts;
                             ptsalloced *= 2;
@@ -888,7 +892,7 @@ compute_array(AptEngine *self, PyObject *args)
                                 ret = call_progress(self, progress, prog_arg, num_pixels, info);
                                 Py_UNBLOCK_THREADS
                                 if (!ret) {
-                                    goto done;
+                                    goto late_done;
                                 }
                                 last_progress = stats.totaliter;
                             }
@@ -911,7 +915,7 @@ compute_array(AptEngine *self, PyObject *args)
             ret = call_progress(self, progress, prog_arg, num_pixels, info);
             Py_UNBLOCK_THREADS
             if (!ret) {
-                goto done;
+                goto late_done;
             }
             last_progress = stats.totaliter;
         }
@@ -921,13 +925,14 @@ compute_array(AptEngine *self, PyObject *args)
     // Clean up.
     ok = 1;
 
-done:
+late_done:
+    Py_END_ALLOW_THREADS
+
+early_done:
     // Free allocated memory.
     if (points != NULL) {
         PyMem_Free(points);
     }
-
-    Py_END_ALLOW_THREADS
 
     return ok ? ComputeStats_AsDict(&stats) : NULL;
 }
