@@ -1003,15 +1003,10 @@ apply_palette(AptEngine *self, PyObject *args)
         }
 
     // Walk the arrays
-    int h;
-    int w;
-    int count_stride;
-    int pix_stride;
-
-    h = PyArray_DIM(counts, 0);
-    w = PyArray_DIM(counts, 1);
-    count_stride = PyArray_STRIDE(counts, 1);
-    pix_stride = PyArray_STRIDE(pix, 1);
+    int h = PyArray_DIM(counts, 0);
+    int w = PyArray_DIM(counts, 1);
+    int count_stride = PyArray_STRIDE(counts, 1);
+    int pix_stride = PyArray_STRIDE(pix, 1);
 
     int x, y;
     for (y = 0; y < h; y++) {
