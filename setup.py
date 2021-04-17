@@ -6,9 +6,11 @@ a computation extension in C for speed.
 """
 
 import distutils, sys
-from distutils.core import setup, Extension
+from distutils.core import Extension
 from distutils.cygwinccompiler import Mingw32CCompiler
 import glob
+
+from setuptools import setup
 
 try:
     import numpy
@@ -77,7 +79,7 @@ setup(
         ],
 
     package_dir = {
-        'aptus': 'src'
+        '': 'src'
         },
 
     package_data = {
