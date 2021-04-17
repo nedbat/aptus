@@ -2,6 +2,8 @@
 // copyright 2007-2010, Ned Batchelder
 // http://nedbatchelder.com/code/aptus
 
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+
 #include "Python.h"
 #include "numpy/arrayobject.h"
 #include "structmember.h"
@@ -500,7 +502,7 @@ human_u8int(u8int big, char *buf)
 {
     float little = (float)big;
     if (big < 10000000) {   // 10 million
-        sprintf(buf, "%lu", (u4int)big);
+        sprintf(buf, "%u", (u4int)big);
     }
     else if (big < 1000000000) {    // 1 billion
         little /= 1e6;
@@ -971,9 +973,9 @@ apply_palette(AptEngine *self, PyObject *args)
     }
 
     // Unpack the palette a bit.
-    const u1int * colbytes;
+    u1int * colbytes;
     Py_ssize_t ncolbytes;
-    if (PyBytes_AsStringAndSize(colbytes_obj, &colbytes, &ncolbytes) < 0) {
+    if (PyBytes_AsStringAndSize(colbytes_obj, (char**)&colbytes, &ncolbytes) < 0) {
         goto done;
     }
     int ncolors;
