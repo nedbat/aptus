@@ -2,14 +2,14 @@ from aptus.compute import AptusCompute
 from aptus.progress import NullProgressReporter
 from aptus import settings
 
-import sys, time
+import sys
+import time
 
 def timeit(args):
     compute = AptusCompute()
     compute.progress = NullProgressReporter()
-    compute.size = settings.explorer_size
+    compute.size = 5000, 5000
 
-    nruns = 100
     grandtotal = 0
 
     if not args:
@@ -20,6 +20,7 @@ def timeit(args):
     if case == 'a':
         compute.center = settings.mandelbrot_center
         compute.diam = settings.mandelbrot_diam, settings.mandelbrot_diam
+        nruns = 100
     elif case == 'b':
         compute.center = -1.8605327670201655, -1.2705648690517021e-005
         compute.diam = 2.92062690996144e-010, 2.92062690996144e-010
