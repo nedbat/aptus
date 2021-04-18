@@ -540,12 +540,13 @@ compute_array(AptEngine *self, PyObject *args)
     // finished, and a string of information.
     PyObject * progress;
 
-    // Malloc'ed buffers.
-    typedef struct { int x, y; } Point;
-    Point * points = NULL;
-
     int ok = 0;
     int ret;
+
+    // Malloc'ed buffers.
+    // points is an array of points on a boundary.
+    typedef struct { int x, y; } Point;
+    Point * points = NULL;
 
     if (!PyArg_ParseTuple(args, "O!O!iiiiOO:compute_array",
             &PyArray_Type, &counts, &PyArray_Type, &status,
@@ -559,18 +560,14 @@ compute_array(AptEngine *self, PyObject *args)
         goto early_done;
     }
 
+    u4int ptsalloced = 10;
+    u4int ptsstored = 0;
+    points = PyMem_New(Point, ptsalloced);
+
     ComputeStats stats;
     ComputeStats_clear(&stats);
 
-    u4int num_pixels;
-    num_pixels = 0;
-
-    // points is an array of points on a boundary.
-    u4int ptsalloced;
-    u4int ptsstored;
-    ptsalloced = 10;
-    ptsstored = 0;
-    points = PyMem_New(Point, ptsalloced);
+    u4int num_pixels = 0;
 
     Py_BEGIN_ALLOW_THREADS
 
@@ -596,25 +593,21 @@ compute_array(AptEngine *self, PyObject *args)
 
     int xi, yi;
     u1int s;
-    int c;// = 0;
+    int c;
     u4int pi;
     int ptx, pty;
 
     // Figure out if we can flip around the x-axis.
-    int flipping;
-    aptfloat axisy;
-    int fliplo, fliphi;
-
-    flipping = fliplo = fliphi = 0;
-    axisy = 0;
+    int flipping = 0;
+    aptfloat axisy = 0;
+    int fliplo = 0, fliphi = 0;
 
     if (!self->julia && self->ridx.r != 0 && self->ridx.i == 0 && self->ridy.r == 0 && self->ridy.i != 0) {
         // The symmetry axis is horizontal.
         axisy = self->ri0.i/-self->ridy.i;
-        aptfloat above, below;
+        aptfloat above = self->ri0.i + floor(axisy)*self->ridy.i;
+        aptfloat below = self->ri0.i + ceil(axisy)*self->ridy.i;
 
-        above = self->ri0.i + floor(axisy)*self->ridy.i;
-        below = self->ri0.i + ceil(axisy)*self->ridy.i;
         // printf("above = %f, below = %f\n", above, below);
         if (fequal(self, above, -below)) {
             // printf("Properly aligned!\n");
@@ -627,8 +620,8 @@ compute_array(AptEngine *self, PyObject *args)
         }
     }
 
-    int flipped, yflip;
-    flipped = yflip = 0;
+    int flipped = 0;
+    int yflip = 0;
 
 // A macro to potentially flip a result across the x axis.
 // TODO: This macro checks the status of the flipped point to see that it is
@@ -669,8 +662,7 @@ compute_array(AptEngine *self, PyObject *args)
     // to exist along one of the edges.  We can quickly find the minimum, and then
     // use that value in compute_count to quickly iterate to the minimum without
     // checking the bailout condition.
-    int miniteredge;
-    miniteredge = INT_MAX;
+    int miniteredge = INT_MAX;
     if (self->trace_boundary) {
         // Calc the left and right edges
         for (yi = ymin; yi < ymax; yi++) {
@@ -978,8 +970,7 @@ apply_palette(AptEngine *self, PyObject *args)
     if (PyBytes_AsStringAndSize(colbytes_obj, (char**)&colbytes, &ncolbytes) < 0) {
         goto done;
     }
-    int ncolors;
-    ncolors = ncolbytes / 3;
+    int ncolors = ncolbytes / 3;
 
     u1int incolbytes[3];
     int i;
@@ -990,10 +981,8 @@ apply_palette(AptEngine *self, PyObject *args)
     }
 
     // A one-element cache of count and color.
-    npy_uint8 *plastpix;
-    npy_uint32 lastc;
-    plastpix = NULL;
-    lastc = (*(npy_uint32 *)PyArray_GETPTR2(counts, 0, 0))+1;    // Something different than the first value.
+    npy_uint8 *plastpix = NULL;
+    npy_uint32 lastc = (*(npy_uint32 *)PyArray_GETPTR2(counts, 0, 0))+1;    // Something different than the first value.
 
 // A macro to deal with out-of-range color indexes
 #define WRAP_COLOR(cindex)                      \
