@@ -2,6 +2,8 @@
     http://nedbatchelder.com/code/aptus
 """
 
+import sys
+
 from aptus import data_file
 from aptus.gui.mainframe import AptusMainFrame
 
@@ -13,7 +15,7 @@ class AptusGuiApp(wx.App):
     def __init__(self, args):
         self.args = args
         wx.App.__init__(self)
-            
+
     def OnInit(self):
         frame = self.new_window(self.args)
         SplashScreen(frame).Show()
@@ -44,7 +46,7 @@ class SplashScreen(wx.adv.SplashScreen):
 
         # Don't actually destroy the window or skip the event, so the timer can
         # run, and fade the window out..
-        
+
     def fade_some(self, evt_unused):
         self.alpha -= 16
         if self.alpha <= 0:
@@ -55,9 +57,9 @@ class SplashScreen(wx.adv.SplashScreen):
             self.SetTransparent(self.alpha)
 
 
-def main(args):
+def main(argv=None):
     """ The main for the Aptus GUI.
     """
-    AptusGuiApp(args).MainLoop()
-
-
+    if argv is None:
+        argv = sys.argv[1:]
+    AptusGuiApp(argv).MainLoop()

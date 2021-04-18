@@ -99,10 +99,12 @@ setup(
             ),
         ],
 
-    scripts = [
-        'scripts/aptuscmd.py',
-        'scripts/aptusgui.py',
+    entry_points={
+        "console_scripts": [
+            "aptus = aptus.cmdline:main",
+            "aptusgui = aptus.gui:main",
         ],
+    },
 
     data_files = data_files,
     options = options,
