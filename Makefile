@@ -5,8 +5,8 @@ RESFILE = src/gui/resources.py
 install: build
 	python setup.py install
 
-build: 
-	python setup.py build 
+build:
+	python setup.py build
 
 rez: $(RESFILE)
 
@@ -14,12 +14,15 @@ $(RESFILE): etc/crosshair.gif
 	python /Python25/Scripts/img2py -n Crosshair etc/crosshair.gif $(RESFILE)
 
 clean:
-	-rm -rf build dist Aptus.egg-info
+	-rm -rf build dist
+	-rm -rf *.egg-info */*.egg-info */*/*.egg-info
 	-rm -f MANIFEST
 	-rm -f doc/*.png
+	-rm -rf __pycache__ */__pycache__ */*/__pycache__ */*/*/__pycache__
 	-rm -f *.pyc */*.pyc */*/*.pyc */*/*/*.pyc
 	-rm -f *.pyo */*.pyo */*/*.pyo */*/*/*.pyo
 	-rm -f *.bak */*.bak */*/*.bak */*/*/*.bak
+	-rm -f *.so */*.so */*/*.so */*/*/*.so
 
 kit: build
 	python setup.py sdist --formats=gztar
