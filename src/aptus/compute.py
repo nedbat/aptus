@@ -41,7 +41,7 @@ class WorkerPool:
         """The work function on each of our compute threads."""
         while True:
             result_queue, apt_compute, n_tile, coords = self.work.get()
-            apt_compute.compute_some(n_tile, coords)
+            apt_compute.compute_array(n_tile, coords)
             result_queue.put(coords)
 
 
@@ -402,7 +402,7 @@ class AptusCompute:
 
         else:
             # Not threading: just compute the whole rectangle right now.
-            self.compute_some(0, (0, self.counts.shape[1], 0, self.counts.shape[0]))
+            self.compute_array()
 
         # Clean up
         self.bucket_progress.end()
@@ -438,8 +438,12 @@ class AptusCompute:
 
         return x, y
 
-    def compute_some(self, n_tile, coords):
-        xmin, xmax, ymin, ymax = coords
+    def compute_array(self, n_tile=0, coords=None):
+        if coords is not None:
+            xmin, xmax, ymin, ymax = coords
+        else:
+            xmin = ymin = 0
+            ymax, xmax = self.counts.shape
         stats = self.eng.compute_array(
             self.counts, self.status,
             xmin, xmax, ymin, ymax,

@@ -1,3 +1,4 @@
+import ast
 import asyncio
 import base64
 import functools
@@ -33,9 +34,23 @@ def run_in_executor(f):
     return inner
 
 @run_in_executor
-def compute_tile(coords):
-    xmin, xmax, ymin, ymax = coords
+def compute_tile(compute):
+    compute.compute_array()
+    pix = compute.color_mandel()
+    im = Image.fromarray(pix)
+    fout = io.BytesIO()
+    compute.write_image(im, fout)
+    data_url = "data:image/png;base64," + base64.b64encode(fout.getvalue()).decode("ascii")
+    return data_url
+
+@app.get("/tile")
+async def tile(
+    center:str="-0.6, 0.0",
+    xmin:int=0, xmax:int=600, ymin:int=0, ymax:int=600,
+):
+    center = ast.literal_eval(center)
     compute = AptusCompute()
+    compute.center = center
 
     # Reduce to a smaller tile. This needs to be moved to a function elsewhere.
     engparams = compute.engine_params()
@@ -52,17 +67,8 @@ def compute_tile(coords):
         )
 
     compute.create_mandel(engparams)
-    compute.compute_some(0, (0, newsize[1], 0, newsize[0]))
-    pix = compute.color_mandel()
-    im = Image.fromarray(pix)
-    fout = io.BytesIO()
-    compute.write_image(im, fout)
-    data_url = "data:image/png;base64," + base64.b64encode(fout.getvalue()).decode("ascii")
-    return data_url
 
-@app.get("/tile")
-async def tile(xmin:int = 0, xmax:int = 600, ymin:int = 0, ymax:int = 600):
-    data_url = await compute_tile((xmin, xmax, ymin, ymax))
+    data_url = await compute_tile(compute)
     return {"url": data_url}
 
 def main():
