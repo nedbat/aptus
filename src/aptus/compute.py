@@ -73,6 +73,14 @@ class BucketCountingProgressReporter:
         self.reporter.end()
 
 
+class EngineParams:
+    def __init__(self):
+        self.ssize = (600, 600)
+        self.pixsize = .001
+        self.ridxdy = (0, 0, 0, 0)
+        self.ri0 = (0, 0)
+
+
 class AptusCompute:
     """ The Mandelbrot compute class.  It wraps the AptEngine to provide pythonic
         convenience.
@@ -131,8 +139,8 @@ class AptusCompute:
         """ Call this before any of the geometry settings change, to possibly
             optimize the next computation.
         """
-        self.old_ssize = self.ssize
-        self.old_pixsize = self.pixsize
+        self.old_ssize = self.engparams.ssize
+        self.old_pixsize = self.engparams.pixsize
         self.old_ri0 = self.eng.ri0
         self.old_angle = self.angle
         for a in self._computation_attributes:
@@ -152,35 +160,49 @@ class AptusCompute:
                 return True
         return False
 
-    def create_mandel(self):
+    def engine_params(self):
+        engparams = EngineParams()
+
         # ssize is the dimensions of the sample array, in samples across and down.
-        self.ssize = self.size[0]*self.supersample, self.size[1]*self.supersample
+        engparams.ssize = self.size[0]*self.supersample, self.size[1]*self.supersample
 
         # pixsize is the size of a single sample, in real units.
-        self.pixsize = max(self.diam[0] / self.ssize[0], self.diam[1] / self.ssize[1])
+        engparams.pixsize = max(
+            self.diam[0] / engparams.ssize[0],
+            self.diam[1] / engparams.ssize[1],
+            )
 
         rad = math.radians(self.angle)
-        dx = math.cos(rad) * self.pixsize
-        dy = math.sin(rad) * self.pixsize
+        dx = math.cos(rad) * engparams.pixsize
+        dy = math.sin(rad) * engparams.pixsize
 
         # The upper-left corner is computed from the center, minus the radii,
         # plus half a pixel, so that we're sampling the center of the pixel.
-        self.eng.ridxdy = (dx, dy, dy, -dx)
-        halfsizew = self.ssize[0]/2.0 - 0.5
-        halfsizeh = self.ssize[1]/2.0 - 0.5
-        ri0x = self.center[0] - halfsizew * self.eng.ridxdy[0] - halfsizeh * self.eng.ridxdy[2]
-        ri0y = self.center[1] - halfsizew * self.eng.ridxdy[1] - halfsizeh * self.eng.ridxdy[3]
+        engparams.ridxdy = (dx, dy, dy, -dx)
+        halfsizew = engparams.ssize[0]/2.0 - 0.5
+        halfsizeh = engparams.ssize[1]/2.0 - 0.5
+        ri0x = self.center[0] - halfsizew * engparams.ridxdy[0] - halfsizeh * engparams.ridxdy[2]
+        ri0y = self.center[1] - halfsizew * engparams.ridxdy[1] - halfsizeh * engparams.ridxdy[3]
 
         # In order for x-axis symmetry to apply, the x axis has to fall between
         # pixels or through the center of a pixel.
-        pix_offset, _ = math.modf(ri0y / self.pixsize)
-        ri0y -= pix_offset * self.pixsize
+        pix_offset, _ = math.modf(ri0y / engparams.pixsize)
+        ri0y -= pix_offset * engparams.pixsize
 
-        self.eng.ri0 = ri0x, ri0y
+        engparams.ri0 = ri0x, ri0y
+        return engparams
+
+    def create_mandel(self, engparams=None):
+        if engparams is None:
+            engparams = self.engine_params()
+        self.engparams = engparams
+        self.eng.ri0 = self.engparams.ri0
+        self.eng.ridxdy = self.engparams.ridxdy
 
         self.eng.iter_limit = self.iter_limit
         self.progress = NullProgressReporter()
         self.while_waiting = None
+        self.stats = ComputeStats()
 
         # Set bailout differently based on continuous or discrete coloring.
         if self.continuous:
@@ -207,12 +229,12 @@ class AptusCompute:
 
         # Create new workspaces for the compute engine.
         old_counts = self.counts
-        self.counts = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint32)
-        self.status = numpy.zeros((self.ssize[1], self.ssize[0]), dtype=numpy.uint8)
+        self.counts = numpy.zeros((self.engparams.ssize[1], self.engparams.ssize[0]), dtype=numpy.uint32)
+        self.status = numpy.zeros((self.engparams.ssize[1], self.engparams.ssize[0]), dtype=numpy.uint8)
 
         # Figure out if we can keep any of our old counts or not.
         if (old_counts is not None and
-            self.pixsize == self.old_pixsize and
+            self.engparams.pixsize == self.old_pixsize and
             self.angle == self.old_angle and
             not self.computation_changed()):
             # All the params are compatible, see how much we shifted.
@@ -243,9 +265,9 @@ class AptusCompute:
 
         # In desperate times, printing the counts and status might help...
         if 0:
-            for y in range(self.ssize[1]):
+            for y in range(self.engparams.ssize[1]):
                 l = ""
-                for x in range(self.ssize[0]):
+                for x in range(self.engparams.ssize[0]):
                     l += "%s%s" % (
                         "_-=@"[self.status[y,x]],
                         "0123456789"[self.counts[y,x]%10]
@@ -330,11 +352,9 @@ class AptusCompute:
 
         if not self.quiet:
             print("ri %r step %r, angle %.1f, iter_limit %r, size %r" % (
-                self.eng.ri0, self.pixsize, self.angle, self.eng.iter_limit, self.ssize
+                self.eng.ri0, self.engparams.pixsize, self.angle, self.eng.iter_limit, self.engparams.ssize
                 ))
             print("center %r, diam %r" % (self.center, self.diam))
-
-        self.stats = ComputeStats()
 
         # Figure out how many pixels have to be computed: make a histogram of
         # the buckets of values: 0,1,2,3.
@@ -345,6 +365,7 @@ class AptusCompute:
         self.bucket_progress = BucketCountingProgressReporter(x_side_cuts*y_side_cuts, num_compute, self.progress)
 
         self.bucket_progress.begin()
+        self.progress = self.bucket_progress
         self.refresh_rate = .5
 
         #self.eng.debug_callback = self.debug_callback
@@ -402,13 +423,13 @@ class AptusCompute:
 
         """
         # Slice into roughly 200-pixel tiles.
-        x, y = max(self.ssize[0]//200, 1), max(self.ssize[1]//200, 1)
+        x, y = max(self.engparams.ssize[0]//200, 1), max(self.engparams.ssize[1]//200, 1)
 
         # If the xaxis is horizontal, and is in the middle third of the image,
         # then slice the window into vertical slices to maximize the benefit of
         # the axis symmetry.
         top = self.eng.ri0[1]
-        height = self.ssize[1]*self.pixsize
+        height = self.engparams.ssize[1] * self.engparams.pixsize
         if self.angle == 0 and top > 0 and height > top:
             axis_frac = top / height
             if .25 < axis_frac < .75:
@@ -422,7 +443,7 @@ class AptusCompute:
         stats = self.eng.compute_array(
             self.counts, self.status,
             xmin, xmax, ymin, ymax,
-            n_tile, self.bucket_progress.progress
+            n_tile, self.progress.progress
             )
         self.stats += stats
 
@@ -456,8 +477,8 @@ class AptusCompute:
 
     # Output-writing methods
 
-    def write_image(self, im, fpath):
-        """ Write the image `im` to the path `fpath`.
+    def write_image(self, im, fout):
+        """ Write the image `im` to the path or file object `fout`.
         """
         # PNG info mojo from: http://blog.modp.com/2007/08/python-pil-and-png-metadata-take-2.html
         from PIL import PngImagePlugin
@@ -466,7 +487,7 @@ class AptusCompute:
         info.add_text("Software", "Aptus %s" % __version__)
         info.add_text("Aptus State", aptst.write_string())
         info.add_text("Aptus Stats", json.dumps(self.stats))
-        im.save(fpath, 'PNG', pnginfo=info)
+        im.save(fout, 'PNG', pnginfo=info)
 
 
 class ComputeStats(dict):

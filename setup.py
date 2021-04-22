@@ -76,6 +76,7 @@ setup(
     packages = [
         'aptus',
         'aptus.gui',
+        "aptus.web",
         ],
 
     package_dir = {
@@ -103,6 +104,15 @@ setup(
         "console_scripts": [
             "aptus = aptus.cmdline:main",
             "aptusgui = aptus.gui:main",
+            "aptusweb = aptus.web:main",
+        ],
+    },
+
+    extras_require={
+        "web": [
+            "aiofiles",
+            "fastapi",
+            "uvicorn",
         ],
     },
 
