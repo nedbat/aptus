@@ -1,4 +1,6 @@
 recursive-include scripts *.py
 recursive-include src *.py
 recursive-include src *.png
+recursive-include src *.html
+recursive-include src *.js
 include CHANGES

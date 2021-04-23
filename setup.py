@@ -88,6 +88,7 @@ setup(
             '*.ico',
             '*.png',
             'palettes/*.ggr',
+            "web/static/*.*",
             ]
         },
 
@@ -100,21 +101,28 @@ setup(
             ),
         ],
 
-    entry_points={
+    entry_points = {
         "console_scripts": [
             "aptus = aptus.cmdline:main",
             "aptusgui = aptus.gui:main",
             "aptusweb = aptus.web:main",
-        ],
-    },
+            ],
+        },
 
-    extras_require={
+    install_requires = [
+        "Pillow>=3.0",
+        "numpy>=1.5.1",
+        ],
+    extras_require = {
+        "gui": [
+            "wxPython",
+            ],
         "web": [
             "aiofiles",
             "fastapi",
             "uvicorn",
-        ],
-    },
+            ],
+        },
 
     data_files = data_files,
     options = options,
