@@ -49,11 +49,15 @@ function click(ev) {
     const {x, y} = getCursorPosition(canvas, ev);
     const x0 = cx - diam/2;
     const y0 = cy + diam/2;
-    const pix = diam / canvasW;
-    console.log(`x0,y0 = ${x0},${y0};  x,y = ${x},${y}; pix = ${pix}`);
-    cx = x0 + x * pix;
-    cy = y0 - y * pix;
-    diam *= .75;
+    const pix0 = diam / canvasW;
+    const clickx = x0 + x * pix0;
+    const clicky = y0 - y * pix0;
+    diam *= .5;
+    const pix1 = diam / canvasW;
+    const x1 = clickx - x * pix1;
+    const y1 = clicky + y * pix1;
+    cx = x1 + diam/2;
+    cy = y1 - diam/2;
     paint();
 }
 
