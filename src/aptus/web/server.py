@@ -43,16 +43,23 @@ def compute_tile(compute):
     data_url = "data:image/png;base64," + base64.b64encode(fout.getvalue()).decode("ascii")
     return data_url
 
-@app.get("/tile")
+from pydantic import BaseModel
+
+class ComputeSpec(BaseModel):
+    center: tuple[float, float]
+    size: tuple[int, int]
+    diam: tuple[float, float]
+    coords: tuple[int, int, int, int]
+
+@app.post("/tile")
 async def tile(
-    center:str="-0.6, 0.0",
-    diam:float=3.0,
-    xmin:int=0, xmax:int=600, ymin:int=0, ymax:int=600,
+    spec: ComputeSpec
 ):
-    center = ast.literal_eval(center)
     compute = AptusCompute()
-    compute.center = center
-    compute.diam = diam, diam
+    compute.center = spec.center
+    compute.size = spec.size
+    compute.diam = spec.diam
+    xmin, xmax, ymin, ymax = spec.coords
 
     # Reduce to a smaller tile. This needs to be moved to a function elsewhere.
     engparams = compute.engine_params()

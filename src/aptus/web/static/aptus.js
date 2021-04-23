@@ -1,10 +1,11 @@
-const canvasW = 600, tileX = 200;
+const tileX = 200;
 let cx = -0.6, cy = 0.0;
-let diam = 3.0;
+let pixsize = 3.0/600;
+let canvasW = 0, canvasH = 0;
 
 function fetchTile(tile) {
     return new Promise(resolve => {
-        fetch(tile.url)
+        fetch("/tile", {method: "POST", body: JSON.stringify(tile.spec)})
         .then(response => response.json())
         .then(tiledata => {
             const img = new Image();
@@ -16,7 +17,7 @@ function fetchTile(tile) {
 }
 
 function showTile(tile) {
-    tile.ctx.drawImage(tile.img, tile.x*tileX, tile.y*tileX);
+    tile.ctx.drawImage(tile.img, tile.tx*tileX, tile.ty*tileX);
 }
 
 function getImage(tile) {
@@ -26,12 +27,18 @@ function getImage(tile) {
 function paint() {
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
-    ctx.canvas.width = ctx.canvas.height = canvasW
+    canvasW = ctx.canvas.width = window.innerWidth;
+    canvasH = ctx.canvas.height = window.innerHeight;
     const imageurls = [];
-    for (let x = 0; x < canvasW / tileX; x++) {
-        for (let y = 0; y < canvasW / tileX; y++) {
-            const url = `/tile?center=${cx},${cy}&diam=${diam}&xmin=${x*tileX}&xmax=${(x+1)*tileX}&ymin=${y*tileX}&ymax=${(y+1)*tileX}`;
-            imageurls.push({ctx, x, y, url});
+    for (let tx = 0; tx < canvasW / tileX; tx++) {
+        for (let ty = 0; ty < canvasH / tileX; ty++) {
+            spec = {
+                center: [cx, cy],
+                size: [canvasW, canvasH],
+                diam: [canvasW * pixsize, canvasH * pixsize],
+                coords: [tx*tileX, (tx+1)*tileX, ty*tileX, (ty+1)*tileX],
+            }
+            imageurls.push({ctx, tx, ty, spec});
         }
     }
     Promise.all(imageurls.map(getImage));
@@ -47,17 +54,15 @@ function getCursorPosition(canvas, ev) {
 function click(ev) {
     const canvas = document.getElementById("canvas");
     const {x, y} = getCursorPosition(canvas, ev);
-    const x0 = cx - diam/2;
-    const y0 = cy + diam/2;
-    const pix0 = diam / canvasW;
-    const clickx = x0 + x * pix0;
-    const clicky = y0 - y * pix0;
-    diam *= .5;
-    const pix1 = diam / canvasW;
-    const x1 = clickx - x * pix1;
-    const y1 = clicky + y * pix1;
-    cx = x1 + diam/2;
-    cy = y1 - diam/2;
+    const x0 = cx - canvasW/2 * pixsize;
+    const y0 = cy + canvasH/2 * pixsize;
+    const clickx = x0 + x * pixsize;
+    const clicky = y0 - y * pixsize;
+    pixsize *= .5;
+    const x1 = clickx - x * pixsize;
+    const y1 = clicky + y * pixsize;
+    cx = x1 + canvasW/2 * pixsize;
+    cy = y1 - canvasH/2 * pixsize;
     paint();
 }
 
