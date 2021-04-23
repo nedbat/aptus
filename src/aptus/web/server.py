@@ -46,11 +46,13 @@ def compute_tile(compute):
 @app.get("/tile")
 async def tile(
     center:str="-0.6, 0.0",
+    diam:float=3.0,
     xmin:int=0, xmax:int=600, ymin:int=0, ymax:int=600,
 ):
     center = ast.literal_eval(center)
     compute = AptusCompute()
     compute.center = center
+    compute.diam = diam, diam
 
     # Reduce to a smaller tile. This needs to be moved to a function elsewhere.
     engparams = compute.engine_params()
