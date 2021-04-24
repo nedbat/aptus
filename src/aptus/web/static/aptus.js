@@ -1,7 +1,16 @@
-const tileX = 200;
-let cx = -0.6, cy = 0.0;
-let pixsize = 3.0/600;
-let canvasW = 0, canvasH = 0;
+const tileX = 400;
+
+let cx, cy;
+let pixsize;
+let canvasW, canvasH;
+let continuous;
+
+function reset() {
+    cx = -0.6;
+    cy = 0.0;
+    pixsize = 3.0/600;
+    continuous = false;
+}
 
 function fetchTile(tile) {
     return new Promise(resolve => {
@@ -37,6 +46,7 @@ function paint() {
                 size: [canvasW, canvasH],
                 diam: [canvasW * pixsize, canvasH * pixsize],
                 coords: [tx*tileX, (tx+1)*tileX, ty*tileX, (ty+1)*tileX],
+                continuous: continuous,
             }
             imageurls.push({ctx, tx, ty, spec});
         }
@@ -66,8 +76,24 @@ function click(ev) {
     paint();
 }
 
+function keydown(e) {
+    switch (e.key) {
+        case "c":
+            continuous = !continuous;
+            paint();
+            break;
+
+        case "r":
+            reset();
+            paint();
+            break;
+    }
+}
+
 document.body.onload = () => {
     const canvas = document.getElementById("canvas");
     canvas.addEventListener("click", click);
+    document.addEventListener("keydown", keydown);
+    reset();
     paint();
 }

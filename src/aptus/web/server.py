@@ -50,6 +50,7 @@ class ComputeSpec(BaseModel):
     size: tuple[int, int]
     diam: tuple[float, float]
     coords: tuple[int, int, int, int]
+    continuous: bool
 
 @app.post("/tile")
 async def tile(
@@ -59,6 +60,7 @@ async def tile(
     compute.center = spec.center
     compute.size = spec.size
     compute.diam = spec.diam
+    compute.continuous = spec.continuous
     xmin, xmax, ymin, ymax = spec.coords
 
     # Reduce to a smaller tile. This needs to be moved to a function elsewhere.
