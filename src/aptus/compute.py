@@ -73,10 +73,9 @@ class BucketCountingProgressReporter:
         self.reporter.end()
 
 
-class EngineParams:
+class GridParams:
     def __init__(self):
-        self.ssize = (600, 600)
-        self.pixsize = .001
+        self.bounds = (600, 600)
         self.ridxdy = (0, 0, 0, 0)
         self.ri0 = (0, 0)
 
@@ -139,16 +138,16 @@ class AptusCompute:
         """ Call this before any of the geometry settings change, to possibly
             optimize the next computation.
         """
-        self.old_ssize = self.engparams.ssize
-        self.old_pixsize = self.engparams.pixsize
-        self.old_ri0 = self.eng.ri0
+        self.old_grid_bounds = self.gparams.bounds
+        self.old_ridxdy = self.gparams.ridxdy
+        self.old_ri0 = self.gparams.ri0
         self.old_angle = self.angle
         for a in self._computation_attributes:
             setattr(self, 'old_'+a, getattr(self, a))
 
     def _clear_old_geometry(self):
-        self.old_ssize = (0,0)
-        self.old_pixsize = 0
+        self.old_grid_bounds = (0,0)
+        self.old_ridxdy = (0, 0, 0, 0)
         self.old_ri0 = (0,0)
         self.old_angle = 0
         for a in self._computation_attributes:
@@ -160,44 +159,44 @@ class AptusCompute:
                 return True
         return False
 
-    def engine_params(self):
-        engparams = EngineParams()
+    def grid_params(self):
+        gparams = GridParams()
 
-        # ssize is the dimensions of the sample array, in samples across and down.
-        engparams.ssize = self.size[0]*self.supersample, self.size[1]*self.supersample
+        # bounds is the dimensions of the sample array, in samples across and down.
+        gparams.bounds = self.size[0]*self.supersample, self.size[1]*self.supersample
 
         # pixsize is the size of a single sample, in real units.
-        engparams.pixsize = max(
-            self.diam[0] / engparams.ssize[0],
-            self.diam[1] / engparams.ssize[1],
+        self.pixsize = max(
+            self.diam[0] / gparams.bounds[0],
+            self.diam[1] / gparams.bounds[1],
             )
 
         rad = math.radians(self.angle)
-        dx = math.cos(rad) * engparams.pixsize
-        dy = math.sin(rad) * engparams.pixsize
+        dx = math.cos(rad) * self.pixsize
+        dy = math.sin(rad) * self.pixsize
 
         # The upper-left corner is computed from the center, minus the radii,
         # plus half a pixel, so that we're sampling the center of the pixel.
-        engparams.ridxdy = (dx, dy, dy, -dx)
-        halfsizew = engparams.ssize[0]/2.0 - 0.5
-        halfsizeh = engparams.ssize[1]/2.0 - 0.5
-        ri0x = self.center[0] - halfsizew * engparams.ridxdy[0] - halfsizeh * engparams.ridxdy[2]
-        ri0y = self.center[1] - halfsizew * engparams.ridxdy[1] - halfsizeh * engparams.ridxdy[3]
+        gparams.ridxdy = (dx, dy, dy, -dx)
+        halfsizew = gparams.bounds[0]/2.0 - 0.5
+        halfsizeh = gparams.bounds[1]/2.0 - 0.5
+        ri0x = self.center[0] - halfsizew * gparams.ridxdy[0] - halfsizeh * gparams.ridxdy[2]
+        ri0y = self.center[1] - halfsizew * gparams.ridxdy[1] - halfsizeh * gparams.ridxdy[3]
 
         # In order for x-axis symmetry to apply, the x axis has to fall between
         # pixels or through the center of a pixel.
-        pix_offset, _ = math.modf(ri0y / engparams.pixsize)
-        ri0y -= pix_offset * engparams.pixsize
+        pix_offset, _ = math.modf(ri0y / self.pixsize)
+        ri0y -= pix_offset * self.pixsize
 
-        engparams.ri0 = ri0x, ri0y
-        return engparams
+        gparams.ri0 = ri0x, ri0y
+        return gparams
 
-    def create_mandel(self, engparams=None):
-        if engparams is None:
-            engparams = self.engine_params()
-        self.engparams = engparams
-        self.eng.ri0 = self.engparams.ri0
-        self.eng.ridxdy = self.engparams.ridxdy
+    def create_mandel(self, gparams=None):
+        if gparams is None:
+            gparams = self.grid_params()
+        self.gparams = gparams
+        self.eng.ri0 = self.gparams.ri0
+        self.eng.ridxdy = self.gparams.ridxdy
 
         self.eng.iter_limit = self.iter_limit
         self.progress = NullProgressReporter()
@@ -229,13 +228,12 @@ class AptusCompute:
 
         # Create new workspaces for the compute engine.
         old_counts = self.counts
-        self.counts = numpy.zeros((self.engparams.ssize[1], self.engparams.ssize[0]), dtype=numpy.uint32)
-        self.status = numpy.zeros((self.engparams.ssize[1], self.engparams.ssize[0]), dtype=numpy.uint8)
+        self.counts = numpy.zeros((self.gparams.bounds[1], self.gparams.bounds[0]), dtype=numpy.uint32)
+        self.status = numpy.zeros((self.gparams.bounds[1], self.gparams.bounds[0]), dtype=numpy.uint8)
 
         # Figure out if we can keep any of our old counts or not.
         if (old_counts is not None and
-            self.engparams.pixsize == self.old_pixsize and
-            self.angle == self.old_angle and
+            self.gparams.ridxdy == self.old_ridxdy and
             not self.computation_changed()):
             # All the params are compatible, see how much we shifted.
             dx, dy = self.pixel_from_coords(*self.old_ri0)
@@ -265,9 +263,9 @@ class AptusCompute:
 
         # In desperate times, printing the counts and status might help...
         if 0:
-            for y in range(self.engparams.ssize[1]):
+            for y in range(self.gparams.bounds[1]):
                 l = ""
-                for x in range(self.engparams.ssize[0]):
+                for x in range(self.gparams.bounds[0]):
                     l += "%s%s" % (
                         "_-=@"[self.status[y,x]],
                         "0123456789"[self.counts[y,x]%10]
@@ -352,7 +350,7 @@ class AptusCompute:
 
         if not self.quiet:
             print("ri %r step %r, angle %.1f, iter_limit %r, size %r" % (
-                self.eng.ri0, self.engparams.pixsize, self.angle, self.eng.iter_limit, self.engparams.ssize
+                self.eng.ri0, self.pixsize, self.angle, self.eng.iter_limit, self.gparams.bounds
                 ))
             print("center %r, diam %r" % (self.center, self.diam))
 
@@ -423,13 +421,13 @@ class AptusCompute:
 
         """
         # Slice into roughly 200-pixel tiles.
-        x, y = max(self.engparams.ssize[0]//200, 1), max(self.engparams.ssize[1]//200, 1)
+        x, y = max(self.gparams.bounds[0]//200, 1), max(self.gparams.bounds[1]//200, 1)
 
         # If the xaxis is horizontal, and is in the middle third of the image,
         # then slice the window into vertical slices to maximize the benefit of
         # the axis symmetry.
         top = self.eng.ri0[1]
-        height = self.engparams.ssize[1] * self.engparams.pixsize
+        height = self.gparams.bounds[1] * self.pixsize
         if self.angle == 0 and top > 0 and height > top:
             axis_frac = top / height
             if .25 < axis_frac < .75:

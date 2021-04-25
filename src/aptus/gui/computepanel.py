@@ -40,7 +40,7 @@ class ComputePanel(wx.Panel):
             compute.center = ((ulr+lrr)/2, (uli+lri)/2)
             ulx, uly = compute.pixel_from_coords(ulr, uli)
             lrx, lry = compute.pixel_from_coords(lrr, lri)
-            compute.diam = (abs(compute.engparams.pixsize*(lrx-ulx)), abs(compute.engparams.pixsize*(lry-uly)))
+            compute.diam = (abs(compute.pixsize*(lrx-ulx)), abs(compute.pixsize*(lry-uly)))
         if center:
             compute.center = center
         if diam:
