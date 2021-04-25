@@ -19,7 +19,7 @@ class YouAreHereWin(ParentComputePanel, ListeningWindowMixin):
     """ A panel slaved to another ComputePanel to show where the master panel is
         on the Set.  These are designed to be stacked in a YouAreHereStack to
         show successive magnifications.
-        
+
         Two windows are referenced: the main view window (so that we can change
         the view), and the window our rectangle represents.  This can be either
         the next YouAreHereWin in the stack, or the main view window in the case
@@ -28,7 +28,7 @@ class YouAreHereWin(ParentComputePanel, ListeningWindowMixin):
     def __init__(self, parent, mainwin, center, diam, size=wx.DefaultSize):
         ParentComputePanel.__init__(self, parent, size=size)
         ListeningWindowMixin.__init__(self)
-        
+
         self.mainwin = mainwin
         self.hererect = None
         self.diam = diam
@@ -38,12 +38,12 @@ class YouAreHereWin(ParentComputePanel, ListeningWindowMixin):
         self.Bind(wx.EVT_LEFT_DOWN, self.on_left_down)
         self.Bind(wx.EVT_LEFT_UP, self.on_left_up)
         self.Bind(wx.EVT_MOTION, self.on_motion)
-        
+
         self.register_listener(self.on_coloring_changed, EVT_APTUS_COLORING_CHANGED, self.mainwin)
         self.register_listener(self.on_computation_changed, EVT_APTUS_COMPUTATION_CHANGED, self.mainwin)
 
         self.set_ref_window(mainwin)
-        
+
         self.set_geometry(center=center, diam=diam)
         self.on_coloring_changed(None)
         self.on_computation_changed(None)
@@ -59,11 +59,11 @@ class YouAreHereWin(ParentComputePanel, ListeningWindowMixin):
         self.deregister_listener(self.on_geometry_changed)
 
         self.rectwin = refwin
-        
+
         # Register the new listener and calc the rectangle.
         self.register_listener(self.on_geometry_changed, EVT_APTUS_GEOMETRY_CHANGED, self.rectwin)
         self.calc_rectangle()
-        
+
     def on_size(self, event):
         # Need to recalc our rectangle.
         self.hererect = None
@@ -92,7 +92,7 @@ class YouAreHereWin(ParentComputePanel, ListeningWindowMixin):
                 my = self.hererect.y + self.hererect.height/2
                 self.mainwin.set_geometry(center=self.compute.coords_from_pixel(mx, my))
             else:
-                # Dragging the rect: set the view to invlude the four corners of
+                # Dragging the rect: set the view to include the four corners of
                 # the rectangle.
                 ulr, uli = self.compute.coords_from_pixel(*self.hererect.TopLeft)
                 lrr, lri = self.compute.coords_from_pixel(*self.hererect.BottomRight)
@@ -153,7 +153,7 @@ class YouAreHereWin(ParentComputePanel, ListeningWindowMixin):
             uly -= 1
         self.hererect = wx.Rect(ulx, uly, w, h)
         self.Refresh()
-        
+
     def on_paint_extras(self, dc):
         # Draw the mainwin view window.
         if self.hererect:
@@ -169,17 +169,17 @@ class YouAreHereStack(ScrolledPanel, ListeningWindowMixin):
     def __init__(self, parent, viewwin, size=wx.DefaultSize):
         ScrolledPanel.__init__(self, parent, size=size)
         ListeningWindowMixin.__init__(self)
-        
+
         self.winsize = 250
         self.minrect = MIN_RECT
         self.stepfactor = float(self.winsize)/self.minrect
-        
+
         self.viewwin = viewwin
         self.sizer = wx.FlexGridSizer(cols=1, vgap=2, hgap=0)
         self.SetSizer(self.sizer)
         self.SetAutoLayout(1)
         self.SetupScrolling()
-        
+
         self.register_listener(self.on_geometry_changed, EVT_APTUS_GEOMETRY_CHANGED, self.viewwin)
 
         self.on_geometry_changed()
@@ -187,12 +187,12 @@ class YouAreHereStack(ScrolledPanel, ListeningWindowMixin):
     def on_geometry_changed(self, event_unused=None):
         mode = self.viewwin.compute.mode
         diam = min(settings.diam(mode))
-        
+
         # How many YouAreHereWin's will we need?
         targetdiam = min(self.viewwin.compute.diam)
         num_wins = int(math.ceil((math.log(diam)-math.log(targetdiam))/math.log(self.stepfactor)))
         num_wins = num_wins or 1
-        
+
         cur_wins = list(self.sizer.Children)
         last = None
         for i in range(num_wins):
