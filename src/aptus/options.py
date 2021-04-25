@@ -149,7 +149,7 @@ class AptusState:
 
     def write(self, f):
         if isinstance(f, str):
-            f = open(f, 'wb')
+            f = open(f, "w")
         f.write(self.write_string())
 
     simple_attrs = "center diam angle iter_limit palette_phase palette_scale supersample continuous mode".split()
