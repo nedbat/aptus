@@ -3,6 +3,7 @@
 """
 
 import colorsys
+import math
 
 from aptus import data_file
 
@@ -25,6 +26,7 @@ def _clip(val, lo, hi):
     if val > hi:
         val = hi
     return val
+
 
 class Palette:
     """ A palette is a list of colors for coloring the successive bands of the
@@ -147,7 +149,7 @@ class Palette:
         self._spec.append(['spectrum', args])
         return self
 
-    def stretch(self, steps, hsl=False):
+    def stretch(self, steps, hsl=False, ease=None):
         """ Interpolate between colors in the palette, stretching it out.
             Works in either RGB or HSL space.
         """
@@ -162,6 +164,8 @@ class Palette:
                 if a1 < a0 and a0-a1 > 0.01:
                     a1 += 1
             step = float(i % steps)/steps
+            if ease == "sine":
+                step = -(math.cos(math.pi * step) - 1) / 2;
             ax, bx, cx = (
                 a0 + (a1 - a0) * step,
                 b0 + (b1 - b0) * step,
@@ -269,7 +273,9 @@ class Palette:
 
 all_palettes = [
     Palette().spectrum(12).stretch(10, hsl=True),
+    Palette().spectrum(12).stretch(10, hsl=True, ease="sine"),
     Palette().spectrum(12, l=(50,150), s=150).stretch(25, hsl=True),
+    Palette().spectrum(12, l=(50,150), s=150).stretch(25, hsl=True, ease="sine"),
     Palette().spectrum(64, l=125, s=175),
     Palette().spectrum(48, l=(100,150), s=175).stretch(5),
     Palette().spectrum(2, h=250, l=(100,150), s=175).stretch(10, hsl=True),
