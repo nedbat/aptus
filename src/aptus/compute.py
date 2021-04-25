@@ -79,6 +79,29 @@ class GridParams:
         self.ridxdy = (0, 0, 0, 0)
         self.ri0 = (0, 0)
 
+    def coords_from_pixel(self, x, y):
+        """ Get the coords of a pixel in the grid. Note that x and y can be
+            fractional.
+        """
+        # The .5 adjustment is because the grid is aligned to the center of the
+        # pixels, but we need to return the upper-left of the pixel so that other
+        # math comes out right.
+        x = float(x) - 0.5
+        y = float(y) - 0.5
+        r = self.ri0[0] + self.ridxdy[0]*x + self.ridxdy[2]*y
+        i = self.ri0[1] + self.ridxdy[1]*x + self.ridxdy[3]*y
+        return r, i
+
+    def pixel_from_coords(self, r, i):
+        """ Get the pixel coords containing the fractal coordinates.
+        """
+        d0, d1, d2, d3 = self.ridxdy
+        ri00, ri01 = self.ri0
+        # Thanks, Maxima!
+        x = (d2*(i-ri01)+d3*ri00-d3*r)/(d1*d2-d0*d3)
+        y = -(d0*(i-ri01)+d1*ri00-d1*r)/(d1*d2-d0*d3)
+        return x, y
+
 
 class AptusCompute:
     """ The Mandelbrot compute class.  It wraps the AptEngine to provide pythonic
@@ -430,7 +453,7 @@ class AptusCompute:
         # If the xaxis is horizontal, and is in the middle third of the image,
         # then slice the window into vertical slices to maximize the benefit of
         # the axis symmetry.
-        top = self.eng.ri0[1]
+        top = self.gparams.ri0[1]
         height = self.gparams.bounds[1] * self.pixsize
         if self.angle == 0 and top > 0 and height > top:
             axis_frac = top / height
@@ -459,27 +482,10 @@ class AptusCompute:
     # Information methods
 
     def coords_from_pixel(self, x, y):
-        """ Get the coords of a pixel in the grid. Note that x and y can be
-            fractional.
-        """
-        # The .5 adjustment is because the grid is aligned to the center of the
-        # pixels, but we need to return the upper-left of the pixel so that other
-        # math comes out right.
-        x = float(x) - 0.5
-        y = float(y) - 0.5
-        r = self.eng.ri0[0] + self.eng.ridxdy[0]*x + self.eng.ridxdy[2]*y
-        i = self.eng.ri0[1] + self.eng.ridxdy[1]*x + self.eng.ridxdy[3]*y
-        return r, i
+        return self.gparams.coords_from_pixel(x, y)
 
     def pixel_from_coords(self, r, i):
-        """ Get the pixel coords containing the fractal coordinates.
-        """
-        d0, d1, d2, d3 = self.eng.ridxdy
-        ri00, ri01 = self.eng.ri0
-        # Thanks, Maxima!
-        x = (d2*(i-ri01)+d3*ri00-d3*r)/(d1*d2-d0*d3)
-        y = -(d0*(i-ri01)+d1*ri00-d1*r)/(d1*d2-d0*d3)
-        return x, y
+        return self.gparams.pixel_from_coords(r, i)
 
     # Output-writing methods
 
