@@ -46,8 +46,8 @@ def compute_tile(compute):
 
 class ComputeSpec(pydantic.BaseModel):
     center: tuple[float, float]
-    size: tuple[int, int]
     diam: tuple[float, float]
+    size: tuple[int, int]
     coords: tuple[int, int, int, int]
     continuous: bool
 
@@ -57,25 +57,11 @@ async def tile(
 ):
     compute = AptusCompute()
     compute.center = spec.center
-    compute.size = spec.size
     compute.diam = spec.diam
+    compute.size = spec.size
     compute.continuous = spec.continuous
-    xmin, xmax, ymin, ymax = spec.coords
 
-    # Reduce to a smaller tile. This needs to be moved to a function elsewhere.
-    gparams = compute.grid_params()
-    ss = compute.supersample
-    newsize = (xmax - xmin, ymax - ymin)
-    new_grid_bounds = (newsize[0] * ss, newsize[1] * ss)
-    compute.size = newsize
-    gparams.bounds = new_grid_bounds
-    ri0 = gparams.ri0
-    rixdx, rixdy, riydx, riydy = gparams.ridxdy
-    gparams.ri0 = (
-        ri0[0] + xmin * ss * rixdx + ymin * ss * rixdy,
-        ri0[1] + xmin * ss * riydx + ymin * ss * riydy,
-        )
-
+    gparams = compute.grid_params().subtile(*spec.coords)
     compute.create_mandel(gparams)
 
     data_url = await compute_tile(compute)

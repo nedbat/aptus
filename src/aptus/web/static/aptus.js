@@ -43,8 +43,8 @@ function paint() {
         for (let ty = 0; ty < canvasH / tileX; ty++) {
             spec = {
                 center: [cx, cy],
-                size: [canvasW, canvasH],
                 diam: [canvasW * pixsize, canvasH * pixsize],
+                size: [canvasW, canvasH],
                 coords: [tx*tileX, (tx+1)*tileX, ty*tileX, (ty+1)*tileX],
                 continuous: continuous,
             }

@@ -110,6 +110,20 @@ class GridParams:
         gparams.ri0 = ri0x, ri0y
         return gparams
 
+    def subtile(self, xmin, xmax, ymin, ymax):
+        """
+        Make a new GridParams for a subtile of this one.
+        """
+        tileparams = GridParams()
+        tileparams.bounds = (xmax - xmin, ymax - ymin)
+        ri0x, ri0y = self.ri0
+        tileparams.ridxdy = rixdx, rixdy, riydx, riydy = self.ridxdy
+        tileparams.ri0 = (
+            ri0x + xmin * rixdx + ymin * rixdy,
+            ri0y + xmin * riydx + ymin * riydy,
+            )
+        return tileparams
+
     def coords_from_pixel(self, x, y):
         """ Get the coords of a pixel in the grid. Note that x and y can be
             fractional.
