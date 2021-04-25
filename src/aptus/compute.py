@@ -79,6 +79,37 @@ class GridParams:
         self.ridxdy = (0, 0, 0, 0)
         self.ri0 = (0, 0)
 
+    @classmethod
+    def from_user_perspective(cls, center, diam, angle, size):
+        gparams = cls()
+        gparams.bounds = size
+
+        # pixsize is the size of a single sample, in real units.
+        pixsize = max(
+            diam[0] / gparams.bounds[0],
+            diam[1] / gparams.bounds[1],
+            )
+
+        rad = math.radians(angle)
+        dx = math.cos(rad) * pixsize
+        dy = math.sin(rad) * pixsize
+
+        # The upper-left corner is computed from the center, minus the radii,
+        # plus half a pixel, so that we're sampling the center of the pixel.
+        gparams.ridxdy = (dx, dy, dy, -dx)
+        halfsizew = gparams.bounds[0]/2.0 - 0.5
+        halfsizeh = gparams.bounds[1]/2.0 - 0.5
+        ri0x = center[0] - halfsizew * gparams.ridxdy[0] - halfsizeh * gparams.ridxdy[2]
+        ri0y = center[1] - halfsizew * gparams.ridxdy[1] - halfsizeh * gparams.ridxdy[3]
+
+        # In order for x-axis symmetry to apply, the x axis has to fall between
+        # pixels or through the center of a pixel.
+        pix_offset, _ = math.modf(ri0y / pixsize)
+        ri0y -= pix_offset * pixsize
+
+        gparams.ri0 = ri0x, ri0y
+        return gparams
+
     def coords_from_pixel(self, x, y):
         """ Get the coords of a pixel in the grid. Note that x and y can be
             fractional.
@@ -183,35 +214,11 @@ class AptusCompute:
         return False
 
     def grid_params(self):
-        gparams = GridParams()
-
-        # bounds is the dimensions of the sample array, in samples across and down.
-        gparams.bounds = self.size[0]*self.supersample, self.size[1]*self.supersample
-
-        # pixsize is the size of a single sample, in real units.
-        self.pixsize = max(
-            self.diam[0] / gparams.bounds[0],
-            self.diam[1] / gparams.bounds[1],
+        size = (self.size[0] * self.supersample, self.size[1] * self.supersample)
+        gparams = GridParams.from_user_perspective(
+            self.center, self.diam, self.angle, size
             )
-
-        rad = math.radians(self.angle)
-        dx = math.cos(rad) * self.pixsize
-        dy = math.sin(rad) * self.pixsize
-
-        # The upper-left corner is computed from the center, minus the radii,
-        # plus half a pixel, so that we're sampling the center of the pixel.
-        gparams.ridxdy = (dx, dy, dy, -dx)
-        halfsizew = gparams.bounds[0]/2.0 - 0.5
-        halfsizeh = gparams.bounds[1]/2.0 - 0.5
-        ri0x = self.center[0] - halfsizew * gparams.ridxdy[0] - halfsizeh * gparams.ridxdy[2]
-        ri0y = self.center[1] - halfsizew * gparams.ridxdy[1] - halfsizeh * gparams.ridxdy[3]
-
-        # In order for x-axis symmetry to apply, the x axis has to fall between
-        # pixels or through the center of a pixel.
-        pix_offset, _ = math.modf(ri0y / self.pixsize)
-        ri0y -= pix_offset * self.pixsize
-
-        gparams.ri0 = ri0x, ri0y
+        self.pixsize = math.hypot(*gparams.ridxdy[:2])
         return gparams
 
     def create_mandel(self, gparams=None):
@@ -453,13 +460,14 @@ class AptusCompute:
         # If the xaxis is horizontal, and is in the middle third of the image,
         # then slice the window into vertical slices to maximize the benefit of
         # the axis symmetry.
-        top = self.gparams.ri0[1]
-        height = self.gparams.bounds[1] * self.pixsize
-        if self.angle == 0 and top > 0 and height > top:
-            axis_frac = top / height
-            if .25 < axis_frac < .75:
-                # Use tall slices to get axis symmetry
-                y = 1
+        if self.angle == 0:
+            top = self.gparams.ri0[1]
+            height = self.gparams.bounds[1] * self.gparams.ridxdy[0]
+            if top > 0 and height > top:
+                axis_frac = top / height
+                if .25 < axis_frac < .75:
+                    # Use tall slices to get axis symmetry
+                    y = 1
 
         return x, y
 
