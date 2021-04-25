@@ -279,6 +279,7 @@ class AptusCompute:
 
         self.pixels_computed = False
         self._clear_old_geometry()
+        self._set_engine_parameters()
 
     def clear_results(self):
         """ Discard any results held.
@@ -380,8 +381,6 @@ class AptusCompute:
     def compute_pixels(self):
         if self.pixels_computed:
             return
-
-        self._set_engine_parameters()
 
         if not self.quiet:
             print("ri %r step %r, angle %.1f, iter_limit %r, size %r" % (
