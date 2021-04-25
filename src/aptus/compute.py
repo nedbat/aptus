@@ -195,36 +195,10 @@ class AptusCompute:
         if gparams is None:
             gparams = self.grid_params()
         self.gparams = gparams
-        self.eng.ri0 = self.gparams.ri0
-        self.eng.ridxdy = self.gparams.ridxdy
 
-        self.eng.iter_limit = self.iter_limit
         self.progress = NullProgressReporter()
         self.while_waiting = None
         self.stats = ComputeStats()
-
-        # Set bailout differently based on continuous or discrete coloring.
-        if self.continuous:
-            self.eng.bailout = 100.0
-        else:
-            self.eng.bailout = 2.0
-
-        # Continuous is really two different controls in the engine.
-        self.eng.cont_levels = self.eng.blend_colors = 256 if self.continuous else 1
-
-        # Different modes require different settings.
-        if self.mode == 'mandelbrot':
-            self.eng.julia = 0
-            self.eng.rijulia = (0, 0)
-            self.eng.trace_boundary = 1
-            self.eng.check_cycles = 1
-        elif self.mode == 'julia':
-            self.eng.julia = 1
-            self.eng.rijulia = tuple(self.rijulia)
-            self.eng.trace_boundary = 0
-            self.eng.check_cycles = 0
-        else:
-            raise Exception("Unknown mode: %r" % (self.mode,))
 
         # Create new workspaces for the compute engine.
         old_counts = self.counts
@@ -344,9 +318,39 @@ class AptusCompute:
             )
         return self.pix
 
+    def _set_engine_parameters(self):
+        self.eng.ri0 = self.gparams.ri0
+        self.eng.ridxdy = self.gparams.ridxdy
+        self.eng.iter_limit = self.iter_limit
+
+        # Set bailout differently based on continuous or discrete coloring.
+        if self.continuous:
+            self.eng.bailout = 100.0
+        else:
+            self.eng.bailout = 2.0
+
+        # Continuous is really two different controls in the engine.
+        self.eng.cont_levels = self.eng.blend_colors = 256 if self.continuous else 1
+
+        # Different modes require different settings.
+        if self.mode == "mandelbrot":
+            self.eng.julia = 0
+            self.eng.rijulia = (0, 0)
+            self.eng.trace_boundary = 1
+            self.eng.check_cycles = 1
+        elif self.mode == "julia":
+            self.eng.julia = 1
+            self.eng.rijulia = tuple(self.rijulia)
+            self.eng.trace_boundary = 0
+            self.eng.check_cycles = 0
+        else:
+            raise Exception("Unknown mode: %r" % (self.mode,))
+
     def compute_pixels(self):
         if self.pixels_computed:
             return
+
+        self._set_engine_parameters()
 
         if not self.quiet:
             print("ri %r step %r, angle %.1f, iter_limit %r, size %r" % (
