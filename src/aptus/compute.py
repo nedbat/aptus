@@ -76,7 +76,7 @@ class BucketCountingProgressReporter:
 class GridParams:
     def __init__(self):
         self.bounds = (600, 600)
-        self.ridxdy = (0, 0, 0, 0)
+        self.ridxdy = (0, .1, .1, 0)
         self.ri0 = (0, 0)
 
     @classmethod
@@ -173,6 +173,7 @@ class AptusCompute:
 
         # The C extension for doing the heavy lifting.
         self.eng = AptEngine()
+        self.gparams = GridParams()
 
         # counts is a numpy array of 32bit ints: the iteration counts at each pixel.
         self.counts = None
