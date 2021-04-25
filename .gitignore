@@ -4,6 +4,7 @@
 *.pyd
 *.so
 *.bak
+.DS_Store
 
 # Stuff in the root.
 build/
