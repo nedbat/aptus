@@ -6,12 +6,13 @@ import io
 import os
 import pathlib
 
+import PIL
+import pydantic
+import uvicorn
+
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
-from PIL import Image
-
-import uvicorn
 
 from aptus.compute import AptusCompute
 
@@ -37,15 +38,13 @@ def run_in_executor(f):
 def compute_tile(compute):
     compute.compute_array()
     pix = compute.color_mandel()
-    im = Image.fromarray(pix)
+    im = PIL.Image.fromarray(pix)
     fout = io.BytesIO()
     compute.write_image(im, fout)
     data_url = "data:image/png;base64," + base64.b64encode(fout.getvalue()).decode("ascii")
     return data_url
 
-from pydantic import BaseModel
-
-class ComputeSpec(BaseModel):
+class ComputeSpec(pydantic.BaseModel):
     center: tuple[float, float]
     size: tuple[int, int]
     diam: tuple[float, float]
