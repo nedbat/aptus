@@ -124,14 +124,6 @@ class AptusOptions:
             else:
                 raise Exception("PNG file has no Aptus state information: %s" % fname)
 
-        elif fname.endswith('.xet'):
-            xet = XetState()
-            xet.read(fname)
-            self.target.center = xet.center
-            self.target.diam = xet.diam
-            self.target.iter_limit = xet.iter_limit
-            self.target.size = xet.size
-
         else:
             raise Exception("Don't know how to read options from %s" % fname)
 
@@ -232,38 +224,3 @@ class XaosState:
                 return float(fstr)
             except ValueError:
                 fstr = fstr[:-1]
-
-
-class XetState:
-    """ The state of a .xet file from http://hbar.servebeer.com/art/mandelbrot/index-1.html
-    """
-    def __init__(self):
-        self.center = None
-        self.diam = None
-        self.iter_limit = None
-        self.size = None
-
-    def read(self, f):
-        if isinstance(f, str):
-            f = open(f)
-        # skip the binary crap.
-        f.read(30)
-        xet = {}
-        for l in f:
-            try:
-                name, val = l.split(':')
-            except ValueError:
-                continue
-            xet[name.strip()] = val.strip()
-
-        x = float(xet['x'])
-        y = float(xet['y'])
-        dx = float(xet['dx'])
-        depth = int(xet['depth'])
-        w = float(xet['width'])
-        h = float(xet['height'])
-
-        self.center = (x + w*dx/2, y + h*dx/2)
-        self.diam = (min(w,h)*dx,)*2
-        self.iter_limit = depth
-        self.size = (w, h)

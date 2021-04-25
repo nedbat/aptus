@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" ?> 
+<?xml version="1.0" encoding="utf-8" ?>
 <page title='Aptus'>
 <section title='Aptus' order='70'/>
 <history>
@@ -159,7 +159,7 @@ the display to use it.</p>
 
 <p>'q' displays information about a point in the display.  Hold the shift key
 and hover over a point in the image to see iteration counts, coordinates, and so on.</p>
-    
+
 <p>'l' (lowercase L) displays the You Are Here panel.  It shows a series of images,
 zooming in to the currently displayed view of the set.  Each image has a rectangle
 drawn on it corresponding to the next image in the list, so that you can see
@@ -180,7 +180,7 @@ moves.</p>
 You'll get a new top-level window displaying the Julia set, and you can use all
 the usual Aptus controls to navigate and manipulate the image.</p>
 
-    
+
 <h1>History</h1>
 
 <h2>Version 2.0, October 2008</h2>
@@ -197,7 +197,7 @@ the usual Aptus controls to navigate and manipulate the image.</p>
     <li>Julia panel shows Julia set for the current point, shift-hover to indicate point.
     Double-clicking the Julia panel opens a new exploration window to explore that Julia set.</li>
     </ul></li>
-    
+
 <li>Computation improvements:
     <ul>
     <li>Faster.</li>
@@ -205,7 +205,7 @@ the usual Aptus controls to navigate and manipulate the image.</p>
     <li>Continuous coloring is more accurate now: banding artifacts are gone.</li>
     <li>When dragging the exploration window, pixels still in the window aren't re-calculated.</li>
     </ul></li>
-    
+
 <li>Center and diameter can be specified in the command line arguments.</li>
 </ul>
 
@@ -240,15 +240,13 @@ the usual Aptus controls to navigate and manipulate the image.</p>
         <li>Hue and saturation adjustments.</li>
         <li>Scaling the palette to adjust distance between colors.</li>
         </ul></li>
-    
+
     <li>Statistics:
         <ul>
         <li>More statistics: boundaries traced, boundaries filled, and points computed.</li>
         <li>Statistics are written into the final .PNG files.</li>
         </ul></li>
-        
-    <li>Reads .xet files from <a href='http://hbar.servebeer.com/mandelbrot/coordinates.html'>servebeer.com</a>.</li>
-    
+
     <li>Some old .aptus files recorded the y coordinate incorrectly,
         and will now render upside-down: negate the y component of the center to fix this.</li>
 </ul>
