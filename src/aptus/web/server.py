@@ -50,6 +50,7 @@ class ComputeSpec(pydantic.BaseModel):
     size: tuple[int, int]
     coords: tuple[int, int, int, int]
     continuous: bool
+    iter_limit: int
 
 @app.post("/tile")
 async def tile(
@@ -60,6 +61,7 @@ async def tile(
     compute.diam = spec.diam
     compute.size = spec.size
     compute.continuous = spec.continuous
+    compute.iter_limit = spec.iter_limit
 
     gparams = compute.grid_params().subtile(*spec.coords)
     compute.create_mandel(gparams)

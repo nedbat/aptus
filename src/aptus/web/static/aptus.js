@@ -4,6 +4,7 @@ let centerr, centeri;
 let pixsize;
 let canvasW, canvasH;
 let continuous;
+let iter_limit;
 let fractal_canvas, overlay_canvas;
 let is_down;
 
@@ -12,6 +13,7 @@ function reset() {
     centeri = 0.0;
     pixsize = 3.0/600;
     continuous = false;
+    iter_limit = 999;
 }
 
 function fetchTile(tile) {
@@ -45,6 +47,7 @@ function paint() {
                 size: [canvasW, canvasH],
                 coords: [tx*tileX, (tx+1)*tileX, ty*tileX, (ty+1)*tileX],
                 continuous: continuous,
+                iter_limit: iter_limit,
             }
             imageurls.push({ctx: fractal_ctx, tx, ty, spec});
         }
@@ -110,6 +113,14 @@ function keydown(e) {
         case "c":
             continuous = !continuous;
             paint();
+            break;
+
+        case "i":
+            new_limit = +prompt("Iteration limit", iter_limit);
+            if (new_limit != iter_limit) {
+                iter_limit = new_limit;
+                paint();
+            }
             break;
 
         case "r":
