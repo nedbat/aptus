@@ -7,6 +7,7 @@ let continuous;
 let iter_limit;
 let fractal_canvas, overlay_canvas;
 let is_down;
+let palette_index;
 
 function reset() {
     centerr = -0.6;
@@ -48,6 +49,7 @@ function paint() {
                 coords: [tx*tileX, (tx+1)*tileX, ty*tileX, (ty+1)*tileX],
                 continuous: continuous,
                 iter_limit: iter_limit,
+                palette: palettes[palette_index],
             }
             imageurls.push({ctx: fractal_ctx, tx, ty, spec});
         }
@@ -127,6 +129,24 @@ function keydown(e) {
             reset();
             paint();
             break;
+
+        case "<":
+            palette_index -= 1;
+            if (palette_index < 0) {
+                palette_index += palettes.length;
+            }
+            paint();
+            break;
+
+        case ">":
+            palette_index += 1;
+            palette_index %= palettes.length;
+            paint();
+            break;
+
+        default:
+            console.log("key:", e.key);
+            break;
     }
 }
 
@@ -138,6 +158,7 @@ document.body.onload = () => {
     canvasW = fractal_canvas.width = overlay_canvas.width = window.innerWidth;
     canvasH = fractal_canvas.height = overlay_canvas.height = window.innerHeight;
     is_down = false;
+    palette_index = 0;
     overlay_canvas.addEventListener("mousedown", mousedown);
     overlay_canvas.addEventListener("mousemove", mousemove);
     overlay_canvas.addEventListener("mouseup", mouseup);

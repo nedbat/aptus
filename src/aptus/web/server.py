@@ -16,7 +16,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from aptus.compute import AptusCompute
-from aptus.palettes import all_palettes
+from aptus.palettes import Palette, all_palettes
 
 app = FastAPI()
 
@@ -57,6 +57,7 @@ class ComputeSpec(pydantic.BaseModel):
     coords: tuple[int, int, int, int]
     continuous: bool
     iter_limit: int
+    palette: list
 
 @app.post("/tile")
 async def tile(
@@ -68,6 +69,7 @@ async def tile(
     compute.size = spec.size
     compute.continuous = spec.continuous
     compute.iter_limit = spec.iter_limit
+    compute.palette = Palette().from_spec(spec.palette)
 
     gparams = compute.grid_params().subtile(*spec.coords)
     compute.create_mandel(gparams)
