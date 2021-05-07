@@ -10,9 +10,10 @@ import PIL
 import pydantic
 import uvicorn
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 
 from aptus.compute import AptusCompute
 from aptus.palettes import all_palettes
@@ -21,11 +22,15 @@ app = FastAPI()
 
 HERE = pathlib.Path(__file__).parent
 app.mount("/static", StaticFiles(directory=HERE / "static"), name="static")
+templates = Jinja2Templates(directory=HERE / "templates")
 
 @app.get("/", response_class=HTMLResponse)
-async def home():
-    with open(HERE / "static/mainpage.html") as f:
-        return f.read()
+async def home(request: Request):
+    context = {
+        "request": request,
+        "palettes": [p.spec() for p in all_palettes],
+    }
+    return templates.TemplateResponse("mainpage.html", context)
 
 def run_in_executor(f):
     # from https://stackoverflow.com/a/53719009/14343
@@ -69,10 +74,6 @@ async def tile(
 
     data_url = await compute_tile(compute)
     return {"url": data_url}
-
-@app.get("/palettes")
-async def palettes():
-    return [p.spec() for p in all_palettes]
 
 def main():
     uvicorn.run(app, host="127.0.0.1", port=8042)
