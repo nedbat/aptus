@@ -15,6 +15,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 
 from aptus.compute import AptusCompute
+from aptus.palettes import all_palettes
 
 app = FastAPI()
 
@@ -68,6 +69,10 @@ async def tile(
 
     data_url = await compute_tile(compute)
     return {"url": data_url}
+
+@app.get("/palettes")
+async def palettes():
+    return [p.spec() for p in all_palettes]
 
 def main():
     uvicorn.run(app, host="127.0.0.1", port=8042)

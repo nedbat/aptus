@@ -176,7 +176,7 @@ class Palette:
             fcolors[i] = (ax, bx, cx)
         self.fcolors = fcolors
         self._colors_from_fcolors()
-        self._spec.append(['stretch', {'steps':steps, 'hsl':hsl}])
+        self._spec.append(['stretch', {'steps':steps, 'hsl':hsl, 'ease':ease}])
         return self
 
     def adjust(self, hue=0, saturation=0):
