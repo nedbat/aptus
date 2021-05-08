@@ -15,6 +15,7 @@ function reset() {
     pixsize = 3.0/600;
     continuous = false;
     iter_limit = 999;
+    palette_index = 0;
 }
 
 function fetchTile(tile) {
@@ -158,7 +159,6 @@ document.body.onload = () => {
     canvasW = fractal_canvas.width = overlay_canvas.width = window.innerWidth;
     canvasH = fractal_canvas.height = overlay_canvas.height = window.innerHeight;
     is_down = false;
-    palette_index = 0;
     overlay_canvas.addEventListener("mousedown", mousedown);
     overlay_canvas.addEventListener("mousemove", mousemove);
     overlay_canvas.addEventListener("mouseup", mouseup);
