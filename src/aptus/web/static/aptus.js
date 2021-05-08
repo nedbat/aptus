@@ -7,6 +7,7 @@ let continuous;
 let iter_limit;
 let fractal_canvas, overlay_canvas;
 let is_down;
+let moving;
 let palette_index;
 
 function reset() {
@@ -55,7 +56,7 @@ function paint() {
             imageurls.push({ctx: fractal_ctx, tx, ty, spec});
         }
     }
-    Promise.all(imageurls.map(getImage));
+    return Promise.all(imageurls.map(getImage));
 }
 
 function getCursorPosition(ev) {
@@ -80,39 +81,67 @@ function mousedown(ev) {
 
 function mousemove(ev) {
     if (is_down) {
-        overlay_ctx.clearRect(0, 0, overlay_canvas.width, overlay_canvas.height);
         const movedto = getCursorPosition(ev);
-        overlay_ctx.lineWidth = 1;
-        overlay_ctx.strokeStyle = "white";
-        overlay_ctx.strokeRect(rubstart.x, rubstart.y, movedto.x - rubstart.x, movedto.y - rubstart.y);
+        if (moving) {
+            fractal_canvas.style.left = (movedto.x - rubstart.x) + "px";
+            fractal_canvas.style.top = (movedto.y - rubstart.y) + "px";
+        }
+        else {
+            overlay_ctx.clearRect(0, 0, overlay_canvas.width, overlay_canvas.height);
+            overlay_ctx.lineWidth = 1;
+            overlay_ctx.strokeStyle = "white";
+            overlay_ctx.strokeRect(rubstart.x, rubstart.y, movedto.x - rubstart.x, movedto.y - rubstart.y);
+        }
     }
 }
 
 function mouseup(ev) {
     is_down = false;
-    overlay_ctx.clearRect(0, 0, overlay_canvas.width, overlay_canvas.height);
     const up = getCursorPosition(ev);
-    const moved = Math.abs(rubstart.x - up.x) + Math.abs(rubstart.y - up.y);
-    if (moved > 20) {
-        const {r: ra, i: ia} = ri4xy(rubstart.x, rubstart.y);
-        const {r: rb, i: ib} = ri4xy(up.x, up.y);
-        centerr = (ra + rb) / 2;
-        centeri = (ia + ib) / 2;
-        pixsize = Math.max(Math.abs(ra - rb) / canvasW, Math.abs(ia - ib) / canvasH);
+    const dx = up.x - rubstart.x;
+    const dy = up.y - rubstart.y;
+    if (moving) {
+        centerr -= dx * pixsize;
+        centeri += dy * pixsize;
+        paint().then(() => {
+            fractal_canvas.style.left = "0";
+            fractal_canvas.style.top = "0";
+        });
     }
     else {
-        const {r: clickr, i: clicki} = ri4xy(up.x, up.y);
-        pixsize *= .5;
-        const r0 = clickr - up.x * pixsize;
-        const i0 = clicki + up.y * pixsize;
-        centerr = r0 + canvasW/2 * pixsize;
-        centeri = i0 - canvasH/2 * pixsize;
+        overlay_ctx.clearRect(0, 0, overlay_canvas.width, overlay_canvas.height);
+        const moved = Math.abs(dx) + Math.abs(dy);
+        if (moved > 20) {
+            const {r: ra, i: ia} = ri4xy(rubstart.x, rubstart.y);
+            const {r: rb, i: ib} = ri4xy(up.x, up.y);
+            centerr = (ra + rb) / 2;
+            centeri = (ia + ib) / 2;
+            pixsize = Math.max(Math.abs(ra - rb) / canvasW, Math.abs(ia - ib) / canvasH);
+        }
+        else {
+            const {r: clickr, i: clicki} = ri4xy(up.x, up.y);
+            pixsize *= .5;
+            const r0 = clickr - up.x * pixsize;
+            const i0 = clicki + up.y * pixsize;
+            centerr = r0 + canvasW/2 * pixsize;
+            centeri = i0 - canvasH/2 * pixsize;
+        }
+        paint();
     }
-    paint();
 }
 
 function keydown(e) {
     switch (e.key) {
+        case "m":
+            moving = !moving;
+            if (moving) {
+                overlay_canvas.classList.add("move");
+            }
+            else {
+                overlay_canvas.classList.remove("move");
+            }
+            break;
+
         case "c":
             continuous = !continuous;
             paint();
@@ -159,6 +188,7 @@ document.body.onload = () => {
     canvasW = fractal_canvas.width = overlay_canvas.width = window.innerWidth;
     canvasH = fractal_canvas.height = overlay_canvas.height = window.innerHeight;
     is_down = false;
+    moving = false;
     overlay_canvas.addEventListener("mousedown", mousedown);
     overlay_canvas.addEventListener("mousemove", mousemove);
     overlay_canvas.addEventListener("mouseup", mouseup);
