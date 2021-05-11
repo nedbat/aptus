@@ -164,8 +164,15 @@ class Palette:
                 if a1 < a0 and a0-a1 > 0.01:
                     a1 += 1
             step = float(i % steps)/steps
+
             if ease == "sine":
                 step = -(math.cos(math.pi * step) - 1) / 2;
+            elif isinstance(ease, float):
+                if step < 0.5:
+                    step = math.pow(2 * step, ease) / 2
+                else:
+                    step = 1 - math.pow(-2 * step + 2, ease) / 2
+
             ax, bx, cx = (
                 a0 + (a1 - a0) * step,
                 b0 + (b1 - b0) * step,
