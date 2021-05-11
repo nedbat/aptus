@@ -121,7 +121,12 @@ function mouseup(ev) {
         }
         else {
             const {r: clickr, i: clicki} = ri4xy(up.x, up.y);
-            pixsize /= (ev.ctrlKey ? 1.1 : 2.0);
+            if (ev.shiftKey) {
+                pixsize *= (ev.ctrlKey ? 1.1 : 2.0);
+            }
+            else {
+                pixsize /= (ev.ctrlKey ? 1.1 : 2.0);
+            }
             const r0 = clickr - up.x * pixsize;
             const i0 = clicki + up.y * pixsize;
             centerr = r0 + canvasW/2 * pixsize;
