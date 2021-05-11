@@ -96,13 +96,14 @@ function mousemove(ev) {
 }
 
 function mouseup(ev) {
-    is_down = false;
     const up = getCursorPosition(ev);
     const dx = up.x - rubstart.x;
     const dy = up.y - rubstart.y;
     if (moving) {
         centerr -= dx * pixsize;
         centeri += dy * pixsize;
+        fractal_canvas.style.left = "0";
+        fractal_canvas.style.top = "0";
         paint().then(() => {
             fractal_canvas.style.left = "0";
             fractal_canvas.style.top = "0";
@@ -120,7 +121,7 @@ function mouseup(ev) {
         }
         else {
             const {r: clickr, i: clicki} = ri4xy(up.x, up.y);
-            pixsize *= .5;
+            pixsize /= (ev.ctrlKey ? 1.1 : 2.0);
             const r0 = clickr - up.x * pixsize;
             const i0 = clicki + up.y * pixsize;
             centerr = r0 + canvasW/2 * pixsize;
@@ -128,6 +129,7 @@ function mouseup(ev) {
         }
         paint();
     }
+    is_down = false;
 }
 
 function keydown(e) {
@@ -203,6 +205,7 @@ document.body.onload = () => {
     overlay_canvas.addEventListener("mousedown", mousedown);
     overlay_canvas.addEventListener("mousemove", mousemove);
     overlay_canvas.addEventListener("mouseup", mouseup);
+    overlay_canvas.addEventListener("contextmenu", ev => { ev.preventDefault(); return false; });
     document.addEventListener("keydown", keydown);
     reset();
     paint();
