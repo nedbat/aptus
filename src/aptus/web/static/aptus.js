@@ -134,25 +134,6 @@ function mouseup(ev) {
 
 function keydown(e) {
     switch (e.key) {
-        case "?":
-            if (help_panel.style.display === "block") {
-                help_panel.style.display = "none";
-            }
-            else {
-                help_panel.style.display = "block";
-            }
-            break;
-
-        case "m":
-            moving = !moving;
-            if (moving) {
-                overlay_canvas.classList.add("move");
-            }
-            else {
-                overlay_canvas.classList.remove("move");
-            }
-            break;
-
         case "c":
             continuous = !continuous;
             paint();
@@ -163,6 +144,16 @@ function keydown(e) {
             if (new_limit != iter_limit) {
                 iter_limit = new_limit;
                 paint();
+            }
+            break;
+
+        case "m":
+            moving = !moving;
+            if (moving) {
+                overlay_canvas.classList.add("move");
+            }
+            else {
+                overlay_canvas.classList.remove("move");
             }
             break;
 
@@ -185,8 +176,17 @@ function keydown(e) {
             paint();
             break;
 
+        case "?":
+            if (help_panel.style.display === "block") {
+                help_panel.style.display = "none";
+            }
+            else {
+                help_panel.style.display = "block";
+            }
+            break;
+
         default:
-            console.log("key:", e.key);
+            //console.log("key:", e.key);
             break;
     }
 }
