@@ -15,6 +15,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
+from aptus import __version__
 from aptus.compute import AptusCompute
 from aptus.palettes import Palette, all_palettes
 
@@ -29,6 +30,7 @@ async def home(request: Request):
     context = {
         "request": request,
         "palettes": [p.spec() for p in all_palettes],
+        "version": __version__,
     }
     return templates.TemplateResponse("mainpage.html", context)
 

@@ -5,7 +5,7 @@ let pixsize;
 let canvasW, canvasH;
 let continuous;
 let iter_limit;
-let fractal_canvas, overlay_canvas;
+let fractal_canvas, overlay_canvas, help_panel;
 let is_down;
 let moving;
 let palette_index;
@@ -132,6 +132,15 @@ function mouseup(ev) {
 
 function keydown(e) {
     switch (e.key) {
+        case "?":
+            if (help_panel.style.display === "block") {
+                help_panel.style.display = "none";
+            }
+            else {
+                help_panel.style.display = "block";
+            }
+            break;
+
         case "m":
             moving = !moving;
             if (moving) {
@@ -182,8 +191,10 @@ function keydown(e) {
 
 document.body.onload = () => {
     fractal_canvas = document.getElementById("fractal");
-    fractal_ctx = fractal_canvas.getContext("2d");
     overlay_canvas = document.getElementById("overlay");
+    help_panel = document.getElementById("helppanel");
+
+    fractal_ctx = fractal_canvas.getContext("2d");
     overlay_ctx = overlay_canvas.getContext("2d");
     canvasW = fractal_canvas.width = overlay_canvas.width = window.innerWidth;
     canvasH = fractal_canvas.height = overlay_canvas.height = window.innerHeight;

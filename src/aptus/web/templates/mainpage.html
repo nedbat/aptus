@@ -5,7 +5,23 @@
     <script>
     const palettes = {{palettes|tojson}};
     </script>
+</head>
 <body>
-<canvas id="fractal" class="mainpane"></canvas>
-<canvas id="overlay" class="mainpane"></canvas>
-<script src="/static/aptus.js"></script>
+    <canvas id="fractal" class="mainpane"></canvas>
+    <canvas id="overlay" class="mainpane"></canvas>
+    <div id="helppanel">
+        <p><b>Aptus {{version}}</b>, Mandelbrot set explorer.</p>
+
+        <p>Copyright 2007-2021, Ned Batchelder.
+        <a href='https://nedbatchelder.com/code/aptus'>http://nedbatchelder.com/code/aptus</a>
+        </p>
+
+        <kbd>c</kbd> toggle continuous coloring<br/>
+        <kbd>i</kbd> change the iteration limit<br/>
+        <kbd>m</kbd> toggle move mode<br/>
+        <kbd>r</kbd> reset everything<br/>
+        <kbd>&lt;</kbd> <kbd>&gt;</kbd> cycle through palettes</br>
+        <kbd>?</kbd> toggle help panel<br/>
+    </div>
+    <script src="/static/aptus.js"></script>
+</body>
