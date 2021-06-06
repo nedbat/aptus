@@ -61,10 +61,15 @@ class ComputeSpec(pydantic.BaseModel):
     iter_limit: int
     palette: list
 
+class TileRequest(pydantic.BaseModel):
+    spec: ComputeSpec
+    seq: int
+
 @app.post("/tile")
 async def tile(
-    spec: ComputeSpec
+    req: TileRequest
 ):
+    spec = req.spec
     compute = AptusCompute()
     compute.center = spec.center
     compute.diam = spec.diam
@@ -77,7 +82,7 @@ async def tile(
     compute.create_mandel(gparams)
 
     data_url = await compute_tile(compute)
-    return {"url": data_url}
+    return {"url": data_url, "seq": req.seq}
 
 def main():
     uvicorn.run(app, host="127.0.0.1", port=8042)

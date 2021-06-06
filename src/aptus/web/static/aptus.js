@@ -10,6 +10,11 @@ let is_down;
 let moving;
 let palette_index;
 
+// Request sequence number. Requests include the sequence number and the tile
+// returns it. If the sequence number has been incremented since the tile was
+// requested, then the tile is no longer needed, and is not displayed.
+let reqseq = 0;
+
 function reset() {
     centerr = -0.6;
     centeri = 0.0;
@@ -21,13 +26,22 @@ function reset() {
 
 function fetchTile(tile) {
     return new Promise(resolve => {
-        fetch("/tile", {method: "POST", body: JSON.stringify(tile.spec)})
+        const body = {
+            seq: tile.reqseq,
+            spec: tile.spec,
+        };
+        fetch("/tile", {method: "POST", body: JSON.stringify(body)})
         .then(response => response.json())
         .then(tiledata => {
-            const img = new Image();
-            tile.img = img;
-            img.src = tiledata.url;
-            img.onload = () => resolve(tile);
+            if (tiledata.seq == reqseq) {
+                const img = new Image();
+                tile.img = img;
+                img.src = tiledata.url;
+                img.onload = () => resolve(tile);
+            }
+            else {
+                // console.log("Discarding tile with seq " + tiledata.seq + ", only interested now in " + reqseq);
+            }
         });
     });
 }
@@ -41,6 +55,7 @@ function getImage(tile) {
 }
 
 function paint() {
+    reqseq += 1;
     const imageurls = [];
     for (let tx = 0; tx < canvasW / tileX; tx++) {
         for (let ty = 0; ty < canvasH / tileX; ty++) {
@@ -53,7 +68,7 @@ function paint() {
                 iter_limit: iter_limit,
                 palette: palettes[palette_index],
             }
-            imageurls.push({ctx: fractal_ctx, tx, ty, spec});
+            imageurls.push({ctx: fractal_ctx, tx, ty, spec, reqseq});
         }
     }
     return Promise.all(imageurls.map(getImage));
