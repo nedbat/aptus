@@ -2,13 +2,18 @@ const tileX = 400;
 
 let centerr, centeri;
 let pixsize;
-let canvasW, canvasH;
+let angle;
 let continuous;
 let iter_limit;
+let palette_index;
+
+let canvasW, canvasH;
 let fractal_canvas, overlay_canvas, help_panel;
 let is_down;
 let moving;
-let palette_index;
+
+// sin(angle) and cos(angle)
+let sina, cosa;
 
 // Request sequence number. Requests include the sequence number and the tile
 // returns it. If the sequence number has been incremented since the tile was
@@ -19,6 +24,9 @@ function reset() {
     centerr = -0.6;
     centeri = 0.0;
     pixsize = 3.0/600;
+    angle = 0.0;
+    sina = 0.0;
+    cosa = 1.0;
     continuous = false;
     iter_limit = 999;
     palette_index = 0;
@@ -64,6 +72,7 @@ function paint() {
                 diam: [canvasW * pixsize, canvasH * pixsize],
                 size: [canvasW, canvasH],
                 coords: [tx*tileX, (tx+1)*tileX, ty*tileX, (ty+1)*tileX],
+                angle: angle,
                 continuous: continuous,
                 iter_limit: iter_limit,
                 palette: palettes[palette_index],
@@ -82,10 +91,10 @@ function getCursorPosition(ev) {
 }
 
 function ri4xy(x, y) {
-    const r0 = centerr - canvasW/2 * pixsize;
-    const i0 = centeri + canvasH/2 * pixsize;
-    const r = r0 + x * pixsize;
-    const i = i0 - y * pixsize;
+    const r0 = centerr - (canvasW * cosa + canvasH * sina)/2 * pixsize;
+    const i0 = centeri + (canvasH * cosa - canvasW * sina)/2 * pixsize;
+    const r = r0 + (x * cosa + y * sina) * pixsize;
+    const i = i0 - (y * cosa - x * sina) * pixsize;
     return {r, i};
 }
 
@@ -115,8 +124,8 @@ function mouseup(ev) {
     const dx = up.x - rubstart.x;
     const dy = up.y - rubstart.y;
     if (moving) {
-        centerr -= dx * pixsize;
-        centeri += dy * pixsize;
+        centerr -= (cosa * dx + sina * dy) * pixsize;
+        centeri += (cosa * dy - sina * dx) * pixsize;
         fractal_canvas.style.left = "0";
         fractal_canvas.style.top = "0";
         paint().then(() => {
@@ -136,16 +145,17 @@ function mouseup(ev) {
         }
         else {
             const {r: clickr, i: clicki} = ri4xy(up.x, up.y);
+
             if (ev.shiftKey) {
                 pixsize *= (ev.ctrlKey ? 1.1 : 2.0);
             }
             else {
                 pixsize /= (ev.ctrlKey ? 1.1 : 2.0);
             }
-            const r0 = clickr - up.x * pixsize;
-            const i0 = clicki + up.y * pixsize;
-            centerr = r0 + canvasW/2 * pixsize;
-            centeri = i0 - canvasH/2 * pixsize;
+            const r0 = clickr - (up.x * cosa + up.y * sina) * pixsize;
+            const i0 = clicki + (up.y * cosa - up.x * sina) * pixsize;
+            centerr = r0 + (canvasW * cosa + canvasH * sina)/2 * pixsize;
+            centeri = i0 - (canvasH * cosa - canvasW * sina)/2 * pixsize;
         }
         paint();
     }
@@ -154,6 +164,17 @@ function mouseup(ev) {
 
 function keydown(e) {
     switch (e.key) {
+        case "a":
+            new_angle = +prompt("Angle", angle);
+            if (new_angle != angle) {
+                angle = new_angle;
+                const rads = angle / 180 * Math.PI;
+                sina = Math.sin(rads)
+                cosa = Math.cos(rads)
+                paint();
+            }
+            break;
+
         case "c":
             continuous = !continuous;
             paint();

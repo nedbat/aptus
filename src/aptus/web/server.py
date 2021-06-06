@@ -57,6 +57,7 @@ class ComputeSpec(pydantic.BaseModel):
     diam: tuple[float, float]
     size: tuple[int, int]
     coords: tuple[int, int, int, int]
+    angle: float
     continuous: bool
     iter_limit: int
     palette: list
@@ -74,6 +75,7 @@ async def tile(
     compute.center = spec.center
     compute.diam = spec.diam
     compute.size = spec.size
+    compute.angle = spec.angle
     compute.continuous = spec.continuous
     compute.iter_limit = spec.iter_limit
     compute.palette = Palette().from_spec(spec.palette)
