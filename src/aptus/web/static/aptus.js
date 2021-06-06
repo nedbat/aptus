@@ -178,6 +178,10 @@ function keydown(e) {
             break;
 
         case "r":
+            paint();
+            break;
+
+        case "R":
             reset();
             paint();
             break;
@@ -211,6 +215,27 @@ function keydown(e) {
     }
 }
 
+function set_size() {
+    canvasW = fractal_canvas.width = overlay_canvas.width = window.innerWidth;
+    canvasH = fractal_canvas.height = overlay_canvas.height = window.innerHeight;
+}
+
+let resize_timeout = null;
+
+function resize() {
+    if (resize_timeout) {
+        clearTimeout(resize_timeout);
+    }
+    resize_timeout = setTimeout(
+        () => {
+            resize_timeout = null;
+            set_size();
+            paint();
+        },
+        250
+    );
+}
+
 document.body.onload = () => {
     fractal_canvas = document.getElementById("fractal");
     overlay_canvas = document.getElementById("overlay");
@@ -218,8 +243,6 @@ document.body.onload = () => {
 
     fractal_ctx = fractal_canvas.getContext("2d");
     overlay_ctx = overlay_canvas.getContext("2d");
-    canvasW = fractal_canvas.width = overlay_canvas.width = window.innerWidth;
-    canvasH = fractal_canvas.height = overlay_canvas.height = window.innerHeight;
     is_down = false;
     moving = false;
     overlay_canvas.addEventListener("mousedown", mousedown);
@@ -227,6 +250,8 @@ document.body.onload = () => {
     overlay_canvas.addEventListener("mouseup", mouseup);
     overlay_canvas.addEventListener("contextmenu", ev => { ev.preventDefault(); return false; });
     document.addEventListener("keydown", keydown);
+    window.addEventListener("resize", resize);
+    set_size();
     reset();
     paint();
 }
