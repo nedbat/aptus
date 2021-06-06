@@ -19,7 +19,9 @@ body {
     background: #ffee88;
     border: 2px solid black;
     padding: 1em;
+    padding-bottom: 0;
     max-width: 20em;
+    box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.4);
 }
 
 #helppanel p {
