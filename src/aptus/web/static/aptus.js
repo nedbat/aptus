@@ -1,3 +1,5 @@
+// Aptus web
+
 const tileX = 400;
 
 let centerr, centeri;
@@ -8,7 +10,9 @@ let iter_limit;
 let palette_index;
 
 let canvasW, canvasH;
-let fractal_canvas, overlay_canvas, help_panel;
+let fractal_canvas, overlay_canvas;
+let fractal_ctx, overlay_ctx;
+let help_panel;
 let is_down;
 let moving;
 
@@ -25,8 +29,6 @@ function reset() {
     centeri = 0.0;
     pixsize = 3.0/600;
     set_angle(0.0);
-    sina = 0.0;
-    cosa = 1.0;
     continuous = false;
     iter_limit = 999;
     palette_index = 0;
@@ -83,6 +85,10 @@ function paint() {
     return Promise.all(imageurls.map(getImage));
 }
 
+function clear_ctx(ctx) {
+    ctx.clearRect(0, 0, canvasW, canvasH);
+}
+
 function getCursorPosition(ev) {
     const rect = ev.target.getBoundingClientRect()
     const x = ev.clientX - rect.left
@@ -107,11 +113,12 @@ function mousemove(ev) {
     if (is_down) {
         const movedto = getCursorPosition(ev);
         if (moving) {
+            clear_ctx(overlay_ctx);
             fractal_canvas.style.left = (movedto.x - rubstart.x) + "px";
             fractal_canvas.style.top = (movedto.y - rubstart.y) + "px";
         }
         else {
-            overlay_ctx.clearRect(0, 0, overlay_canvas.width, overlay_canvas.height);
+            clear_ctx(overlay_ctx);
             overlay_ctx.lineWidth = 1;
             overlay_ctx.strokeStyle = "white";
             overlay_ctx.strokeRect(rubstart.x, rubstart.y, movedto.x - rubstart.x, movedto.y - rubstart.y);
@@ -126,15 +133,17 @@ function mouseup(ev) {
     if (moving) {
         centerr -= (cosa * dx + sina * dy) * pixsize;
         centeri += (cosa * dy - sina * dx) * pixsize;
+        overlay_ctx.drawImage(fractal_canvas, dx, dy);
         fractal_canvas.style.left = "0";
         fractal_canvas.style.top = "0";
+        fractal_ctx.fillStyle = "white";
+        fractal_ctx.fillRect(0, 0, canvasW, canvasH);
         paint().then(() => {
-            fractal_canvas.style.left = "0";
-            fractal_canvas.style.top = "0";
+            clear_ctx(overlay_ctx);
         });
     }
     else {
-        overlay_ctx.clearRect(0, 0, overlay_canvas.width, overlay_canvas.height);
+        clear_ctx(overlay_ctx);
         const moved = Math.abs(dx) + Math.abs(dy);
         if (moved > 20) {
             const {r: ra, i: ia} = ri4xy(rubstart.x, rubstart.y);
@@ -274,18 +283,22 @@ function resize() {
 document.body.onload = () => {
     fractal_canvas = document.getElementById("fractal");
     overlay_canvas = document.getElementById("overlay");
-    help_panel = document.getElementById("helppanel");
 
     fractal_ctx = fractal_canvas.getContext("2d");
     overlay_ctx = overlay_canvas.getContext("2d");
+
+    help_panel = document.getElementById("helppanel");
+
     is_down = false;
     moving = false;
+
     overlay_canvas.addEventListener("mousedown", mousedown);
     overlay_canvas.addEventListener("mousemove", mousemove);
     overlay_canvas.addEventListener("mouseup", mouseup);
     overlay_canvas.addEventListener("contextmenu", ev => { ev.preventDefault(); return false; });
     document.addEventListener("keydown", keydown);
     window.addEventListener("resize", resize);
+
     set_size();
     reset();
     paint();
