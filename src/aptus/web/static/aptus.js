@@ -24,7 +24,7 @@ function reset() {
     centerr = -0.6;
     centeri = 0.0;
     pixsize = 3.0/600;
-    angle = 0.0;
+    set_angle(0.0);
     sina = 0.0;
     cosa = 1.0;
     continuous = false;
@@ -162,15 +162,12 @@ function mouseup(ev) {
     is_down = false;
 }
 
-function keydown(e) {
-    switch (e.key) {
+function keydown(ev) {
+    switch (ev.key) {
         case "a":
             new_angle = +prompt("Angle", angle);
             if (new_angle != angle) {
-                angle = new_angle;
-                const rads = angle / 180 * Math.PI;
-                sina = Math.sin(rads)
-                cosa = Math.cos(rads)
+                set_angle(new_angle);
                 paint();
             }
             break;
@@ -207,7 +204,7 @@ function keydown(e) {
             paint();
             break;
 
-        case "<":
+        case ",":
             palette_index -= 1;
             if (palette_index < 0) {
                 palette_index += palettes.length;
@@ -215,9 +212,19 @@ function keydown(e) {
             paint();
             break;
 
-        case ">":
+        case ".":
             palette_index += 1;
             palette_index %= palettes.length;
+            paint();
+            break;
+
+        case ">":
+            set_angle(angle + (ev.ctrlKey ? 1 : 10));
+            paint();
+            break;
+
+        case "<":
+            set_angle(angle - (ev.ctrlKey ? 1 : 10));
             paint();
             break;
 
@@ -231,7 +238,7 @@ function keydown(e) {
             break;
 
         default:
-            //console.log("key:", e.key);
+            //console.log("key:", ev.key);
             break;
     }
 }
@@ -239,6 +246,13 @@ function keydown(e) {
 function set_size() {
     canvasW = fractal_canvas.width = overlay_canvas.width = window.innerWidth;
     canvasH = fractal_canvas.height = overlay_canvas.height = window.innerHeight;
+}
+
+function set_angle(a) {
+    angle = (a % 360 + 360) % 360;
+    const rads = angle / 180 * Math.PI;
+    sina = Math.sin(rads)
+    cosa = Math.cos(rads)
 }
 
 let resize_timeout = null;
