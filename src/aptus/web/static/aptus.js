@@ -105,11 +105,13 @@ function ri4xy(x, y) {
 }
 
 function mousedown(ev) {
+    ev.preventDefault();
     is_down = true;
     rubstart = getCursorPosition(ev);
 }
 
 function mousemove(ev) {
+    ev.preventDefault();
     if (is_down) {
         const movedto = getCursorPosition(ev);
         if (moving) {
@@ -127,6 +129,7 @@ function mousemove(ev) {
 }
 
 function mouseup(ev) {
+    ev.preventDefault();
     const up = getCursorPosition(ev);
     const dx = up.x - rubstart.x;
     const dy = up.y - rubstart.y;
@@ -172,83 +175,92 @@ function mouseup(ev) {
 }
 
 function keydown(ev) {
-    switch (ev.key) {
-        case "a":
-            new_angle = +prompt("Angle", angle);
-            if (new_angle != angle) {
-                set_angle(new_angle);
+    var handled = false;
+
+    if (!ev.metaKey && !ev.altKey) {
+        handled = true;
+        switch (ev.key) {
+            case "a":
+                new_angle = +prompt("Angle", angle);
+                if (new_angle != angle) {
+                    set_angle(new_angle);
+                    paint();
+                }
+                break;
+
+            case "c":
+                continuous = !continuous;
                 paint();
-            }
-            break;
+                break;
 
-        case "c":
-            continuous = !continuous;
-            paint();
-            break;
+            case "i":
+                new_limit = +prompt("Iteration limit", iter_limit);
+                if (new_limit != iter_limit) {
+                    iter_limit = new_limit;
+                    paint();
+                }
+                break;
 
-        case "i":
-            new_limit = +prompt("Iteration limit", iter_limit);
-            if (new_limit != iter_limit) {
-                iter_limit = new_limit;
+            case "m":
+                moving = !moving;
+                if (moving) {
+                    overlay_canvas.classList.add("move");
+                }
+                else {
+                    overlay_canvas.classList.remove("move");
+                }
+                break;
+
+            case "r":
                 paint();
-            }
-            break;
+                break;
 
-        case "m":
-            moving = !moving;
-            if (moving) {
-                overlay_canvas.classList.add("move");
-            }
-            else {
-                overlay_canvas.classList.remove("move");
-            }
-            break;
+            case "R":
+                reset();
+                paint();
+                break;
 
-        case "r":
-            paint();
-            break;
+            case ",":
+                palette_index -= 1;
+                if (palette_index < 0) {
+                    palette_index += palettes.length;
+                }
+                paint();
+                break;
 
-        case "R":
-            reset();
-            paint();
-            break;
+            case ".":
+                palette_index += 1;
+                palette_index %= palettes.length;
+                paint();
+                break;
 
-        case ",":
-            palette_index -= 1;
-            if (palette_index < 0) {
-                palette_index += palettes.length;
-            }
-            paint();
-            break;
+            case ">":
+                set_angle(angle + (ev.ctrlKey ? 1 : 10));
+                paint();
+                break;
 
-        case ".":
-            palette_index += 1;
-            palette_index %= palettes.length;
-            paint();
-            break;
+            case "<":
+                set_angle(angle - (ev.ctrlKey ? 1 : 10));
+                paint();
+                break;
 
-        case ">":
-            set_angle(angle + (ev.ctrlKey ? 1 : 10));
-            paint();
-            break;
+            case "?":
+                if (help_panel.style.display === "block") {
+                    help_panel.style.display = "none";
+                }
+                else {
+                    help_panel.style.display = "block";
+                }
+                break;
 
-        case "<":
-            set_angle(angle - (ev.ctrlKey ? 1 : 10));
-            paint();
-            break;
+            default:
+                handled = false;
+                break;
+        }
+    }
 
-        case "?":
-            if (help_panel.style.display === "block") {
-                help_panel.style.display = "none";
-            }
-            else {
-                help_panel.style.display = "block";
-            }
-            break;
-
-        default:
-            //console.log("key:", ev.key);
-            break;
+    if (handled) {
+        ev.preventDefault();
     }
 }
 
