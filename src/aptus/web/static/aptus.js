@@ -178,9 +178,25 @@ function mainpane_mouseup(ev) {
 function keydown(ev) {
     var handled = false;
 
+    //console.log("key:",  ev.key, "shift:", ev.shiftKey, "ctrl:", ev.ctrlKey, "meta:", ev.metaKey, "alt:", ev.altKey);
+    var key = ev.key;
+
+    // Chrome handles ctrl-lessthan as shift-ctrl-comma. Fix those combinations
+    // to be what we expect.
+    if (ev.shiftKey) {
+        switch (key) {
+            case ".":
+                key = ">";
+                break;
+            case ",":
+                key = "<";
+                break;
+        }
+    }
+
     if (!ev.metaKey && !ev.altKey) {
         handled = true;
-        switch (ev.key) {
+        switch (key) {
             case "a":
                 new_angle = +prompt("Angle", angle);
                 if (new_angle != angle) {
