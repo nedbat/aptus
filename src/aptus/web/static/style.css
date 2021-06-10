@@ -14,13 +14,11 @@ body {
 #helppanel {
     display: none;
     position: absolute;
-    top: 5em;
-    right: 5em;
-    background: #ffee99;
+    background: #ffeebb;
     border: 2px solid black;
     padding: 1em;
     padding-bottom: 0;
-    max-width: 20em;
+    width: 20em;
     border-radius: .5em;
     box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.4);
 }

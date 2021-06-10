@@ -13,7 +13,7 @@ let canvasW, canvasH;
 let fractal_canvas, overlay_canvas;
 let fractal_ctx, overlay_ctx;
 let help_panel;
-let is_down;
+let move_target = null;
 let moving;
 
 // sin(angle) and cos(angle)
@@ -89,8 +89,8 @@ function clear_ctx(ctx) {
     ctx.clearRect(0, 0, canvasW, canvasH);
 }
 
-function getCursorPosition(ev) {
-    const rect = ev.target.getBoundingClientRect()
+function getCursorPosition(ev, target) {
+    const rect = target.getBoundingClientRect()
     const x = ev.clientX - rect.left
     const y = ev.clientY - rect.top
     return {x, y};
@@ -104,23 +104,23 @@ function ri4xy(x, y) {
     return {r, i};
 }
 
-function mousedown(ev) {
+function mainpane_mousedown(ev) {
     ev.preventDefault();
-    is_down = true;
-    rubstart = getCursorPosition(ev);
+    move_target = ev.target.closest(".mainpane")
+    document.addEventListener("mouseup", mainpane_mouseup);
+    rubstart = getCursorPosition(ev, move_target);
 }
 
 function mousemove(ev) {
     ev.preventDefault();
-    if (is_down) {
-        const movedto = getCursorPosition(ev);
+    if (move_target !== null) {
+        const movedto = getCursorPosition(ev, move_target);
+        clear_ctx(overlay_ctx);
         if (moving) {
-            clear_ctx(overlay_ctx);
             fractal_canvas.style.left = (movedto.x - rubstart.x) + "px";
             fractal_canvas.style.top = (movedto.y - rubstart.y) + "px";
         }
         else {
-            clear_ctx(overlay_ctx);
             overlay_ctx.lineWidth = 1;
             overlay_ctx.strokeStyle = "white";
             overlay_ctx.strokeRect(rubstart.x, rubstart.y, movedto.x - rubstart.x, movedto.y - rubstart.y);
@@ -128,9 +128,9 @@ function mousemove(ev) {
     }
 }
 
-function mouseup(ev) {
+function mainpane_mouseup(ev) {
     ev.preventDefault();
-    const up = getCursorPosition(ev);
+    const up = getCursorPosition(ev, move_target);
     const dx = up.x - rubstart.x;
     const dy = up.y - rubstart.y;
     if (moving) {
@@ -171,7 +171,8 @@ function mouseup(ev) {
         }
         paint();
     }
-    is_down = false;
+    document.removeEventListener("mouseup", mainpane_mouseup);
+    move_target = null;
 }
 
 function keydown(ev) {
@@ -249,6 +250,9 @@ function keydown(ev) {
                     help_panel.style.display = "none";
                 }
                 else {
+                    help_panel.style.top = "5em";
+                    help_panel.style.right = "5em";
+                    help_panel.style.left = help_panel.style.bottom = null;
                     help_panel.style.display = "block";
                 }
                 break;
@@ -292,6 +296,39 @@ function resize() {
     );
 }
 
+var draggable = null;
+var draggable_start;
+
+function draggable_mousedown(ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    rubstart = {x: ev.clientX, y: ev.clientY};
+    draggable = ev.target.closest(".draggable");
+    draggable_start = {x: draggable.offsetLeft, y: draggable.offsetTop};
+    draggable.style.left = draggable.offsetLeft + "px";
+    draggable.style.top = draggable.offsetTop + "px";
+    draggable.style.right = null;
+    draggable.style.bottom = null;
+    document.addEventListener("mousemove", draggable_mousemove);
+    document.addEventListener("mouseup", draggable_mouseup);
+}
+
+function draggable_mousemove(ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    const movedto = {x: ev.clientX, y: ev.clientY};
+    draggable.style.left = draggable_start.x - (rubstart.x - movedto.x) + "px";
+    draggable.style.top = draggable_start.y - (rubstart.y - movedto.y) + "px";
+}
+
+function draggable_mouseup(ev) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    document.removeEventListener("mousemove", draggable_mousemove);
+    document.removeEventListener("mouseup", draggable_mouseup);
+    draggable = null;
+}
+
 document.body.onload = () => {
     fractal_canvas = document.getElementById("fractal");
     overlay_canvas = document.getElementById("overlay");
@@ -300,14 +337,13 @@ document.body.onload = () => {
     overlay_ctx = overlay_canvas.getContext("2d");
 
     help_panel = document.getElementById("helppanel");
+    help_panel.addEventListener("mousedown", draggable_mousedown);
 
-    is_down = false;
     moving = false;
 
-    overlay_canvas.addEventListener("mousedown", mousedown);
-    overlay_canvas.addEventListener("mousemove", mousemove);
-    overlay_canvas.addEventListener("mouseup", mouseup);
-    overlay_canvas.addEventListener("contextmenu", ev => { ev.preventDefault(); return false; });
+    overlay_canvas.addEventListener("mousedown", mainpane_mousedown);
+    document.addEventListener("mousemove", mousemove);
+    document.addEventListener("contextmenu", ev => { ev.preventDefault(); return false; });
     document.addEventListener("keydown", keydown);
     window.addEventListener("resize", resize);
 
