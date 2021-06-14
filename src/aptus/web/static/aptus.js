@@ -149,11 +149,14 @@ function mainpane_mouseup(ev) {
         clear_ctx(overlay_ctx);
         const moved = Math.abs(dx) + Math.abs(dy);
         if (moved > 20) {
-            const {r: ra, i: ia} = ri4xy(rubstart.x, rubstart.y);
-            const {r: rb, i: ib} = ri4xy(up.x, up.y);
-            centerr = (ra + rb) / 2;
-            centeri = (ia + ib) / 2;
-            pixsize = Math.max(Math.abs(ra - rb) / canvasW, Math.abs(ia - ib) / canvasH);
+            const a = ri4xy(rubstart.x, rubstart.y);
+            const b = ri4xy(up.x, up.y);
+            const dr = a.r - b.r, di = a.i - b.i;
+            const rdr = cosa * dr + sina * di;
+            const rdi = cosa * di - sina * dr;
+            pixsize = Math.max(Math.abs(rdr) / canvasW, Math.abs(rdi) / canvasH);
+            centerr = (a.r + b.r) / 2;
+            centeri = (a.i + b.i) / 2;
         }
         else {
             const {r: clickr, i: clicki} = ri4xy(up.x, up.y);
