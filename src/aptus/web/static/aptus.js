@@ -96,11 +96,20 @@ function getCursorPosition(ev, target) {
     return {x, y};
 }
 
+// xrot and yrot provide rotated versions of the x,y they are given.
+function xrot(x, y) {
+    return x * cosa + y * sina;
+}
+
+function yrot(x, y) {
+    return y * cosa - x * sina;
+}
+
 function ri4xy(x, y) {
-    const r0 = centerr - (canvasW * cosa + canvasH * sina)/2 * pixsize;
-    const i0 = centeri + (canvasH * cosa - canvasW * sina)/2 * pixsize;
-    const r = r0 + (x * cosa + y * sina) * pixsize;
-    const i = i0 - (y * cosa - x * sina) * pixsize;
+    const r0 = centerr - xrot(canvasW, canvasH)/2 * pixsize;
+    const i0 = centeri + yrot(canvasW, canvasH)/2 * pixsize;
+    const r = r0 + xrot(x, y) * pixsize;
+    const i = i0 - yrot(x, y) * pixsize;
     return {r, i};
 }
 
@@ -134,8 +143,8 @@ function mainpane_mouseup(ev) {
     const dx = up.x - rubstart.x;
     const dy = up.y - rubstart.y;
     if (moving) {
-        centerr -= (cosa * dx + sina * dy) * pixsize;
-        centeri += (cosa * dy - sina * dx) * pixsize;
+        centerr -= xrot(dx, dy) * pixsize;
+        centeri += yrot(dx, dy) * pixsize;
         overlay_ctx.drawImage(fractal_canvas, dx, dy);
         fractal_canvas.style.left = "0";
         fractal_canvas.style.top = "0";
@@ -152,8 +161,8 @@ function mainpane_mouseup(ev) {
             const a = ri4xy(rubstart.x, rubstart.y);
             const b = ri4xy(up.x, up.y);
             const dr = a.r - b.r, di = a.i - b.i;
-            const rdr = cosa * dr + sina * di;
-            const rdi = cosa * di - sina * dr;
+            const rdr = xrot(dr, di);
+            const rdi = yrot(dr, di);
             pixsize = Math.max(Math.abs(rdr) / canvasW, Math.abs(rdi) / canvasH);
             centerr = (a.r + b.r) / 2;
             centeri = (a.i + b.i) / 2;
@@ -167,10 +176,10 @@ function mainpane_mouseup(ev) {
             else {
                 pixsize /= (ev.ctrlKey ? 1.1 : 2.0);
             }
-            const r0 = clickr - (up.x * cosa + up.y * sina) * pixsize;
-            const i0 = clicki + (up.y * cosa - up.x * sina) * pixsize;
-            centerr = r0 + (canvasW * cosa + canvasH * sina)/2 * pixsize;
-            centeri = i0 - (canvasH * cosa - canvasW * sina)/2 * pixsize;
+            const r0 = clickr - xrot(up.x, up.y) * pixsize;
+            const i0 = clicki + yrot(up.x, up.y) * pixsize;
+            centerr = r0 + xrot(canvasW, canvasH)/2 * pixsize;
+            centeri = i0 - yrot(canvasW, canvasH)/2 * pixsize;
         }
         paint();
     }
