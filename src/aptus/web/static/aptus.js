@@ -222,6 +222,14 @@ function keydown(ev) {
                 paint();
                 break;
 
+            case "C":
+                alert(
+                    `--center=${centerr},${centeri} ` +
+                    (angle ? `--angle=${angle} ` : "") +
+                    `--diam=${canvasW * pixsize},${canvasH * pixsize}`
+                );
+                break;
+
             case "i":
                 new_limit = +prompt("Iteration limit", iter_limit);
                 if (new_limit != iter_limit) {
