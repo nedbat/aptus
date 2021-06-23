@@ -163,7 +163,7 @@ class Palette:
                 a1, b1, c1 = colorsys.rgb_to_hls(a1, b1, c1)
                 if a1 < a0 and a0-a1 > 0.01:
                     a1 += 1
-            step = float(i % steps)/steps
+            step = i % steps / steps
 
             if ease == "sine":
                 step = -(math.cos(math.pi * step) - 1) / 2;

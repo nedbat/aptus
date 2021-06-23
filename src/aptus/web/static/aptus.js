@@ -25,8 +25,7 @@ let sina, cosa;
 let reqseq = 0;
 
 function reset() {
-    centerr = -0.6;
-    centeri = 0.0;
+    set_center(-0.6, 0.0);
     pixsize = 3.0/600;
     set_angle(0.0);
     continuous = false;
@@ -67,6 +66,10 @@ function getImage(tile) {
 function paint() {
     reqseq += 1;
     const imageurls = [];
+    var palette = [...palettes[palette_index]];
+    //palette.push(["adjust", {hue: 120, saturation: 0}]);
+    //palette.push(["stretch", {steps: 3, hsl: true}]);
+    //palette = [["spectrum", {ncolors: 4, l: 150, s: 175}], ["stretch", {steps: 4, hsl: true}]];
     for (let tx = 0; tx < canvasW / tileX; tx++) {
         for (let ty = 0; ty < canvasH / tileX; ty++) {
             spec = {
@@ -74,10 +77,10 @@ function paint() {
                 diam: [canvasW * pixsize, canvasH * pixsize],
                 size: [canvasW, canvasH],
                 coords: [tx*tileX, (tx+1)*tileX, ty*tileX, (ty+1)*tileX],
-                angle: angle,
-                continuous: continuous,
-                iter_limit: iter_limit,
-                palette: palettes[palette_index],
+                angle,
+                continuous,
+                iter_limit,
+                palette,
             }
             imageurls.push({ctx: fractal_ctx, tx, ty, spec, reqseq});
         }
@@ -143,8 +146,7 @@ function mainpane_mouseup(ev) {
     const dx = up.x - rubstart.x;
     const dy = up.y - rubstart.y;
     if (moving) {
-        centerr -= xrot(dx, dy) * pixsize;
-        centeri += yrot(dx, dy) * pixsize;
+        set_center(centerr - xrot(dx, dy) * pixsize, centeri + yrot(dx, dy) * pixsize);
         overlay_ctx.drawImage(fractal_canvas, dx, dy);
         fractal_canvas.style.left = "0";
         fractal_canvas.style.top = "0";
@@ -164,8 +166,7 @@ function mainpane_mouseup(ev) {
             const rdr = xrot(dr, di);
             const rdi = yrot(dr, di);
             pixsize = Math.max(Math.abs(rdr) / canvasW, Math.abs(rdi) / canvasH);
-            centerr = (a.r + b.r) / 2;
-            centeri = (a.i + b.i) / 2;
+            set_center((a.r + b.r) / 2, (a.i + b.i) / 2);
         }
         else {
             const {r: clickr, i: clicki} = ri4xy(up.x, up.y);
@@ -178,8 +179,10 @@ function mainpane_mouseup(ev) {
             }
             const r0 = clickr - xrot(up.x, up.y) * pixsize;
             const i0 = clicki + yrot(up.x, up.y) * pixsize;
-            centerr = r0 + xrot(canvasW, canvasH)/2 * pixsize;
-            centeri = i0 - yrot(canvasW, canvasH)/2 * pixsize;
+            set_center(
+                r0 + xrot(canvasW, canvasH)/2 * pixsize,
+                i0 - yrot(canvasW, canvasH)/2 * pixsize
+            );
         }
         paint();
     }
@@ -189,6 +192,10 @@ function mainpane_mouseup(ev) {
 
 function keydown(ev) {
     var handled = false;
+
+    if (ev.target.matches("input")) {
+        return;
+    }
 
     //console.log("key:",  ev.key, "shift:", ev.shiftKey, "ctrl:", ev.ctrlKey, "meta:", ev.metaKey, "alt:", ev.altKey);
     var key = ev.key;
@@ -304,16 +311,38 @@ function keydown(ev) {
     }
 }
 
+function set_input_value(name, val) {
+    document.getElementById(name).value = "" + val;
+}
+
+function get_input_value(name) {
+    return +document.getElementById(name).value;
+}
+
 function set_size() {
     canvasW = fractal_canvas.width = overlay_canvas.width = window.innerWidth;
     canvasH = fractal_canvas.height = overlay_canvas.height = window.innerHeight;
 }
 
+function set_center(r, i) {
+    centerr = r;
+    centeri = i;
+    set_input_value("centerr", centerr);
+    set_input_value("centeri", centeri);
+}
+
 function set_angle(a) {
     angle = (a % 360 + 360) % 360;
+    set_input_value("angle", angle);
     const rads = angle / 180 * Math.PI;
     sina = Math.sin(rads)
     cosa = Math.cos(rads)
+}
+
+function spec_change(ev) {
+    set_center(get_input_value("centerr"), get_input_value("centeri"));
+    set_angle(get_input_value("angle"));
+    paint();
 }
 
 let resize_timeout = null;
@@ -336,8 +365,15 @@ var draggable = null;
 var draggable_start;
 
 function draggable_mousedown(ev) {
+    if (ev.target.matches("input")) {
+        return;
+    }
     ev.preventDefault();
     ev.stopPropagation();
+    const active = document.activeElement;
+    if (active) {
+        active.blur();
+    }
     rubstart = {x: ev.clientX, y: ev.clientY};
     draggable = ev.target.closest(".draggable");
     draggable_start = {x: draggable.offsetLeft, y: draggable.offsetTop};
@@ -365,6 +401,25 @@ function draggable_mouseup(ev) {
     draggable = null;
 }
 
+// From: https://gist.github.com/JustinChristensen/652bedadc92cf0aff86cc5fbcde87732
+// <wroathe> You can then do on(document.body, 'pointerdown', e => console.log(e.delegate), '.draggable');
+
+function delegatedTo(sel, fn) {
+    return e => {
+        e.delegate = e.target.closest(sel);
+        e.delegate && fn(e);
+    };
+};
+
+function on(el, ev, fn, sel) {
+    if (sel) fn = delegatedTo(sel, fn);
+    if (typeof el === 'string') el = document.querySelectorAll(el);
+    if (!el.forEach) el = [el];
+    el.forEach(e => e.addEventListener(ev, fn));
+    return Array.from(el);
+}
+
+
 document.body.onload = () => {
     fractal_canvas = document.getElementById("fractal");
     overlay_canvas = document.getElementById("overlay");
@@ -374,6 +429,7 @@ document.body.onload = () => {
 
     help_panel = document.getElementById("helppanel");
     help_panel.addEventListener("mousedown", draggable_mousedown);
+    on(help_panel, "change", spec_change, "input");
 
     moving = false;
 
@@ -387,3 +443,4 @@ document.body.onload = () => {
     reset();
     paint();
 }
+
