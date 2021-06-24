@@ -13,7 +13,7 @@ let canvasW, canvasH;
 let fractal_canvas, overlay_canvas;
 let fractal_ctx, overlay_ctx;
 let move_target = null;
-let moving;
+let moving = false;
 
 // sin(angle) and cos(angle)
 let sina, cosa;
@@ -409,9 +409,10 @@ function draggable_mouseup(ev) {
 // <wroathe> You can then do on(document.body, 'pointerdown', e => console.log(e.delegate), '.draggable');
 
 function delegatedTo(sel, fn) {
-    return e => {
-        e.delegate = e.target.closest(sel);
-        e.delegate && fn(e);
+    return ev => {
+        console.log("ev:", ev, ev.target);
+        ev.delegate = ev.target.closest(sel);
+        ev.delegate && fn(ev);
     };
 };
 
@@ -434,8 +435,6 @@ document.body.onload = () => {
     on("#helppanel", "mousedown", draggable_mousedown);
     on("#helppanel input", "change", spec_change);
     on("#helppanel .closebtn", "click", toggle_help);
-
-    moving = false;
 
     overlay_canvas.addEventListener("mousedown", mainpane_mousedown);
     document.addEventListener("mousemove", mousemove);
