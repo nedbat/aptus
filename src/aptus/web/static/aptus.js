@@ -12,7 +12,6 @@ let palette_index;
 let canvasW, canvasH;
 let fractal_canvas, overlay_canvas;
 let fractal_ctx, overlay_ctx;
-let help_panel;
 let move_target = null;
 let moving;
 
@@ -289,15 +288,7 @@ function keydown(ev) {
                 break;
 
             case "?":
-                if (help_panel.style.display === "block") {
-                    help_panel.style.display = "none";
-                }
-                else {
-                    help_panel.style.top = "5em";
-                    help_panel.style.right = "5em";
-                    help_panel.style.left = help_panel.style.bottom = null;
-                    help_panel.style.display = "block";
-                }
+                toggle_help();
                 break;
 
             default:
@@ -308,6 +299,19 @@ function keydown(ev) {
 
     if (handled) {
         ev.preventDefault();
+    }
+}
+
+function toggle_help() {
+    const help_panel = document.getElementById("helppanel");
+    if (help_panel.style.display === "block") {
+        help_panel.style.display = "none";
+    }
+    else {
+        help_panel.style.top = "5em";
+        help_panel.style.right = "5em";
+        help_panel.style.left = help_panel.style.bottom = null;
+        help_panel.style.display = "block";
     }
 }
 
@@ -427,9 +431,9 @@ document.body.onload = () => {
     fractal_ctx = fractal_canvas.getContext("2d");
     overlay_ctx = overlay_canvas.getContext("2d");
 
-    help_panel = document.getElementById("helppanel");
-    help_panel.addEventListener("mousedown", draggable_mousedown);
-    on(help_panel, "change", spec_change, "input");
+    on("#helppanel", "mousedown", draggable_mousedown);
+    on("#helppanel input", "change", spec_change);
+    on("#helppanel .closebtn", "click", toggle_help);
 
     moving = false;
 

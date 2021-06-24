@@ -29,6 +29,21 @@ body {
     line-height: 1.3;
 }
 
+.upperright {
+    float: right;
+    margin: -.75em;
+    border: 1px solid #00000000;
+    border-radius: .25em;
+}
+
+.upperright:hover {
+    border: 1px solid black;
+}
+
+.upperright * {
+    margin-bottom: -.25em;
+}
+
 kbd {
     display: inline-block;
     font-family: monospace;
