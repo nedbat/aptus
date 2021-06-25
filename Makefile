@@ -71,3 +71,9 @@ local_kit: kit
 
 pypi:
 	python setup.py register
+
+SCSS = src/aptus/web/static/style.scss
+CSS = src/aptus/web/static/style.css
+
+sass:
+	pysassc --style=compact $(SCSS) $(CSS)

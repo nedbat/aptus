@@ -11,3 +11,6 @@ build/
 dist/
 Aptus.egg-info/
 MANIFEST
+
+# Compiled output
+src/aptus/web/static/style.css
