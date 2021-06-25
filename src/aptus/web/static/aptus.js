@@ -117,29 +117,32 @@ function ri4xy(x, y) {
 
 function mainpane_mousedown(ev) {
     ev.preventDefault();
-    move_target = ev.target.closest(".mainpane")
-    document.addEventListener("mouseup", mainpane_mouseup);
+    move_target = ev.target;
     rubstart = getCursorPosition(ev, move_target);
 }
 
-function mousemove(ev) {
+function mainpane_mousemove(ev) {
+    if (!move_target) {
+        return;
+    }
     ev.preventDefault();
-    if (move_target !== null) {
-        const movedto = getCursorPosition(ev, move_target);
-        clear_ctx(overlay_ctx);
-        if (moving) {
-            fractal_canvas.style.left = (movedto.x - rubstart.x) + "px";
-            fractal_canvas.style.top = (movedto.y - rubstart.y) + "px";
-        }
-        else {
-            overlay_ctx.lineWidth = 1;
-            overlay_ctx.strokeStyle = "white";
-            overlay_ctx.strokeRect(rubstart.x, rubstart.y, movedto.x - rubstart.x, movedto.y - rubstart.y);
-        }
+    const movedto = getCursorPosition(ev, move_target);
+    clear_ctx(overlay_ctx);
+    if (moving) {
+        fractal_canvas.style.left = (movedto.x - rubstart.x) + "px";
+        fractal_canvas.style.top = (movedto.y - rubstart.y) + "px";
+    }
+    else {
+        overlay_ctx.lineWidth = 1;
+        overlay_ctx.strokeStyle = "white";
+        overlay_ctx.strokeRect(rubstart.x, rubstart.y, movedto.x - rubstart.x, movedto.y - rubstart.y);
     }
 }
 
 function mainpane_mouseup(ev) {
+    if (!move_target) {
+        return;
+    }
     ev.preventDefault();
     const up = getCursorPosition(ev, move_target);
     const dx = up.x - rubstart.x;
@@ -185,13 +188,10 @@ function mainpane_mouseup(ev) {
         }
         paint();
     }
-    document.removeEventListener("mouseup", mainpane_mouseup);
     move_target = null;
 }
 
 function keydown(ev) {
-    var handled = false;
-
     if (ev.target.matches("input")) {
         return;
     }
@@ -211,6 +211,8 @@ function keydown(ev) {
                 break;
         }
     }
+
+    var handled = false;
 
     if (!ev.metaKey && !ev.altKey) {
         handled = true;
@@ -380,16 +382,18 @@ function draggable_mousedown(ev) {
     }
     rubstart = {x: ev.clientX, y: ev.clientY};
     draggable = ev.target.closest(".draggable");
+    draggable.classList.add("dragging");
     draggable_start = {x: draggable.offsetLeft, y: draggable.offsetTop};
     draggable.style.left = draggable.offsetLeft + "px";
     draggable.style.top = draggable.offsetTop + "px";
     draggable.style.right = null;
     draggable.style.bottom = null;
-    document.addEventListener("mousemove", draggable_mousemove);
-    document.addEventListener("mouseup", draggable_mouseup);
 }
 
 function draggable_mousemove(ev) {
+    if (!draggable) {
+        return;
+    }
     ev.preventDefault();
     ev.stopPropagation();
     const movedto = {x: ev.clientX, y: ev.clientY};
@@ -398,10 +402,12 @@ function draggable_mousemove(ev) {
 }
 
 function draggable_mouseup(ev) {
+    if (!draggable) {
+        return;
+    }
     ev.preventDefault();
     ev.stopPropagation();
-    document.removeEventListener("mousemove", draggable_mousemove);
-    document.removeEventListener("mouseup", draggable_mouseup);
+    draggable.classList.remove("dragging");
     draggable = null;
 }
 
@@ -410,16 +416,23 @@ function draggable_mouseup(ev) {
 
 function delegatedTo(sel, fn) {
     return ev => {
-        console.log("ev:", ev, ev.target);
         ev.delegate = ev.target.closest(sel);
-        ev.delegate && fn(ev);
+        if (ev.delegate) {
+            fn(ev);
+        }
     };
 };
 
-function on(el, ev, fn, sel) {
-    if (sel) fn = delegatedTo(sel, fn);
-    if (typeof el === 'string') el = document.querySelectorAll(el);
-    if (!el.forEach) el = [el];
+function on_event(el, ev, fn, sel) {
+    if (sel) {
+        fn = delegatedTo(sel, fn);
+    }
+    if (typeof el === 'string') {
+        el = document.querySelectorAll(el);
+    }
+    if (!el.forEach) {
+        el = [el];
+    }
     el.forEach(e => e.addEventListener(ev, fn));
     return Array.from(el);
 }
@@ -432,18 +445,20 @@ document.body.onload = () => {
     fractal_ctx = fractal_canvas.getContext("2d");
     overlay_ctx = overlay_canvas.getContext("2d");
 
-    on("#helppanel", "mousedown", draggable_mousedown);
-    on("#helppanel input", "change", spec_change);
-    on("#helppanel .closebtn", "click", toggle_help);
+    on_event(".draggable", "mousedown", draggable_mousedown);
+    on_event("#helppanel input", "change", spec_change);
+    on_event("#helppanel .closebtn", "click", toggle_help);
 
-    overlay_canvas.addEventListener("mousedown", mainpane_mousedown);
-    document.addEventListener("mousemove", mousemove);
-    document.addEventListener("contextmenu", ev => { ev.preventDefault(); return false; });
-    document.addEventListener("keydown", keydown);
-    window.addEventListener("resize", resize);
+    on_event(overlay_canvas, "mousedown", mainpane_mousedown);
+    on_event(document, "mousemove", mainpane_mousemove);
+    on_event(document, "mousemove", draggable_mousemove);
+    on_event(document, "mouseup", mainpane_mouseup);
+    on_event(document, "mouseup", draggable_mouseup);
+    on_event(document, "contextmenu", ev => { ev.preventDefault(); return false; });
+    on_event(document, "keydown", keydown);
+    on_event(window, "resize", resize);
 
     set_size();
     reset();
     paint();
 }
-
