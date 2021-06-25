@@ -12,19 +12,26 @@ body {
     cursor: grab;
 }
 
-#helppanel {
+.panel {
     display: none;
     position: absolute;
     background: #ffeebb;
     border: 2px solid black;
     padding: 1em;
     padding-bottom: 0;
-    width: 20em;
     border-radius: .5em;
     box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.4);
 }
 
-#helppanel p {
+#helppanel {
+    width: 20em;
+}
+
+#infopanel {
+    width: 15em;
+}
+
+.panel p {
     margin: 0 0 1em 0;
     line-height: 1.3;
 }

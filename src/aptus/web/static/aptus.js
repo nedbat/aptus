@@ -28,7 +28,7 @@ function reset() {
     pixsize = 3.0/600;
     set_angle(0.0);
     continuous = false;
-    iter_limit = 999;
+    set_iter_limit(999);
     palette_index = 0;
 }
 
@@ -241,9 +241,17 @@ function keydown(ev) {
             case "i":
                 new_limit = +prompt("Iteration limit", iter_limit);
                 if (new_limit != iter_limit) {
-                    iter_limit = new_limit;
+                    set_iter_limit(new_limit);
                     paint();
                 }
+                break;
+
+            case "I":
+                const info_panel = document.getElementById("infopanel");
+                info_panel.style.top = "5em";
+                info_panel.style.left = "5em";
+                info_panel.style.right = info_panel.style.bottom = null;
+                info_panel.style.display = "block";
                 break;
 
             case "m":
@@ -317,6 +325,11 @@ function toggle_help() {
     }
 }
 
+function close_panel(ev) {
+    const panel = ev.target.closest(".panel");
+    panel.style.display = "none";
+}
+
 function set_input_value(name, val) {
     document.getElementById(name).value = "" + val;
 }
@@ -345,9 +358,15 @@ function set_angle(a) {
     cosa = Math.cos(rads)
 }
 
+function set_iter_limit(i) {
+    iter_limit = i;
+    set_input_value("iter_limit", i);
+}
+
 function spec_change(ev) {
     set_center(get_input_value("centerr"), get_input_value("centeri"));
     set_angle(get_input_value("angle"));
+    set_iter_limit(get_input_value("iter_limit"));
     paint();
 }
 
@@ -381,7 +400,7 @@ function draggable_mousedown(ev) {
         active.blur();
     }
     rubstart = {x: ev.clientX, y: ev.clientY};
-    draggable = ev.target.closest(".draggable");
+    draggable = ev.delegate;
     draggable.classList.add("dragging");
     draggable_start = {x: draggable.offsetLeft, y: draggable.offsetTop};
     draggable.style.left = draggable.offsetLeft + "px";
@@ -445,11 +464,11 @@ document.body.onload = () => {
     fractal_ctx = fractal_canvas.getContext("2d");
     overlay_ctx = overlay_canvas.getContext("2d");
 
-    on_event(".draggable", "mousedown", draggable_mousedown);
-    on_event("#helppanel input", "change", spec_change);
-    on_event("#helppanel .closebtn", "click", toggle_help);
+    on_event("#infopanel input", "change", spec_change);
+    on_event(".panel .closebtn", "click", close_panel);
 
     on_event(overlay_canvas, "mousedown", mainpane_mousedown);
+    on_event(document, "mousedown", draggable_mousedown, ".draggable");
     on_event(document, "mousemove", mainpane_mousemove);
     on_event(document, "mousemove", draggable_mousemove);
     on_event(document, "mouseup", mainpane_mouseup);
