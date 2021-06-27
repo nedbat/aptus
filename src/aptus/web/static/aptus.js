@@ -411,6 +411,14 @@ function resize() {
 var draggable = null;
 var draggable_start;
 
+function bring_to_top(el, els) {
+    const indexes = [...els].map(e => {
+        const z = getComputedStyle(e).zIndex;
+        return (z === "auto") ? 0 : z;
+    });
+    el.style.zIndex = Math.max(...indexes) + 1;
+}
+
 function draggable_mousedown(ev) {
     if (ev.target.matches("input")) {
         return;
@@ -423,6 +431,7 @@ function draggable_mousedown(ev) {
     }
     rubstart = {x: ev.clientX, y: ev.clientY};
     draggable = ev.delegate;
+    bring_to_top(draggable, document.querySelectorAll(".panel"));
     draggable.classList.add("dragging");
     draggable_start = {x: draggable.offsetLeft, y: draggable.offsetTop};
     draggable.style.left = draggable.offsetLeft + "px";
