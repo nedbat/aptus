@@ -9,6 +9,7 @@
 <body>
     <canvas id="fractal" class="mainpane"></canvas>
     <canvas id="overlay" class="mainpane"></canvas>
+
     <div id="helppanel" class="panel draggable">
         <div class="closebtn">{% include "icon_close.svg" %}</div>
         <p><b>Aptus {{version}}</b>, Mandelbrot set explorer.</p>
@@ -33,12 +34,24 @@
         <b>shift-click</b>: zoom out (+ctrl just a little)<br/>
         </p>
     </div>
-    <div id="infopanel" class="panel draggable">
+
+    <div id="infopanel" class="panel draggable form">
         <div class="closebtn">{% include "icon_close.svg" %}</div>
-        <p>c.r: <input id="centerr" type="text"></input></p>
-        <p>c.i: <input id="centeri" type="text"></input></p>
-        <p>angle: <input id="angle" type="text"></input></p>
-        <p>iterations: <input id="iter_limit" type="text"></input></p>
+        <p><label for="centerr">c.r:</label><input id="centerr" size="19"/></p>
+        <p><label for="centeri">c.i:</label><input id="centeri" size="19"/></p>
+        <p><label for="angle">angle:</label><input id="angle" size="3"/></p>
+        <p><label for="iter_limit">iters:</label><input id="iter_limit" size="8"/></p>
     </div>
+
+    <div id="palettepanel" class="panel draggable form">
+        <div class="closebtn">{% include "icon_close.svg" %}</div>
+        <p><label for="ncolors">colors:</label><input id="ncolors" size="3" value="12"/></p>
+        <p><label for="hlo">hue:</label><input id="hlo" size="3" value="0"/> <input id="hhi" size="3" value="360"/></p>
+        <p><label for="llo">light:</label><input id="llo" size="3" value="100"/> <input id="lhi" size="3" value="150"/></p>
+        <p><label for="slo">sat:</label><input id="slo" size="3" value="100"/> <input id="shi" size="3" value="100"/></p>
+        <p><label for="stretch">stretch:</label><input id="stretch" size="3" value="4"/></p>
+        <p><label for="ease">ease:</label><input id="ease" value="1" size="5"/></p>
+    </div>
+
     <script src="/static/aptus.js"></script>
 </body>

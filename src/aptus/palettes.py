@@ -167,7 +167,7 @@ class Palette:
 
             if ease == "sine":
                 step = -(math.cos(math.pi * step) - 1) / 2;
-            elif isinstance(ease, float):
+            elif isinstance(ease, (int, float)):
                 if step < 0.5:
                     step = math.pow(2 * step, ease) / 2
                 else:

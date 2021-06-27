@@ -77,3 +77,6 @@ CSS = src/aptus/web/static/style.css
 
 sass:
 	pysassc --style=compact $(SCSS) $(CSS)
+
+livesass:
+	echo src/aptus/web/static/style.scss | entr pysassc --style=compact $(SCSS) $(CSS)

@@ -68,7 +68,21 @@ function paint() {
     var palette = [...palettes[palette_index]];
     //palette.push(["adjust", {hue: 120, saturation: 0}]);
     //palette.push(["stretch", {steps: 3, hsl: true}]);
-    //palette = [["spectrum", {ncolors: 4, l: 150, s: 175}], ["stretch", {steps: 4, hsl: true}]];
+    //palette = [["spectrum", {ncolors: 16, l: [100, 150], s: [100, 175]}], ["stretch", {steps: 10, hsl: true, ease: get_input_value("ease")}]];
+    //palette.push(["stretch", {steps: 2, hsl: true, ease: get_input_value("ease")}]);
+    palette = [
+        ["spectrum", {
+            ncolors: get_input_value("ncolors"),
+            h: [get_input_value("hlo"), get_input_value("hhi")],
+            l: [get_input_value("llo"), get_input_value("lhi")],
+            s: [get_input_value("slo"), get_input_value("shi")]
+        }],
+        ["stretch", {
+            steps: get_input_value("stretch"),
+            hsl: true,
+            ease: get_input_value("ease")
+        }]
+    ];
     for (let tx = 0; tx < canvasW / tileX; tx++) {
         for (let ty = 0; ty < canvasH / tileX; ty++) {
             spec = {
@@ -264,6 +278,14 @@ function keydown(ev) {
                 }
                 break;
 
+            case "P":
+                const palette_panel = document.getElementById("palettepanel");
+                palette_panel.style.top = "5em";
+                palette_panel.style.left = "5em";
+                palette_panel.style.right = palette_panel.style.bottom = null;
+                palette_panel.style.display = "block";
+                break;
+
             case "r":
                 paint();
                 break;
@@ -354,8 +376,8 @@ function set_angle(a) {
     angle = (a % 360 + 360) % 360;
     set_input_value("angle", angle);
     const rads = angle / 180 * Math.PI;
-    sina = Math.sin(rads)
-    cosa = Math.cos(rads)
+    sina = Math.sin(rads);
+    cosa = Math.cos(rads);
 }
 
 function set_iter_limit(i) {
