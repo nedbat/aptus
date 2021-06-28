@@ -22,7 +22,9 @@
         <kbd>a</kbd> set the angle<br/>
         <kbd>c</kbd> toggle continuous coloring<br/>
         <kbd>i</kbd> set the iteration limit<br/>
+        <kbd>I</kbd> show the computation parameters panel<br/>
         <kbd>m</kbd> toggle move mode<br/>
+        <kbd>P</kbd> show the palette parameters panel<br/>
         <kbd>r</kbd> redraw<br/>
         <kbd>R</kbd> reset everything<br/>
         <kbd>,</kbd> <kbd>.</kbd> cycle through palettes<br/>
@@ -32,13 +34,14 @@
         <p>
         <b>click</b>: zoom in (+ctrl just a little)<br/>
         <b>shift-click</b>: zoom out (+ctrl just a little)<br/>
+        <b>click-drag</b>: select new viewing rectangle<br/>
         </p>
     </div>
 
     <div id="infopanel" class="panel draggable form">
         <div class="closebtn">{% include "icon_close.svg" %}</div>
-        <p><label for="centerr">c.r:</label><input id="centerr" size="19"/></p>
-        <p><label for="centeri">c.i:</label><input id="centeri" size="19"/></p>
+        <p><label for="centerr">c.r:</label><input id="centerr" size="20"/></p>
+        <p><label for="centeri">c.i:</label><input id="centeri" size="20"/></p>
         <p><label for="angle">angle:</label><input id="angle" size="3"/></p>
         <p><label for="iter_limit">iters:</label><input id="iter_limit" size="8"/></p>
     </div>

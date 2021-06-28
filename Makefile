@@ -79,4 +79,4 @@ sass:
 	pysassc --style=compact $(SCSS) $(CSS)
 
 livesass:
-	echo src/aptus/web/static/style.scss | entr pysassc --style=compact $(SCSS) $(CSS)
+	echo src/aptus/web/static/style.scss | entr -n pysassc --style=compact $(SCSS) $(CSS)

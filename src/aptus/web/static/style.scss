@@ -23,6 +23,7 @@ body {
 
     p {
         margin: 0 0 1em 0;
+        line-height: 1.3;
     }
 
     .closebtn {
@@ -59,14 +60,20 @@ body {
 
 #helppanel {
     width: 20em;
+    top: 5em;
+    right: 5em;
 }
 
 #infopanel {
-    width: 16em;
+    width: 18em;
+    top: 5em;
+    left: 5em;
 }
 
 #palettepanel {
     width: 12em;
+    bottom: 5em;
+    left: 5em;
 }
 
 kbd {

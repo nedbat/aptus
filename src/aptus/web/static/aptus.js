@@ -261,11 +261,7 @@ function keydown(ev) {
                 break;
 
             case "I":
-                const info_panel = document.getElementById("infopanel");
-                info_panel.style.top = "5em";
-                info_panel.style.left = "5em";
-                info_panel.style.right = info_panel.style.bottom = null;
-                info_panel.style.display = "block";
+                toggle_panel("infopanel");
                 break;
 
             case "m":
@@ -279,11 +275,7 @@ function keydown(ev) {
                 break;
 
             case "P":
-                const palette_panel = document.getElementById("palettepanel");
-                palette_panel.style.top = "5em";
-                palette_panel.style.left = "5em";
-                palette_panel.style.right = palette_panel.style.bottom = null;
-                palette_panel.style.display = "block";
+                toggle_panel("palettepanel");
                 break;
 
             case "r":
@@ -320,7 +312,7 @@ function keydown(ev) {
                 break;
 
             case "?":
-                toggle_help();
+                toggle_panel("helppanel");
                 break;
 
             default:
@@ -334,16 +326,14 @@ function keydown(ev) {
     }
 }
 
-function toggle_help() {
-    const help_panel = document.getElementById("helppanel");
-    if (help_panel.style.display === "block") {
-        help_panel.style.display = "none";
+function toggle_panel(panelid) {
+    const panel = document.getElementById(panelid);
+    if (panel.style.display === "block") {
+        panel.style.display = "none";
     }
     else {
-        help_panel.style.top = "5em";
-        help_panel.style.right = "5em";
-        help_panel.style.left = help_panel.style.bottom = null;
-        help_panel.style.display = "block";
+        panel.style.display = "block";
+        bring_panel_to_top(panel);
     }
 }
 
@@ -419,6 +409,10 @@ function bring_to_top(el, els) {
     el.style.zIndex = Math.max(...indexes) + 1;
 }
 
+function bring_panel_to_top(el) {
+    bring_to_top(el, document.querySelectorAll(".panel"));
+}
+
 function draggable_mousedown(ev) {
     if (ev.target.matches("input")) {
         return;
@@ -431,13 +425,13 @@ function draggable_mousedown(ev) {
     }
     rubstart = {x: ev.clientX, y: ev.clientY};
     draggable = ev.delegate;
-    bring_to_top(draggable, document.querySelectorAll(".panel"));
+    bring_panel_to_top(draggable);
     draggable.classList.add("dragging");
     draggable_start = {x: draggable.offsetLeft, y: draggable.offsetTop};
     draggable.style.left = draggable.offsetLeft + "px";
     draggable.style.top = draggable.offsetTop + "px";
-    draggable.style.right = null;
-    draggable.style.bottom = null;
+    draggable.style.right = "auto";
+    draggable.style.bottom = "auto";
 }
 
 function draggable_mousemove(ev) {
