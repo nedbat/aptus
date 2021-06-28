@@ -14,6 +14,7 @@ let fractal_canvas, overlay_canvas;
 let fractal_ctx, overlay_ctx;
 let move_target = null;
 let moving = false;
+let rubstart = null;
 
 // sin(angle) and cos(angle)
 let sina, cosa;
@@ -203,6 +204,15 @@ function mainpane_mouseup(ev) {
         paint();
     }
     move_target = null;
+    rubstart = null;
+}
+
+function cancel_dragging() {
+    fractal_canvas.style.left = "0";
+    fractal_canvas.style.top = "0";
+    clear_ctx(overlay_ctx);
+    move_target = null;
+    rubstart = null;
 }
 
 function keydown(ev) {
@@ -231,6 +241,10 @@ function keydown(ev) {
     if (!ev.metaKey && !ev.altKey) {
         handled = true;
         switch (key) {
+            case "Escape":
+                cancel_dragging();
+                break;
+
             case "a":
                 new_angle = +prompt("Angle", angle);
                 if (new_angle != angle) {
