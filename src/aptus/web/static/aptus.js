@@ -12,9 +12,6 @@ let palette_index;
 let canvasW, canvasH;
 let fractal_canvas, overlay_canvas;
 let fractal_ctx, overlay_ctx;
-let move_target = null;
-let moving = false;
-let rubstart = null;
 
 // sin(angle) and cos(angle)
 let sina, cosa;
@@ -130,11 +127,20 @@ function ri4xy(x, y) {
     return {r, i};
 }
 
+let move_target = null;
+let moving = false;
+let mouse_dragging = false;
+let mouse_shift = false;
+let rubstart = null;
+
 function mainpane_mousedown(ev) {
     ev.preventDefault();
     move_target = ev.target;
     rubstart = getCursorPosition(ev, move_target);
+    mouse_shift = ev.shiftKey;
 }
+
+const DRAGDXY = 5;
 
 function mainpane_mousemove(ev) {
     if (!move_target) {
@@ -142,15 +148,23 @@ function mainpane_mousemove(ev) {
     }
     ev.preventDefault();
     const movedto = getCursorPosition(ev, move_target);
-    clear_ctx(overlay_ctx);
-    if (moving) {
-        fractal_canvas.style.left = (movedto.x - rubstart.x) + "px";
-        fractal_canvas.style.top = (movedto.y - rubstart.y) + "px";
+    const dx = movedto.x - rubstart.x;
+    const dy = movedto.y - rubstart.y;
+    if (!mouse_dragging && Math.abs(dx) + Math.abs(dy) > DRAGDXY) {
+        mouse_dragging = true;
+        set_moving(mouse_shift);
     }
-    else {
-        overlay_ctx.lineWidth = 1;
-        overlay_ctx.strokeStyle = "white";
-        overlay_ctx.strokeRect(rubstart.x, rubstart.y, movedto.x - rubstart.x, movedto.y - rubstart.y);
+    clear_ctx(overlay_ctx);
+    if (mouse_dragging) {
+        if (moving) {
+            fractal_canvas.style.left = dx + "px";
+            fractal_canvas.style.top = dy + "px";
+        }
+        else {
+            overlay_ctx.lineWidth = 1;
+            overlay_ctx.strokeStyle = "white";
+            overlay_ctx.strokeRect(rubstart.x, rubstart.y, dx, dy);
+        }
     }
 }
 
@@ -175,8 +189,7 @@ function mainpane_mouseup(ev) {
     }
     else {
         clear_ctx(overlay_ctx);
-        const moved = Math.abs(dx) + Math.abs(dy);
-        if (moved > 20) {
+        if (mouse_dragging) {
             const a = ri4xy(rubstart.x, rubstart.y);
             const b = ri4xy(up.x, up.y);
             const dr = a.r - b.r, di = a.i - b.i;
@@ -205,6 +218,8 @@ function mainpane_mouseup(ev) {
     }
     move_target = null;
     rubstart = null;
+    mouse_dragging = false;
+    set_moving(false);
 }
 
 function cancel_dragging() {
@@ -276,16 +291,6 @@ function keydown(ev) {
 
             case "I":
                 toggle_panel("infopanel");
-                break;
-
-            case "m":
-                moving = !moving;
-                if (moving) {
-                    overlay_canvas.classList.add("move");
-                }
-                else {
-                    overlay_canvas.classList.remove("move");
-                }
                 break;
 
             case "P":
@@ -394,6 +399,16 @@ function spec_change(ev) {
     set_angle(get_input_value("angle"));
     set_iter_limit(get_input_value("iter_limit"));
     paint();
+}
+
+function set_moving(m) {
+    moving = m;
+    if (moving) {
+        overlay_canvas.classList.add("move");
+    }
+    else {
+        overlay_canvas.classList.remove("move");
+    }
 }
 
 let resize_timeout = null;
