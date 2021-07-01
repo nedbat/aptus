@@ -23,7 +23,7 @@ let reqseq = 0;
 
 function reset() {
     set_center(-0.6, 0.0);
-    pixsize = 3.0/600;
+    set_pixsize(3.0/600);
     set_angle(0.0);
     continuous = false;
     set_iter_limit(999);
@@ -195,17 +195,18 @@ function mainpane_mouseup(ev) {
             const dr = a.r - b.r, di = a.i - b.i;
             const rdr = xrot(dr, di);
             const rdi = yrot(dr, di);
-            pixsize = Math.max(Math.abs(rdr) / canvasW, Math.abs(rdi) / canvasH);
+            set_pixsize(Math.max(Math.abs(rdr) / canvasW, Math.abs(rdi) / canvasH));
             set_center((a.r + b.r) / 2, (a.i + b.i) / 2);
         }
         else {
             const {r: clickr, i: clicki} = ri4xy(up.x, up.y);
 
+            const factor = ev.ctrlKey ? 1.1 : 2.0;
             if (ev.shiftKey) {
-                pixsize *= (ev.ctrlKey ? 1.1 : 2.0);
+                set_pixsize(pixsize * factor);
             }
             else {
-                pixsize /= (ev.ctrlKey ? 1.1 : 2.0);
+                set_pixsize(pixsize / factor);
             }
             const r0 = clickr - xrot(up.x, up.y) * pixsize;
             const i0 = clicki + yrot(up.x, up.y) * pixsize;
@@ -381,6 +382,11 @@ function set_center(r, i) {
     set_input_value("centeri", centeri);
 }
 
+function set_pixsize(ps) {
+    pixsize = ps;
+    set_input_value("pixsize", pixsize);
+}
+
 function set_angle(a) {
     angle = (a % 360 + 360) % 360;
     set_input_value("angle", angle);
@@ -396,6 +402,7 @@ function set_iter_limit(i) {
 
 function spec_change(ev) {
     set_center(get_input_value("centerr"), get_input_value("centeri"));
+    set_pixsize(get_input_value("pixsize"));
     set_angle(get_input_value("angle"));
     set_iter_limit(get_input_value("iter_limit"));
     paint();
