@@ -229,6 +229,7 @@ function cancel_dragging() {
     clear_ctx(overlay_ctx);
     move_target = null;
     rubstart = null;
+    mouse_dragging = false;
 }
 
 function keydown(ev) {
