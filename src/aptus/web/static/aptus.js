@@ -361,22 +361,6 @@ function keydown(ev) {
     }
 }
 
-function toggle_panel(panelid) {
-    const panel = document.getElementById(panelid);
-    if (panel.style.display === "block") {
-        panel.style.display = "none";
-    }
-    else {
-        panel.style.display = "block";
-        bring_panel_to_top(panel);
-    }
-}
-
-function close_panel(ev) {
-    const panel = ev.target.closest(".panel");
-    panel.style.display = "none";
-}
-
 function set_input_value(name, val) {
     document.getElementById(name).value = "" + val;
 }
@@ -464,6 +448,37 @@ function bring_panel_to_top(el) {
     bring_to_top(el, document.querySelectorAll(".panel"));
 }
 
+function toggle_panel(panelid) {
+    const panel = document.getElementById(panelid);
+    if (panel.style.display === "block") {
+        panel.style.display = "none";
+    }
+    else {
+        panel.style.display = "block";
+        let at_x = panel.offsetLeft, at_y = panel.offsetTop;
+        if (at_x > window.innerWidth) {
+            at_x = (window.innerWidth - panel.clientWidth) / 2;
+        }
+        if (at_y > window.innerHeight) {
+            at_y = (window.innerHeight - panel.clientHeight) / 2;
+        }
+        position_panel(panel, at_x, at_y);
+        bring_panel_to_top(panel);
+    }
+}
+
+function position_panel(panel, left, top) {
+    panel.style.left = left + "px";
+    panel.style.top = top + "px";
+    panel.style.right = "auto";
+    panel.style.bottom = "auto";
+}
+
+function close_panel(ev) {
+    const panel = ev.target.closest(".panel");
+    panel.style.display = "none";
+}
+
 function draggable_mousedown(ev) {
     if (ev.target.matches("input")) {
         return;
@@ -474,15 +489,12 @@ function draggable_mousedown(ev) {
     if (active) {
         active.blur();
     }
-    rubstart = {x: ev.clientX, y: ev.clientY};
     draggable = ev.delegate;
-    bring_panel_to_top(draggable);
     draggable.classList.add("dragging");
+    rubstart = {x: ev.clientX, y: ev.clientY};
     draggable_start = {x: draggable.offsetLeft, y: draggable.offsetTop};
-    draggable.style.left = draggable.offsetLeft + "px";
-    draggable.style.top = draggable.offsetTop + "px";
-    draggable.style.right = "auto";
-    draggable.style.bottom = "auto";
+    bring_panel_to_top(draggable);
+    position_panel(draggable, draggable.offsetLeft, draggable.offsetTop);
 }
 
 function draggable_mousemove(ev) {
@@ -491,9 +503,11 @@ function draggable_mousemove(ev) {
     }
     ev.preventDefault();
     ev.stopPropagation();
-    const movedto = {x: ev.clientX, y: ev.clientY};
-    draggable.style.left = draggable_start.x - (rubstart.x - movedto.x) + "px";
-    draggable.style.top = draggable_start.y - (rubstart.y - movedto.y) + "px";
+    position_panel(
+        draggable,
+        draggable_start.x - (rubstart.x - ev.clientX),
+        draggable_start.y - (rubstart.y - ev.clientY)
+    );
 }
 
 function draggable_mouseup(ev) {
