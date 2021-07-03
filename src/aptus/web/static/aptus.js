@@ -545,6 +545,7 @@ document.body.onload = () => {
     if (platform() === "mac") {
         document.querySelector("html").classList.add("mac");
     }
+
     fractal_canvas = document.getElementById("fractal");
     overlay_canvas = document.getElementById("overlay");
 
@@ -560,7 +561,6 @@ document.body.onload = () => {
     on_event(document, "mousemove", draggable_mousemove);
     on_event(document, "mouseup", mainpane_mouseup);
     on_event(document, "mouseup", draggable_mouseup);
-    on_event(document, "contextmenu", ev => { ev.preventDefault(); return false; });
     on_event(document, "keydown", keydown);
     on_event(window, "resize", resize);
 
