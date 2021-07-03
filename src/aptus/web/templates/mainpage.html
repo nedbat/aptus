@@ -14,8 +14,12 @@
         <b><span class="notmac">alt</span><span class="mac">option</span></b>
     {%- endset %}
 
-    <div id="helppanel" class="panel draggable">
+    {% set closebtn -%}
         <div class="closebtn">{% include "icon_close.svg" %}</div>
+    {%- endset %}
+
+    <div id="helppanel" class="panel draggable">
+        {{closebtn}}
         <p><b>Aptus {{version}}</b>, Mandelbrot set explorer.</p>
 
         <p>Copyright 2007-2021, Ned Batchelder.
@@ -43,7 +47,7 @@
     </div>
 
     <div id="infopanel" class="panel draggable form">
-        <div class="closebtn">{% include "icon_close.svg" %}</div>
+        {{closebtn}}
         <p><label for="centerr">c.r:</label><input id="centerr" size="20"/></p>
         <p><label for="centeri">c.i:</label><input id="centeri" size="20"/></p>
         <p><label for="pixsize">pixel:</label><input id="pixsize" size="20"/></p>
@@ -52,7 +56,7 @@
     </div>
 
     <div id="palettepanel" class="panel draggable form">
-        <div class="closebtn">{% include "icon_close.svg" %}</div>
+        {{closebtn}}
         <p><label for="ncolors">colors:</label><input id="ncolors" size="3" value="12"/></p>
         <p><label for="hlo">hue:</label><input id="hlo" size="3" value="0"/> <input id="hhi" size="3" value="360"/></p>
         <p><label for="llo">light:</label><input id="llo" size="3" value="100"/> <input id="lhi" size="3" value="150"/></p>
