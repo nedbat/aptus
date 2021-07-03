@@ -10,6 +10,10 @@
     <canvas id="fractal" class="mainpane"></canvas>
     <canvas id="overlay" class="mainpane"></canvas>
 
+    {% set alt -%}
+        <b><span class="notmac">alt</span><span class="mac">option</span></b>
+    {%- endset %}
+
     <div id="helppanel" class="panel draggable">
         <div class="closebtn">{% include "icon_close.svg" %}</div>
         <p><b>Aptus {{version}}</b>, Mandelbrot set explorer.</p>
@@ -27,12 +31,12 @@
         <kbd>r</kbd> redraw<br/>
         <kbd>R</kbd> reset everything<br/>
         <kbd>,</kbd> <kbd>.</kbd> cycle through palettes<br/>
-        <kbd>&lt;</kbd> <kbd>&gt;</kbd> rotate the angle (+ctrl just a little)<br/>
+        <kbd>&lt;</kbd> <kbd>&gt;</kbd> rotate the angle (+{{alt}}: just a little)<br/>
         <kbd>?</kbd> toggle help panel<br/>
         </p>
         <p>
-        <b>click</b>: zoom in (+ctrl just a little)<br/>
-        <b>shift-click</b>: zoom out (+ctrl just a little)<br/>
+        <b>click</b>: zoom in (+{{alt}}: just a little)<br/>
+        <b>shift-click</b>: zoom out (+{{alt}}: just a little)<br/>
         <b>click-drag</b>: select new viewing rectangle<br/>
         <b>shift-click-drag</b>: pan the view<br/>
         </p>

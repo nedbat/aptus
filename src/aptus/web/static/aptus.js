@@ -134,6 +134,7 @@ let mouse_shift = false;
 let rubstart = null;
 
 function mainpane_mousedown(ev) {
+    //console.log("down. shift:", ev.shiftKey, "ctrl:", ev.ctrlKey, "meta:", ev.metaKey, "alt:", ev.altKey);
     ev.preventDefault();
     move_target = ev.target;
     rubstart = getCursorPosition(ev, move_target);
@@ -169,6 +170,7 @@ function mainpane_mousemove(ev) {
 }
 
 function mainpane_mouseup(ev) {
+    //console.log("up. shift:", ev.shiftKey, "ctrl:", ev.ctrlKey, "meta:", ev.metaKey, "alt:", ev.altKey);
     if (!move_target) {
         return;
     }
@@ -201,7 +203,7 @@ function mainpane_mouseup(ev) {
         else {
             const {r: clickr, i: clicki} = ri4xy(up.x, up.y);
 
-            const factor = ev.ctrlKey ? 1.1 : 2.0;
+            const factor = ev.altKey ? 1.1 : 2.0;
             if (ev.shiftKey) {
                 set_pixsize(pixsize * factor);
             }
@@ -253,9 +255,21 @@ function keydown(ev) {
         }
     }
 
+    // Mac option chars need to be mapped back to their original chars.
+    if (platform() === "mac") {
+        switch (key) {
+            case "¯":
+                key = "<";
+                break;
+            case "˘":
+                key = ">";
+                break;
+        }
+    }
+
     var handled = false;
 
-    if (!ev.metaKey && !ev.altKey) {
+    if (!ev.metaKey) {
         handled = true;
         switch (key) {
             case "Escape":
@@ -323,12 +337,12 @@ function keydown(ev) {
                 break;
 
             case ">":
-                set_angle(angle + (ev.ctrlKey ? 1 : 10));
+                set_angle(angle + (ev.altKey ? 1 : 10));
                 paint();
                 break;
 
             case "<":
-                set_angle(angle - (ev.ctrlKey ? 1 : 10));
+                set_angle(angle - (ev.altKey ? 1 : 10));
                 paint();
                 break;
 
@@ -518,8 +532,19 @@ function on_event(el, ev, fn, sel) {
     return Array.from(el);
 }
 
+function platform() {
+    if (navigator.platform.indexOf("Mac") > -1) {
+        return "mac";
+    }
+    else if (navigator.platform.indexOf("Win") > -1) {
+        return "win";
+    }
+}
 
 document.body.onload = () => {
+    if (platform() === "mac") {
+        document.querySelector("html").classList.add("mac");
+    }
     fractal_canvas = document.getElementById("fractal");
     overlay_canvas = document.getElementById("overlay");
 

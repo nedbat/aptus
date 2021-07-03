@@ -87,3 +87,23 @@ kbd {
     padding: .1em .25em;
     margin: .1em;
 }
+
+html {
+    span.mac {
+        display: none;
+    }
+
+    span.notmac {
+        display: inline;
+    }
+
+    &.mac {
+        span.mac {
+            display: inline;
+        }
+        span.notmac {
+            display: none;
+        }
+
+    }
+}
