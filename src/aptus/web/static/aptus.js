@@ -162,9 +162,10 @@ function mainpane_mousemove(ev) {
             fractal_canvas.style.top = dy + "px";
         }
         else {
+            // With anti-aliasing, 0.5 offset makes 1-pixel wide.
             overlay_ctx.lineWidth = 1;
-            overlay_ctx.strokeStyle = "white";
-            overlay_ctx.strokeRect(rubstart.x, rubstart.y, dx, dy);
+            overlay_ctx.strokeStyle = "#ffffffc0";
+            overlay_ctx.strokeRect(rubstart.x + 0.5, rubstart.y + 0.5, dx, dy);
         }
     }
 }
