@@ -6,6 +6,9 @@ body {
 .mainpane {
     position: absolute;
     top: 0; left: 0;
+    // Get sharp images in the canvas. Browsers disagree how to do that.
+    image-rendering: crisp-edges;
+    image-rendering: pixelated;
 
     &.move {
         cursor: grab;
