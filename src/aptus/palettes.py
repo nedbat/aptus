@@ -43,7 +43,14 @@ class Palette:
 
     def __init__(self):
         self.incolor = (0,0,0)
+
+        # HSL colors, range 0-1.
         self.fcolors = [(0.0,0.0,0.0), (1.0,1.0,1.0)]
+        # RGB colors, range 0-255.
+        self.colors = []
+        # RGB colors as one bytestring
+        self._colorbytes = b""
+
         self._spec = []
         self.adjusts = dict(self.default_adjusts)
         self.wrap = True
@@ -68,19 +75,17 @@ class Palette:
         hue_adj = self.adjusts['hue']/360.0
         sat_adj = self.adjusts['saturation']/255.0
 
-        for r, g, b in self.fcolors:
-            h, l, s = colorsys.rgb_to_hls(r, g, b)
+        for h, l, s in self.fcolors:
             h = (h + hue_adj) % 1.0
             s = _clip(s + sat_adj, 0.0, 1.0)
-            r, g, b = colorsys.hls_to_rgb(h, l, s)
-            self.colors.append(_255(r, g, b))
-        self._colorbytes = None
+            self.colors.append(_255(*colorsys.hls_to_rgb(h, l, s)))
+        self._colorbytes = b""
 
     def color_bytes(self):
         """ Compute a string of RGB bytes for use in the engine.
         """
         if not self._colorbytes:
-            colbytes = b"".join([ bytes([r, g, b]) for r,g,b in self.colors ])
+            colbytes = b"".join(bytes([r, g, b]) for r,g,b in self.colors)
             self._colorbytes = colbytes
         return self._colorbytes
 
@@ -98,10 +103,10 @@ class Palette:
         return s
 
     def rgb_colors(self, colors):
-        """ Use an explicit list of RGB colors as the palette.
+        """ Use an explicit list of RGB 0-255 colors as the palette.
         """
         self.colors = colors[:]
-        self.fcolors = [ _1(*rgb255) for rgb255 in self.colors ]
+        self.fcolors = [colorsys.rgb_to_hls(*_1(*rgb255)) for rgb255 in self.colors]
         self._colorbytes = None
         self._spec.append(['rgb_colors', {'colors':colors}])
         return self
@@ -118,16 +123,15 @@ class Palette:
         llo, lhi = l
         slo, shi = s
 
-        fcolors = []
+        self.fcolors = []
         for pt in range(ncolors//2):
             hfrac = (pt*1.0/(ncolors/2))
             hue = hlo + (hhi-hlo)*hfrac
-            fcolors.append(colorsys.hls_to_rgb(hue/360.0, llo/255.0, slo/255.0))
+            self.fcolors.append((hue/360.0, llo/255.0, slo/255.0))
 
             hfrac = (pt*1.0+0.5)/(ncolors/2)
             hue = hlo + (hhi-hlo)*hfrac
-            fcolors.append(colorsys.hls_to_rgb(hue/360.0, lhi/255.0, shi/255.0))
-        self.fcolors = fcolors
+            self.fcolors.append((hue/360.0, lhi/255.0, shi/255.0))
         self._colors_from_fcolors()
 
         args = {'ncolors':ncolors}
@@ -159,10 +163,12 @@ class Palette:
             a0, b0, c0 = self.fcolors[color_index]
             a1, b1, c1 = self.fcolors[(color_index + 1) % len(self.fcolors)]
             if hsl:
-                a0, b0, c0 = colorsys.rgb_to_hls(a0, b0, c0)
-                a1, b1, c1 = colorsys.rgb_to_hls(a1, b1, c1)
                 if a1 < a0 and a0-a1 > 0.01:
                     a1 += 1
+            else:
+                a0, b0, c0 = colorsys.hls_to_rgb(a0, b0, c0)
+                a1, b1, c1 = colorsys.hls_to_rgb(a1, b1, c1)
+
             step = i % steps / steps
 
             if ease == "sine":
@@ -178,8 +184,8 @@ class Palette:
                 b0 + (b1 - b0) * step,
                 c0 + (c1 - c0) * step,
                 )
-            if hsl:
-                ax, bx, cx = colorsys.hls_to_rgb(ax, bx, cx)
+            if not hsl:
+                ax, bx, cx = colorsys.rgb_to_hls(ax, bx, cx)
             fcolors[i] = (ax, bx, cx)
         self.fcolors = fcolors
         self._colors_from_fcolors()
@@ -223,7 +229,9 @@ class Palette:
         ggr = GimpGradient()
         try:
             ggr.read(ggr_file)
-            self.fcolors = [ ggr.color(float(c)/ncolors) for c in range(ncolors) ]
+            self.fcolors = [
+                colorsys.rgb_to_hls(*ggr.color(float(c)/ncolors)) for c in range(ncolors)
+                ]
         except IOError:
             self.fcolors = [ (0.0,0.0,0.0), (1.0,0.0,0.0), (1.0,1.0,1.0) ]
         self._colors_from_fcolors()
@@ -268,7 +276,7 @@ class Palette:
 
         self.rgb_colors(xaos_colors)
         del self._spec[-1]
-        self.stretch(8)
+        self.stretch(8, hsl=False)
         del self._spec[-1]
         self._spec.append(['xaos', {}])
         return self
@@ -284,7 +292,7 @@ all_palettes = [
     Palette().spectrum(12, l=(50,150), s=150).stretch(25, hsl=True),
     Palette().spectrum(12, l=(50,150), s=150).stretch(25, hsl=True, ease="sine"),
     Palette().spectrum(64, l=125, s=175),
-    Palette().spectrum(48, l=(100,150), s=175).stretch(5),
+    Palette().spectrum(48, l=(100,150), s=175).stretch(5, hsl=False),
     Palette().spectrum(2, h=250, l=(100,150), s=175).stretch(10, hsl=True),
     Palette().spectrum(2, h=290, l=(75,175), s=(230,25)).stretch(10, hsl=True),
     Palette().spectrum(16, l=125, s=175),

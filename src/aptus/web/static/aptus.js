@@ -68,19 +68,19 @@ function paint() {
     //palette.push(["stretch", {steps: 3, hsl: true}]);
     //palette = [["spectrum", {ncolors: 16, l: [100, 150], s: [100, 175]}], ["stretch", {steps: 10, hsl: true, ease: get_input_value("ease")}]];
     //palette.push(["stretch", {steps: 2, hsl: true, ease: get_input_value("ease")}]);
-    palette = [
-        ["spectrum", {
-            ncolors: get_input_value("ncolors"),
-            h: [get_input_value("hlo"), get_input_value("hhi")],
-            l: [get_input_value("llo"), get_input_value("lhi")],
-            s: [get_input_value("slo"), get_input_value("shi")]
-        }],
-        ["stretch", {
-            steps: get_input_value("stretch"),
-            hsl: true,
-            ease: get_input_value("ease")
-        }]
-    ];
+    //palette = [
+    //    ["spectrum", {
+    //        ncolors: get_input_value("ncolors"),
+    //        h: [get_input_value("hlo"), get_input_value("hhi")],
+    //        l: [get_input_value("llo"), get_input_value("lhi")],
+    //        s: [get_input_value("slo"), get_input_value("shi")]
+    //    }],
+    //    ["stretch", {
+    //        steps: get_input_value("stretch"),
+    //        hsl: true,
+    //        ease: get_input_value("ease")
+    //    }]
+    //];
     for (let tx = 0; tx < canvasW / tileX; tx++) {
         for (let ty = 0; ty < canvasH / tileX; ty++) {
             spec = {
