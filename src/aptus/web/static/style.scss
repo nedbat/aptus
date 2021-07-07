@@ -1,11 +1,24 @@
 body {
     font-family: Helvetica;
     overflow: hidden;
+    margin: 0;
+    padding: 0;
+}
+
+.canvas_container {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+}
+
+.canvas_sizer {
+    position: absolute;
+    top: 0;
+    overflow: hidden;
 }
 
 .mainpane {
     position: absolute;
-    top: 0; left: 0;
     // Get sharp images in the canvas. Browsers disagree how to do that.
     image-rendering: crisp-edges;
     image-rendering: pixelated;

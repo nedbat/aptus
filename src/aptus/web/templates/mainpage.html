@@ -7,8 +7,12 @@
     </script>
 </head>
 <body>
-    <canvas id="fractal" class="mainpane"></canvas>
-    <canvas id="overlay" class="mainpane"></canvas>
+    <div class="canvas_container">
+        <div class="canvas_sizer">
+            <canvas id="fractal" class="mainpane"></canvas>
+            <canvas id="overlay" class="mainpane"></canvas>
+        </div>
+    </div>
 
     {% set alt -%}
         <b><span class="notmac">alt</span><span class="mac">option</span></b>
@@ -34,6 +38,7 @@
         <kbd>P</kbd> show the palette parameters panel<br/>
         <kbd>r</kbd> redraw<br/>
         <kbd>R</kbd> reset everything<br/>
+        <kbd>w</kbd> set the canvas size<br/>
         <kbd>,</kbd> <kbd>.</kbd> cycle through palettes<br/>
         <kbd>&lt;</kbd> <kbd>&gt;</kbd> rotate the angle (+{{alt}}: just a little)<br/>
         <kbd>?</kbd> toggle help panel<br/>

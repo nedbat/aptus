@@ -9,6 +9,7 @@ let continuous;
 let iter_limit;
 let palette_index;
 
+let canvas_size_text, canvas_size_w, canvas_size_h;
 let canvasW, canvasH;
 let fractal_canvas, overlay_canvas;
 let fractal_ctx, overlay_ctx;
@@ -28,6 +29,7 @@ function reset() {
     continuous = false;
     set_iter_limit(999);
     palette_index = 0;
+    set_canvas_size("*");
 }
 
 function fetchTile(tile) {
@@ -278,7 +280,7 @@ function keydown(ev) {
                 break;
 
             case "a":
-                new_angle = +prompt("Angle", angle);
+                const new_angle = +prompt("Angle", angle);
                 if (new_angle != angle) {
                     set_angle(new_angle);
                     paint();
@@ -320,6 +322,11 @@ function keydown(ev) {
 
             case "R":
                 reset();
+                paint();
+                break;
+
+            case "w":
+                set_canvas_size(prompt("Canvas size", canvas_size_text));
                 paint();
                 break;
 
@@ -370,9 +377,33 @@ function get_input_value(name) {
     return +document.getElementById(name).value;
 }
 
+function set_canvas_size(s) {
+    canvas_size_text = s;
+    if (canvas_size_text === "*") {
+        canvas_size_w = canvas_size_h = null;
+    }
+    else {
+        nums = canvas_size_text.split(/[ ,]+/);
+        canvas_size_w = +nums[0];
+        canvas_size_h = +nums[1];
+    }
+    set_size();
+}
+
 function set_size() {
-    canvasW = fractal_canvas.width = overlay_canvas.width = window.innerWidth;
-    canvasH = fractal_canvas.height = overlay_canvas.height = window.innerHeight;
+    if (!canvas_size_w) {
+        canvasW = window.innerWidth;
+        canvasH = window.innerHeight;
+    }
+    else {
+        canvasW = canvas_size_w;
+        canvasH = canvas_size_h;
+    }
+    fractal_canvas.width = overlay_canvas.width = canvasW;
+    fractal_canvas.height = overlay_canvas.height = canvasH;
+    const sizer = document.querySelector(".canvas_sizer");
+    sizer.style.width = canvasW + "px";
+    sizer.style.height = canvasH + "px";
 }
 
 function set_center(r, i) {
@@ -579,7 +610,7 @@ document.body.onload = () => {
     on_event(document, "keydown", keydown);
     on_event(window, "resize", resize);
 
-    set_size();
     reset();
+    set_size();
     paint();
 }
