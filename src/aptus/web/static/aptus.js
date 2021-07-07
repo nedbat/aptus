@@ -186,8 +186,7 @@ function mainpane_mouseup(ev) {
         overlay_ctx.drawImage(fractal_canvas, dx, dy);
         fractal_canvas.style.left = "0";
         fractal_canvas.style.top = "0";
-        fractal_ctx.fillStyle = "white";
-        fractal_ctx.fillRect(0, 0, canvasW, canvasH);
+        fractal_ctx.clearRect(0, 0, canvasW, canvasH);
         paint().then(() => {
             clear_ctx(overlay_ctx);
         });
@@ -399,11 +398,13 @@ function set_size() {
         canvasW = canvas_size_w;
         canvasH = canvas_size_h;
     }
-    fractal_canvas.width = overlay_canvas.width = canvasW;
-    fractal_canvas.height = overlay_canvas.height = canvasH;
+    const backdrop = document.getElementById("backdrop");
+    backdrop.width = fractal_canvas.width = overlay_canvas.width = canvasW;
+    backdrop.height = fractal_canvas.height = overlay_canvas.height = canvasH;
     const sizer = document.querySelector(".canvas_sizer");
     sizer.style.width = canvasW + "px";
     sizer.style.height = canvasH + "px";
+    checkers("backdrop");
 }
 
 function set_center(r, i) {
@@ -584,6 +585,25 @@ function platform() {
     }
     else if (navigator.platform.indexOf("Win") > -1) {
         return "win";
+    }
+}
+
+function checkers(canvid) {
+    const canvas = document.getElementById(canvid);
+    const ctx = canvas.getContext("2d");
+    const w = canvas.width, h = canvas.height;
+
+    ctx.fillStyle = "#aaaaaa";
+    ctx.fillRect(0, 0, w, h);
+
+    const sqw = 50;
+    ctx.fillStyle = "#999999";
+    for (let col = 0; col < (w / sqw); col += 1) {
+        for (let row = 0; row < (h / sqw); row += 1) {
+            if ((row + col) % 2) {
+                ctx.fillRect(col * sqw, row * sqw, sqw, sqw);
+            }
+        }
     }
 }
 
