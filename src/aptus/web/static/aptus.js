@@ -16,26 +16,22 @@ const View = {
     set_center(r, i) {
         this.centerr = r;
         this.centeri = i;
-        set_input_value("centerr", this.centerr);
-        set_input_value("centeri", this.centeri);
     },
 
     set_pixsize(ps) {
         this.pixsize = ps;
-        set_input_value("pixsize", this.pixsize);
     },
 
     set_angle(a) {
         this.angle = (a % 360 + 360) % 360;
-        set_input_value("angle", this.angle);
         const rads = this.angle / 180 * Math.PI;
         this.sina = Math.sin(rads);
         this.cosa = Math.cos(rads);
+        return this.angle;
     },
 
     set_iter_limit(i) {
         this.iter_limit = i;
-        set_input_value("iter_limit", i);
     },
 
     set_canvas_size(s) {
@@ -232,14 +228,14 @@ function mainpane_mouseup(ev) {
     const dx = up.x - rubstart.x;
     const dy = up.y - rubstart.y;
     if (moving) {
-        the_view.set_center(
+        the_app.set_center(
             the_view.centerr - the_view.xrot(dx, dy) * the_view.pixsize,
             the_view.centeri + the_view.yrot(dx, dy) * the_view.pixsize
         );
         overlay_ctx.drawImage(fractal_canvas, dx, dy);
         fractal_canvas.style.left = "0";
         fractal_canvas.style.top = "0";
-        fractal_ctx.clearRect(0, 0, the_view.canvasW, the_view.canvasH);
+        clear_canvas(fractal_canvas);
         the_view.paint().then(() => {
             clear_canvas(overlay_canvas);
         });
@@ -252,22 +248,22 @@ function mainpane_mouseup(ev) {
             const dr = a.r - b.r, di = a.i - b.i;
             const rdr = the_view.xrot(dr, di);
             const rdi = the_view.yrot(dr, di);
-            the_view.set_pixsize(Math.max(Math.abs(rdr) / the_view.canvasW, Math.abs(rdi) / the_view.canvasH));
-            the_view.set_center((a.r + b.r) / 2, (a.i + b.i) / 2);
+            the_app.set_pixsize(Math.max(Math.abs(rdr) / the_view.canvasW, Math.abs(rdi) / the_view.canvasH));
+            the_app.set_center((a.r + b.r) / 2, (a.i + b.i) / 2);
         }
         else {
             const {r: clickr, i: clicki} = the_view.ri4xy(up.x, up.y);
 
             const factor = ev.altKey ? 1.1 : 2.0;
             if (ev.shiftKey) {
-                the_view.set_pixsize(the_view.pixsize * factor);
+                the_app.set_pixsize(the_view.pixsize * factor);
             }
             else {
-                the_view.set_pixsize(the_view.pixsize / factor);
+                the_app.set_pixsize(the_view.pixsize / factor);
             }
             const r0 = clickr - the_view.xrot(up.x, up.y) * the_view.pixsize;
             const i0 = clicki + the_view.yrot(up.x, up.y) * the_view.pixsize;
-            the_view.set_center(
+            the_app.set_center(
                 r0 + the_view.xrot(the_view.canvasW, the_view.canvasH)/2 * the_view.pixsize,
                 i0 - the_view.yrot(the_view.canvasW, the_view.canvasH)/2 * the_view.pixsize
             );
@@ -334,7 +330,7 @@ function keydown(ev) {
             case "a":
                 const new_angle = +prompt("Angle", the_view.angle);
                 if (new_angle != the_view.angle) {
-                    the_view.set_angle(new_angle);
+                    the_app.set_angle(new_angle);
                     the_view.paint();
                 }
                 break;
@@ -355,7 +351,7 @@ function keydown(ev) {
             case "i":
                 new_limit = +prompt("Iteration limit", the_view.iter_limit);
                 if (new_limit != the_view.iter_limit) {
-                    the_view.set_iter_limit(new_limit);
+                    the_app.set_iter_limit(new_limit);
                     the_view.paint();
                 }
                 break;
@@ -373,7 +369,7 @@ function keydown(ev) {
                 break;
 
             case "R":
-                the_view.reset();
+                the_app.reset();
                 the_view.paint();
                 break;
 
@@ -404,12 +400,12 @@ function keydown(ev) {
                 break;
 
             case ">":
-                the_view.set_angle(the_view.angle + (ev.altKey ? 1 : 10));
+                the_app.set_angle(the_view.angle + (ev.altKey ? 1 : 10));
                 the_view.paint();
                 break;
 
             case "<":
-                the_view.set_angle(the_view.angle - (ev.altKey ? 1 : 10));
+                the_app.set_angle(the_view.angle - (ev.altKey ? 1 : 10));
                 the_view.paint();
                 break;
 
@@ -436,13 +432,49 @@ function get_input_value(name) {
     return +document.getElementById(name).value;
 }
 
-function spec_change(ev) {
-    the_view.set_center(get_input_value("centerr"), get_input_value("centeri"));
-    the_view.set_pixsize(get_input_value("pixsize"));
-    the_view.set_angle(get_input_value("angle"));
-    the_view.set_iter_limit(get_input_value("iter_limit"));
-    the_view.paint();
-}
+const App = {
+    init() {
+        this.view = Object.create(View);
+        this.reset();
+    },
+
+    reset() {
+        this.view.reset();
+        this.set_center(-0.6, 0.0);
+        this.set_pixsize(3.0/600);
+        this.set_angle(0.0);
+        this.set_iter_limit(999);
+        //this.set_canvas_size("*");
+    },
+
+    set_center(r, i) {
+        this.view.set_center(r, i);
+        set_input_value("centerr", r);
+        set_input_value("centeri", i);
+    },
+
+    set_pixsize(ps) {
+        this.view.set_pixsize(ps);
+        set_input_value("pixsize", ps);
+    },
+
+    set_angle(a) {
+        set_input_value("angle", this.view.set_angle(a));
+    },
+
+    set_iter_limit(i) {
+        this.view.set_iter_limit(i);
+        set_input_value("iter_limit", i);
+    },
+
+    spec_change(ev) {
+        this.set_center(get_input_value("centerr"), get_input_value("centeri"));
+        this.set_pixsize(get_input_value("pixsize"));
+        this.set_angle(get_input_value("angle"));
+        this.set_iter_limit(get_input_value("iter_limit"));
+        this.view.paint();
+    },
+};
 
 function set_moving(m) {
     moving = m;
@@ -615,7 +647,7 @@ function checkers(canvas) {
     }
 }
 
-let the_view;
+let the_app, the_view;
 
 document.body.onload = () => {
     if (platform() === "mac") {
@@ -628,7 +660,7 @@ document.body.onload = () => {
     fractal_ctx = fractal_canvas.getContext("2d");
     overlay_ctx = overlay_canvas.getContext("2d");
 
-    on_event("#infopanel input", "change", spec_change);
+    on_event("#infopanel input", "change", ev => the_app.spec_change(ev));
     on_event(".panel .closebtn", "click", close_panel);
 
     on_event(overlay_canvas, "mousedown", mainpane_mousedown);
@@ -640,8 +672,9 @@ document.body.onload = () => {
     on_event(document, "keydown", keydown);
     on_event(window, "resize", resize);
 
-    the_view = Object.create(View);
-    the_view.reset();
+    the_app = Object.create(App);
+    the_app.init();
+    the_view = the_app.view;
     the_view.set_size();
     the_view.paint();
 }
