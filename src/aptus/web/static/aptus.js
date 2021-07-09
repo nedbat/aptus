@@ -1,36 +1,149 @@
 // Aptus web
 
-const tileX = 400;
+const View = {
+    tileX: 400,
 
-let centerr, centeri;
-let pixsize;
-let angle;
-let continuous;
-let iter_limit;
-let palette_index;
+    reset() {
+        this.set_center(-0.6, 0.0);
+        this.set_pixsize(3.0/600);
+        this.set_angle(0.0);
+        this.continuous = false;
+        this.set_iter_limit(999);
+        this.palette_index = 0;
+        this.set_canvas_size("*");
+    },
 
-let canvas_size_text, canvas_size_w, canvas_size_h;
-let canvasW, canvasH;
+    set_center(r, i) {
+        this.centerr = r;
+        this.centeri = i;
+        set_input_value("centerr", this.centerr);
+        set_input_value("centeri", this.centeri);
+    },
+
+    set_pixsize(ps) {
+        this.pixsize = ps;
+        set_input_value("pixsize", this.pixsize);
+    },
+
+    set_angle(a) {
+        this.angle = (a % 360 + 360) % 360;
+        set_input_value("angle", this.angle);
+        const rads = this.angle / 180 * Math.PI;
+        this.sina = Math.sin(rads);
+        this.cosa = Math.cos(rads);
+    },
+
+    set_iter_limit(i) {
+        this.iter_limit = i;
+        set_input_value("iter_limit", i);
+    },
+
+    set_canvas_size(s) {
+        if (s === "*") {
+            this.canvas_size_w = this.canvas_size_h = null;
+        }
+        else {
+            const nums = s.split(/[ ,]+/);
+            this.canvas_size_w = +nums[0];
+            this.canvas_size_h = +nums[1];
+        }
+        this.set_size();
+    },
+
+    set_size() {
+        if (this.canvas_size_w) {
+            this.canvasW = this.canvas_size_w;
+            this.canvasH = this.canvas_size_h;
+        }
+        else {
+            this.canvasW = window.innerWidth;
+            this.canvasH = window.innerHeight;
+        }
+        const backdrop = document.getElementById("backdrop");
+        backdrop.width = fractal_canvas.width = overlay_canvas.width = this.canvasW;
+        backdrop.height = fractal_canvas.height = overlay_canvas.height = this.canvasH;
+        const sizer = document.querySelector(".canvas_sizer");
+        sizer.style.width = this.canvasW + "px";
+        sizer.style.height = this.canvasH + "px";
+        checkers(document.getElementById("backdrop"));
+    },
+
+    paint() {
+        reqseq += 1;
+        const imageurls = [];
+        var palette = [...palettes[this.palette_index]];
+        //palette.push(["adjust", {hue: 120, saturation: 0}]);
+        //palette.push(["stretch", {steps: 3, hsl: true}]);
+        //palette = [["spectrum", {ncolors: 16, l: [100, 150], s: [100, 175]}], ["stretch", {steps: 10, hsl: true, ease: get_input_value("ease")}]];
+        //palette.push(["stretch", {steps: 2, hsl: true, ease: get_input_value("ease")}]);
+        //palette = [
+        //    ["spectrum", {
+        //        ncolors: get_input_value("ncolors"),
+        //        h: [get_input_value("hlo"), get_input_value("hhi")],
+        //        l: [get_input_value("llo"), get_input_value("lhi")],
+        //        s: [get_input_value("slo"), get_input_value("shi")]
+        //    }],
+        //    ["stretch", {
+        //        steps: get_input_value("stretch"),
+        //        hsl: true,
+        //        ease: get_input_value("ease")
+        //    }]
+        //];
+        for (let tx = 0; tx < this.canvasW / this.tileX; tx++) {
+            for (let ty = 0; ty < this.canvasH / this.tileX; ty++) {
+                let tile = {
+                    ctx: fractal_ctx,
+                    tx: tx * this.tileX,
+                    ty: ty * this.tileX,
+                    spec: {
+                        center: [this.centerr, this.centeri],
+                        diam: [
+                            this.canvasW * this.pixsize,
+                            this.canvasH * this.pixsize
+                        ],
+                        size: [this.canvasW, this.canvasH],
+                        coords: [
+                            tx*this.tileX, (tx+1)*this.tileX,
+                            ty*this.tileX, (ty+1)*this.tileX
+                        ],
+                        angle: this.angle,
+                        continuous: this.continuous,
+                        iter_limit: this.iter_limit,
+                        palette,
+                    },
+                    reqseq,
+                };
+                imageurls.push(tile);
+            }
+        }
+        return Promise.all(imageurls.map(getImage));
+    },
+
+    // xrot and yrot provide rotated versions of the x,y they are given.
+    xrot(x, y) {
+        return x * this.cosa + y * this.sina;
+    },
+
+    yrot(x, y) {
+        return y * this.cosa - x * this.sina;
+    },
+
+    ri4xy(x, y) {
+        const r0 = this.centerr - this.xrot(this.canvasW, this.canvasH)/2 * this.pixsize;
+        const i0 = this.centeri + this.yrot(this.canvasW, this.canvasH)/2 * this.pixsize;
+        const r = r0 + this.xrot(x, y) * this.pixsize;
+        const i = i0 - this.yrot(x, y) * this.pixsize;
+        return {r, i};
+    },
+};
+
 let fractal_canvas, overlay_canvas;
 let fractal_ctx, overlay_ctx;
-
-// sin(angle) and cos(angle)
-let sina, cosa;
 
 // Request sequence number. Requests include the sequence number and the tile
 // returns it. If the sequence number has been incremented since the tile was
 // requested, then the tile is no longer needed, and is not displayed.
 let reqseq = 0;
-
-function reset() {
-    set_center(-0.6, 0.0);
-    set_pixsize(3.0/600);
-    set_angle(0.0);
-    continuous = false;
-    set_iter_limit(999);
-    palette_index = 0;
-    set_canvas_size("*");
-}
 
 function fetchTile(tile) {
     return new Promise(resolve => {
@@ -47,62 +160,16 @@ function fetchTile(tile) {
                 img.src = tiledata.url;
                 img.onload = () => resolve(tile);
             }
-            else {
-                // console.log("Discarding tile with seq " + tiledata.seq + ", only interested now in " + reqseq);
-            }
         });
     });
 }
 
 function showTile(tile) {
-    tile.ctx.drawImage(tile.img, tile.tx*tileX, tile.ty*tileX);
+    tile.ctx.drawImage(tile.img, tile.tx, tile.ty);
 }
 
 function getImage(tile) {
     return fetchTile(tile).then(showTile);
-}
-
-function paint() {
-    reqseq += 1;
-    const imageurls = [];
-    var palette = [...palettes[palette_index]];
-    //palette.push(["adjust", {hue: 120, saturation: 0}]);
-    //palette.push(["stretch", {steps: 3, hsl: true}]);
-    //palette = [["spectrum", {ncolors: 16, l: [100, 150], s: [100, 175]}], ["stretch", {steps: 10, hsl: true, ease: get_input_value("ease")}]];
-    //palette.push(["stretch", {steps: 2, hsl: true, ease: get_input_value("ease")}]);
-    //palette = [
-    //    ["spectrum", {
-    //        ncolors: get_input_value("ncolors"),
-    //        h: [get_input_value("hlo"), get_input_value("hhi")],
-    //        l: [get_input_value("llo"), get_input_value("lhi")],
-    //        s: [get_input_value("slo"), get_input_value("shi")]
-    //    }],
-    //    ["stretch", {
-    //        steps: get_input_value("stretch"),
-    //        hsl: true,
-    //        ease: get_input_value("ease")
-    //    }]
-    //];
-    for (let tx = 0; tx < canvasW / tileX; tx++) {
-        for (let ty = 0; ty < canvasH / tileX; ty++) {
-            spec = {
-                center: [centerr, centeri],
-                diam: [canvasW * pixsize, canvasH * pixsize],
-                size: [canvasW, canvasH],
-                coords: [tx*tileX, (tx+1)*tileX, ty*tileX, (ty+1)*tileX],
-                angle,
-                continuous,
-                iter_limit,
-                palette,
-            }
-            imageurls.push({ctx: fractal_ctx, tx, ty, spec, reqseq});
-        }
-    }
-    return Promise.all(imageurls.map(getImage));
-}
-
-function clear_ctx(ctx) {
-    ctx.clearRect(0, 0, canvasW, canvasH);
 }
 
 function getCursorPosition(ev, target) {
@@ -110,23 +177,6 @@ function getCursorPosition(ev, target) {
     const x = ev.clientX - rect.left
     const y = ev.clientY - rect.top
     return {x, y};
-}
-
-// xrot and yrot provide rotated versions of the x,y they are given.
-function xrot(x, y) {
-    return x * cosa + y * sina;
-}
-
-function yrot(x, y) {
-    return y * cosa - x * sina;
-}
-
-function ri4xy(x, y) {
-    const r0 = centerr - xrot(canvasW, canvasH)/2 * pixsize;
-    const i0 = centeri + yrot(canvasW, canvasH)/2 * pixsize;
-    const r = r0 + xrot(x, y) * pixsize;
-    const i = i0 - yrot(x, y) * pixsize;
-    return {r, i};
 }
 
 let move_target = null;
@@ -157,7 +207,7 @@ function mainpane_mousemove(ev) {
         mouse_dragging = true;
         set_moving(mouse_shift);
     }
-    clear_ctx(overlay_ctx);
+    clear_canvas(overlay_canvas);
     if (mouse_dragging) {
         if (moving) {
             fractal_canvas.style.left = dx + "px";
@@ -182,44 +232,47 @@ function mainpane_mouseup(ev) {
     const dx = up.x - rubstart.x;
     const dy = up.y - rubstart.y;
     if (moving) {
-        set_center(centerr - xrot(dx, dy) * pixsize, centeri + yrot(dx, dy) * pixsize);
+        the_view.set_center(
+            the_view.centerr - the_view.xrot(dx, dy) * the_view.pixsize,
+            the_view.centeri + the_view.yrot(dx, dy) * the_view.pixsize
+        );
         overlay_ctx.drawImage(fractal_canvas, dx, dy);
         fractal_canvas.style.left = "0";
         fractal_canvas.style.top = "0";
-        fractal_ctx.clearRect(0, 0, canvasW, canvasH);
-        paint().then(() => {
-            clear_ctx(overlay_ctx);
+        fractal_ctx.clearRect(0, 0, the_view.canvasW, the_view.canvasH);
+        the_view.paint().then(() => {
+            clear_canvas(overlay_canvas);
         });
     }
     else {
-        clear_ctx(overlay_ctx);
+        clear_canvas(overlay_canvas);
         if (mouse_dragging) {
-            const a = ri4xy(rubstart.x, rubstart.y);
-            const b = ri4xy(up.x, up.y);
+            const a = the_view.ri4xy(rubstart.x, rubstart.y);
+            const b = the_view.ri4xy(up.x, up.y);
             const dr = a.r - b.r, di = a.i - b.i;
-            const rdr = xrot(dr, di);
-            const rdi = yrot(dr, di);
-            set_pixsize(Math.max(Math.abs(rdr) / canvasW, Math.abs(rdi) / canvasH));
-            set_center((a.r + b.r) / 2, (a.i + b.i) / 2);
+            const rdr = the_view.xrot(dr, di);
+            const rdi = the_view.yrot(dr, di);
+            the_view.set_pixsize(Math.max(Math.abs(rdr) / the_view.canvasW, Math.abs(rdi) / the_view.canvasH));
+            the_view.set_center((a.r + b.r) / 2, (a.i + b.i) / 2);
         }
         else {
-            const {r: clickr, i: clicki} = ri4xy(up.x, up.y);
+            const {r: clickr, i: clicki} = the_view.ri4xy(up.x, up.y);
 
             const factor = ev.altKey ? 1.1 : 2.0;
             if (ev.shiftKey) {
-                set_pixsize(pixsize * factor);
+                the_view.set_pixsize(the_view.pixsize * factor);
             }
             else {
-                set_pixsize(pixsize / factor);
+                the_view.set_pixsize(the_view.pixsize / factor);
             }
-            const r0 = clickr - xrot(up.x, up.y) * pixsize;
-            const i0 = clicki + yrot(up.x, up.y) * pixsize;
-            set_center(
-                r0 + xrot(canvasW, canvasH)/2 * pixsize,
-                i0 - yrot(canvasW, canvasH)/2 * pixsize
+            const r0 = clickr - the_view.xrot(up.x, up.y) * the_view.pixsize;
+            const i0 = clicki + the_view.yrot(up.x, up.y) * the_view.pixsize;
+            the_view.set_center(
+                r0 + the_view.xrot(the_view.canvasW, the_view.canvasH)/2 * the_view.pixsize,
+                i0 - the_view.yrot(the_view.canvasW, the_view.canvasH)/2 * the_view.pixsize
             );
         }
-        paint();
+        the_view.paint();
     }
     move_target = null;
     rubstart = null;
@@ -230,7 +283,7 @@ function mainpane_mouseup(ev) {
 function cancel_dragging() {
     fractal_canvas.style.left = "0";
     fractal_canvas.style.top = "0";
-    clear_ctx(overlay_ctx);
+    clear_canvas(overlay_canvas);
     move_target = null;
     rubstart = null;
     mouse_dragging = false;
@@ -279,31 +332,31 @@ function keydown(ev) {
                 break;
 
             case "a":
-                const new_angle = +prompt("Angle", angle);
-                if (new_angle != angle) {
-                    set_angle(new_angle);
-                    paint();
+                const new_angle = +prompt("Angle", the_view.angle);
+                if (new_angle != the_view.angle) {
+                    the_view.set_angle(new_angle);
+                    the_view.paint();
                 }
                 break;
 
             case "c":
-                continuous = !continuous;
-                paint();
+                the_view.continuous = !the_view.continuous;
+                the_view.paint();
                 break;
 
             case "C":
                 alert(
-                    `--center=${centerr},${centeri} ` +
-                    (angle ? `--angle=${angle} ` : "") +
-                    `--diam=${canvasW * pixsize},${canvasH * pixsize}`
+                    `--center=${the_view.centerr},${the_view.centeri} ` +
+                    (the_view.angle ? `--angle=${the_view.angle} ` : "") +
+                    `--diam=${the_view.canvasW * the_view.pixsize},${the_view.canvasH * the_view.pixsize}`
                 );
                 break;
 
             case "i":
-                new_limit = +prompt("Iteration limit", iter_limit);
-                if (new_limit != iter_limit) {
-                    set_iter_limit(new_limit);
-                    paint();
+                new_limit = +prompt("Iteration limit", the_view.iter_limit);
+                if (new_limit != the_view.iter_limit) {
+                    the_view.set_iter_limit(new_limit);
+                    the_view.paint();
                 }
                 break;
 
@@ -316,41 +369,48 @@ function keydown(ev) {
                 break;
 
             case "r":
-                paint();
+                the_view.paint();
                 break;
 
             case "R":
-                reset();
-                paint();
+                the_view.reset();
+                the_view.paint();
                 break;
 
             case "w":
-                set_canvas_size(prompt("Canvas size", canvas_size_text));
-                paint();
+                let text;
+                if (!the_view.canvas_size_w) {
+                    text = "*";
+                }
+                else {
+                    text = `${the_view.canvas_size_w} ${the_view.canvas_size_h}`;
+                }
+                the_view.set_canvas_size(prompt("Canvas size", text));
+                the_view.paint();
                 break;
 
             case ",":
-                palette_index -= 1;
-                if (palette_index < 0) {
-                    palette_index += palettes.length;
+                the_view.palette_index -= 1;
+                if (the_view.palette_index < 0) {
+                    the_view.palette_index += palettes.length;
                 }
-                paint();
+                the_view.paint();
                 break;
 
             case ".":
-                palette_index += 1;
-                palette_index %= palettes.length;
-                paint();
+                the_view.palette_index += 1;
+                the_view.palette_index %= palettes.length;
+                the_view.paint();
                 break;
 
             case ">":
-                set_angle(angle + (ev.altKey ? 1 : 10));
-                paint();
+                the_view.set_angle(the_view.angle + (ev.altKey ? 1 : 10));
+                the_view.paint();
                 break;
 
             case "<":
-                set_angle(angle - (ev.altKey ? 1 : 10));
-                paint();
+                the_view.set_angle(the_view.angle - (ev.altKey ? 1 : 10));
+                the_view.paint();
                 break;
 
             case "?":
@@ -376,68 +436,12 @@ function get_input_value(name) {
     return +document.getElementById(name).value;
 }
 
-function set_canvas_size(s) {
-    canvas_size_text = s;
-    if (canvas_size_text === "*") {
-        canvas_size_w = canvas_size_h = null;
-    }
-    else {
-        nums = canvas_size_text.split(/[ ,]+/);
-        canvas_size_w = +nums[0];
-        canvas_size_h = +nums[1];
-    }
-    set_size();
-}
-
-function set_size() {
-    if (!canvas_size_w) {
-        canvasW = window.innerWidth;
-        canvasH = window.innerHeight;
-    }
-    else {
-        canvasW = canvas_size_w;
-        canvasH = canvas_size_h;
-    }
-    const backdrop = document.getElementById("backdrop");
-    backdrop.width = fractal_canvas.width = overlay_canvas.width = canvasW;
-    backdrop.height = fractal_canvas.height = overlay_canvas.height = canvasH;
-    const sizer = document.querySelector(".canvas_sizer");
-    sizer.style.width = canvasW + "px";
-    sizer.style.height = canvasH + "px";
-    checkers("backdrop");
-}
-
-function set_center(r, i) {
-    centerr = r;
-    centeri = i;
-    set_input_value("centerr", centerr);
-    set_input_value("centeri", centeri);
-}
-
-function set_pixsize(ps) {
-    pixsize = ps;
-    set_input_value("pixsize", pixsize);
-}
-
-function set_angle(a) {
-    angle = (a % 360 + 360) % 360;
-    set_input_value("angle", angle);
-    const rads = angle / 180 * Math.PI;
-    sina = Math.sin(rads);
-    cosa = Math.cos(rads);
-}
-
-function set_iter_limit(i) {
-    iter_limit = i;
-    set_input_value("iter_limit", i);
-}
-
 function spec_change(ev) {
-    set_center(get_input_value("centerr"), get_input_value("centeri"));
-    set_pixsize(get_input_value("pixsize"));
-    set_angle(get_input_value("angle"));
-    set_iter_limit(get_input_value("iter_limit"));
-    paint();
+    the_view.set_center(get_input_value("centerr"), get_input_value("centeri"));
+    the_view.set_pixsize(get_input_value("pixsize"));
+    the_view.set_angle(get_input_value("angle"));
+    the_view.set_iter_limit(get_input_value("iter_limit"));
+    the_view.paint();
 }
 
 function set_moving(m) {
@@ -459,8 +463,8 @@ function resize() {
     resize_timeout = setTimeout(
         () => {
             resize_timeout = null;
-            set_size();
-            paint();
+            the_view.set_size();
+            the_view.paint();
         },
         250
     );
@@ -588,8 +592,12 @@ function platform() {
     }
 }
 
-function checkers(canvid) {
-    const canvas = document.getElementById(canvid);
+function clear_canvas(canvas) {
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function checkers(canvas) {
     const ctx = canvas.getContext("2d");
     const w = canvas.width, h = canvas.height;
 
@@ -606,6 +614,8 @@ function checkers(canvid) {
         }
     }
 }
+
+let the_view;
 
 document.body.onload = () => {
     if (platform() === "mac") {
@@ -630,7 +640,8 @@ document.body.onload = () => {
     on_event(document, "keydown", keydown);
     on_event(window, "resize", resize);
 
-    reset();
-    set_size();
-    paint();
+    the_view = Object.create(View);
+    the_view.reset();
+    the_view.set_size();
+    the_view.paint();
 }
