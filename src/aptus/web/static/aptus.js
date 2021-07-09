@@ -3,6 +3,26 @@
 const View = {
     tileX: 400,
 
+    init(div) {
+        div.setAttribute("class", "canvas_container");
+
+        this.canvas_sizer = document.createElement("div");
+        this.canvas_sizer.setAttribute("class", "canvas_sizer");
+        div.appendChild(this.canvas_sizer);
+
+        this.backdrop_canvas = document.createElement("canvas");
+        this.backdrop_canvas.setAttribute("class", "view");
+        this.canvas_sizer.appendChild(this.backdrop_canvas);
+
+        this.fractal_canvas = document.createElement("canvas");
+        this.fractal_canvas.setAttribute("class", "view");
+        this.canvas_sizer.appendChild(this.fractal_canvas);
+
+        this.overlay_canvas = document.createElement("canvas");
+        this.overlay_canvas.setAttribute("class", "view");
+        this.canvas_sizer.appendChild(this.overlay_canvas);
+    },
+
     reset() {
         this.set_center(-0.6, 0.0);
         this.set_pixsize(3.0/600);
@@ -55,13 +75,11 @@ const View = {
             this.canvasW = window.innerWidth;
             this.canvasH = window.innerHeight;
         }
-        const backdrop = document.getElementById("backdrop");
-        backdrop.width = fractal_canvas.width = overlay_canvas.width = this.canvasW;
-        backdrop.height = fractal_canvas.height = overlay_canvas.height = this.canvasH;
-        const sizer = document.querySelector(".canvas_sizer");
-        sizer.style.width = this.canvasW + "px";
-        sizer.style.height = this.canvasH + "px";
-        checkers(document.getElementById("backdrop"));
+        this.backdrop_canvas.width = this.fractal_canvas.width = this.overlay_canvas.width = this.canvasW;
+        this.backdrop_canvas.height = this.fractal_canvas.height = this.overlay_canvas.height = this.canvasH;
+        this.canvas_sizer.style.width = this.canvasW + "px";
+        this.canvas_sizer.style.height = this.canvasH + "px";
+        checkers(this.backdrop_canvas);
     },
 
     paint() {
@@ -88,7 +106,7 @@ const View = {
         for (let tx = 0; tx < this.canvasW / this.tileX; tx++) {
             for (let ty = 0; ty < this.canvasH / this.tileX; ty++) {
                 let tile = {
-                    ctx: fractal_ctx,
+                    ctx: this.fractal_canvas.getContext("2d"),
                     tx: tx * this.tileX,
                     ty: ty * this.tileX,
                     spec: {
@@ -132,9 +150,6 @@ const View = {
         return {r, i};
     },
 };
-
-let fractal_canvas, overlay_canvas;
-let fractal_ctx, overlay_ctx;
 
 // Request sequence number. Requests include the sequence number and the tile
 // returns it. If the sequence number has been incremented since the tile was
@@ -203,14 +218,15 @@ function mainpane_mousemove(ev) {
         mouse_dragging = true;
         set_moving(mouse_shift);
     }
-    clear_canvas(overlay_canvas);
+    clear_canvas(the_app.view.overlay_canvas);
     if (mouse_dragging) {
         if (moving) {
-            fractal_canvas.style.left = dx + "px";
-            fractal_canvas.style.top = dy + "px";
+            the_app.view.fractal_canvas.style.left = dx + "px";
+            the_app.view.fractal_canvas.style.top = dy + "px";
         }
         else {
             // With anti-aliasing, 0.5 offset makes 1-pixel wide.
+            const overlay_ctx = the_app.view.overlay_canvas.getContext("2d");
             overlay_ctx.lineWidth = 1;
             overlay_ctx.strokeStyle = "#ffffffc0";
             overlay_ctx.strokeRect(rubstart.x + 0.5, rubstart.y + 0.5, dx, dy);
@@ -232,16 +248,17 @@ function mainpane_mouseup(ev) {
             the_view.centerr - the_view.xrot(dx, dy) * the_view.pixsize,
             the_view.centeri + the_view.yrot(dx, dy) * the_view.pixsize
         );
-        overlay_ctx.drawImage(fractal_canvas, dx, dy);
-        fractal_canvas.style.left = "0";
-        fractal_canvas.style.top = "0";
-        clear_canvas(fractal_canvas);
+        const overlay_ctx = the_app.view.overlay_canvas.getContext("2d");
+        overlay_ctx.drawImage(the_app.view.fractal_canvas, dx, dy);
+        the_app.view.fractal_canvas.style.left = "0";
+        the_app.view.fractal_canvas.style.top = "0";
+        clear_canvas(the_app.view.fractal_canvas);
         the_view.paint().then(() => {
-            clear_canvas(overlay_canvas);
+            clear_canvas(the_app.view.overlay_canvas);
         });
     }
     else {
-        clear_canvas(overlay_canvas);
+        clear_canvas(the_app.view.overlay_canvas);
         if (mouse_dragging) {
             const a = the_view.ri4xy(rubstart.x, rubstart.y);
             const b = the_view.ri4xy(up.x, up.y);
@@ -277,9 +294,9 @@ function mainpane_mouseup(ev) {
 }
 
 function cancel_dragging() {
-    fractal_canvas.style.left = "0";
-    fractal_canvas.style.top = "0";
-    clear_canvas(overlay_canvas);
+    the_app.view.fractal_canvas.style.left = "0";
+    the_app.view.fractal_canvas.style.top = "0";
+    clear_canvas(the_app.view.overlay_canvas);
     move_target = null;
     rubstart = null;
     mouse_dragging = false;
@@ -435,6 +452,7 @@ function get_input_value(name) {
 const App = {
     init() {
         this.view = Object.create(View);
+        this.view.init(document.querySelector("#the_view"));
         this.reset();
     },
 
@@ -479,10 +497,10 @@ const App = {
 function set_moving(m) {
     moving = m;
     if (moving) {
-        overlay_canvas.classList.add("move");
+        the_app.view.overlay_canvas.classList.add("move");
     }
     else {
-        overlay_canvas.classList.remove("move");
+        the_app.view.overlay_canvas.classList.remove("move");
     }
 }
 
@@ -654,16 +672,14 @@ document.body.onload = () => {
         document.querySelector("html").classList.add("mac");
     }
 
-    fractal_canvas = document.getElementById("fractal");
-    overlay_canvas = document.getElementById("overlay");
-
-    fractal_ctx = fractal_canvas.getContext("2d");
-    overlay_ctx = overlay_canvas.getContext("2d");
+    the_app = Object.create(App);
+    the_app.init();
+    the_view = the_app.view;
 
     on_event("#infopanel input", "change", ev => the_app.spec_change(ev));
     on_event(".panel .closebtn", "click", close_panel);
 
-    on_event(overlay_canvas, "mousedown", mainpane_mousedown);
+    on_event(the_app.view.overlay_canvas, "mousedown", mainpane_mousedown);
     on_event(document, "mousedown", draggable_mousedown, ".draggable");
     on_event(document, "mousemove", mainpane_mousemove);
     on_event(document, "mousemove", draggable_mousemove);
@@ -672,9 +688,6 @@ document.body.onload = () => {
     on_event(document, "keydown", keydown);
     on_event(window, "resize", resize);
 
-    the_app = Object.create(App);
-    the_app.init();
-    the_view = the_app.view;
     the_view.set_size();
     the_view.paint();
 }

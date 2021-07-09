@@ -17,7 +17,7 @@ body {
     overflow: hidden;
 }
 
-.mainpane {
+canvas.view {
     position: absolute;
     // Get sharp images in the canvas. Browsers disagree how to do that.
     image-rendering: crisp-edges;
