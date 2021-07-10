@@ -95,7 +95,7 @@ const View = {
     paint() {
         this.reqseq += 1;
         const imageurls = [];
-        var palette = [...palettes[this.palette_index]];
+        const palette = [...palettes[this.palette_index]];
         //palette.push(["adjust", {hue: 120, saturation: 0}]);
         //palette.push(["stretch", {steps: 3, hsl: true}]);
         //palette = [["spectrum", {ncolors: 16, l: [100, 150], s: [100, 175]}], ["stretch", {steps: 10, hsl: true, ease: get_input_value("ease")}]];
@@ -200,6 +200,7 @@ function getImage(tile) {
 const App = {
     init() {
         this.view = Object.create(View).init(document.querySelector("#the_view"));
+        this.panels = Object.create(Panels);
         this.reset();
         this.reset_dragging();
         this.resize_timeout = null;
@@ -371,7 +372,7 @@ const App = {
         }
 
         //console.log("key:",  ev.key, "shift:", ev.shiftKey, "ctrl:", ev.ctrlKey, "meta:", ev.metaKey, "alt:", ev.altKey);
-        var key = ev.key;
+        let key = ev.key;
 
         // Chrome handles ctrl-lessthan as shift-ctrl-comma. Fix those combinations
         // to be what we expect.
@@ -398,7 +399,7 @@ const App = {
             }
         }
 
-        var handled = false;
+        let handled = false;
 
         if (!ev.metaKey) {
             handled = true;
@@ -433,11 +434,11 @@ const App = {
                     break;
 
                 case "I":
-                    toggle_panel("infopanel");
+                    this.panels.toggle_panel("infopanel");
                     break;
 
                 case "P":
-                    toggle_panel("palettepanel");
+                    this.panels.toggle_panel("palettepanel");
                     break;
 
                 case "r":
@@ -486,7 +487,7 @@ const App = {
                     break;
 
                 case "?":
-                    toggle_panel("helppanel");
+                    this.panels.toggle_panel("helppanel");
                     break;
 
                 default:
@@ -530,91 +531,94 @@ function get_input_value(name) {
     return +document.getElementById(name).value;
 }
 
-var draggable = null;
-var draggable_start;
+const Panels = {
+    draggable: null,
+    draggable_start: null,
+    rubstart: null,
 
-function bring_to_top(el, els) {
-    const indexes = [...els].map(e => {
-        const z = getComputedStyle(e).zIndex;
-        return (z === "auto") ? 0 : z;
-    });
-    el.style.zIndex = Math.max(...indexes) + 1;
-}
+    bring_to_top(el, els) {
+        const indexes = [...els].map(e => {
+            const z = getComputedStyle(e).zIndex;
+            return (z === "auto") ? 0 : z;
+        });
+        el.style.zIndex = Math.max(...indexes) + 1;
+    },
 
-function bring_panel_to_top(el) {
-    bring_to_top(el, document.querySelectorAll(".panel"));
-}
+    bring_panel_to_top(el) {
+        this.bring_to_top(el, document.querySelectorAll(".panel"));
+    },
 
-function toggle_panel(panelid) {
-    const panel = document.getElementById(panelid);
-    if (panel.style.display === "block") {
+    toggle_panel(panelid) {
+        const panel = document.getElementById(panelid);
+        if (panel.style.display === "block") {
+            panel.style.display = "none";
+        }
+        else {
+            panel.style.display = "block";
+            let at_x = panel.offsetLeft, at_y = panel.offsetTop;
+            if (at_x > window.innerWidth) {
+                at_x = (window.innerWidth - panel.clientWidth) / 2;
+            }
+            if (at_y > window.innerHeight) {
+                at_y = (window.innerHeight - panel.clientHeight) / 2;
+            }
+            this.position_panel(panel, at_x, at_y);
+            this.bring_panel_to_top(panel);
+        }
+    },
+
+    position_panel(panel, left, top) {
+        panel.style.left = left + "px";
+        panel.style.top = top + "px";
+        panel.style.right = "auto";
+        panel.style.bottom = "auto";
+    },
+
+    close_panel(ev) {
+        const panel = ev.target.closest(".panel");
         panel.style.display = "none";
-    }
-    else {
-        panel.style.display = "block";
-        let at_x = panel.offsetLeft, at_y = panel.offsetTop;
-        if (at_x > window.innerWidth) {
-            at_x = (window.innerWidth - panel.clientWidth) / 2;
+    },
+
+    draggable_mousedown(ev) {
+        if (ev.target.matches("input")) {
+            return;
         }
-        if (at_y > window.innerHeight) {
-            at_y = (window.innerHeight - panel.clientHeight) / 2;
+        ev.preventDefault();
+        ev.stopPropagation();
+        const active = document.activeElement;
+        if (active) {
+            active.blur();
         }
-        position_panel(panel, at_x, at_y);
-        bring_panel_to_top(panel);
-    }
-}
+        this.draggable = ev.delegate;
+        this.draggable.classList.add("dragging");
+        this.rubstart = {x: ev.clientX, y: ev.clientY};
+        this.draggable_start = {x: this.draggable.offsetLeft, y: this.draggable.offsetTop};
+        this.bring_panel_to_top(this.draggable);
+        this.position_panel(this.draggable, this.draggable.offsetLeft, this.draggable.offsetTop);
+    },
 
-function position_panel(panel, left, top) {
-    panel.style.left = left + "px";
-    panel.style.top = top + "px";
-    panel.style.right = "auto";
-    panel.style.bottom = "auto";
-}
+    draggable_mousemove(ev) {
+        if (!this.draggable) {
+            return;
+        }
+        ev.preventDefault();
+        ev.stopPropagation();
+        this.position_panel(
+            this.draggable,
+            this.draggable_start.x - (this.rubstart.x - ev.clientX),
+            this.draggable_start.y - (this.rubstart.y - ev.clientY)
+        );
+    },
 
-function close_panel(ev) {
-    const panel = ev.target.closest(".panel");
-    panel.style.display = "none";
-}
-
-function draggable_mousedown(ev) {
-    if (ev.target.matches("input")) {
-        return;
-    }
-    ev.preventDefault();
-    ev.stopPropagation();
-    const active = document.activeElement;
-    if (active) {
-        active.blur();
-    }
-    draggable = ev.delegate;
-    draggable.classList.add("dragging");
-    rubstart = {x: ev.clientX, y: ev.clientY};
-    draggable_start = {x: draggable.offsetLeft, y: draggable.offsetTop};
-    bring_panel_to_top(draggable);
-    position_panel(draggable, draggable.offsetLeft, draggable.offsetTop);
-}
-
-function draggable_mousemove(ev) {
-    if (!draggable) {
-        return;
-    }
-    ev.preventDefault();
-    ev.stopPropagation();
-    position_panel(
-        draggable,
-        draggable_start.x - (rubstart.x - ev.clientX),
-        draggable_start.y - (rubstart.y - ev.clientY)
-    );
-}
-
-function draggable_mouseup(ev) {
-    if (!draggable) {
-        return;
-    }
-    ev.preventDefault();
-    ev.stopPropagation();
-    draggable.classList.remove("dragging");
-    draggable = null;
+    draggable_mouseup(ev) {
+        if (!this.draggable) {
+            return;
+        }
+        ev.preventDefault();
+        ev.stopPropagation();
+        this.draggable.classList.remove("dragging");
+        this.draggable = null;
+    },
 }
 
 // From: https://gist.github.com/JustinChristensen/652bedadc92cf0aff86cc5fbcde87732
@@ -681,16 +685,17 @@ function main() {
 
     const the_app = Object.create(App).init();
 
-    on_event("#infopanel input", "change", ev => the_app.spec_change(ev));
-    on_event(".panel .closebtn", "click", close_panel);
-
     on_event(document, "mousedown", ev => the_app.view_mousedown(ev), ".view.overlay");
     on_event(document, "mousemove", ev => the_app.view_mousemove(ev));
     on_event(document, "mouseup", ev => the_app.view_mouseup(ev));
     on_event(document, "keydown", ev => the_app.keydown(ev));
-    on_event(document, "mousedown", draggable_mousedown, ".draggable");
-    on_event(document, "mousemove", draggable_mousemove);
-    on_event(document, "mouseup", draggable_mouseup);
+
+    on_event(document, "mousedown", ev => the_app.panels.draggable_mousedown(ev), ".draggable");
+    on_event(document, "mousemove", ev => the_app.panels.draggable_mousemove(ev));
+    on_event(document, "mouseup", ev => the_app.panels.draggable_mouseup(ev));
+    on_event(".panel .closebtn", "click", ev => the_app.panels.close_panel(ev));
+
+    on_event("#infopanel input", "change", ev => the_app.spec_change(ev));
     on_event(window, "resize", ev => the_app.resize(ev));
 
     the_app.view.set_size();
