@@ -200,7 +200,6 @@ function getImage(tile) {
 const App = {
     init() {
         this.view = Object.create(View).init(document.querySelector("#the_view"));
-        this.panels = Object.create(Panels);
         this.reset();
         this.reset_dragging();
         this.resize_timeout = null;
@@ -434,11 +433,11 @@ const App = {
                     break;
 
                 case "I":
-                    this.panels.toggle_panel("infopanel");
+                    Panels.toggle_panel("infopanel");
                     break;
 
                 case "P":
-                    this.panels.toggle_panel("palettepanel");
+                    Panels.toggle_panel("palettepanel");
                     break;
 
                 case "r":
@@ -487,7 +486,7 @@ const App = {
                     break;
 
                 case "?":
-                    this.panels.toggle_panel("helppanel");
+                    Panels.toggle_panel("helppanel");
                     break;
 
                 default:
@@ -683,21 +682,21 @@ function main() {
         document.querySelector("html").classList.add("mac");
     }
 
-    const the_app = Object.create(App).init();
+    App.init();
 
-    on_event(document, "mousedown", ev => the_app.view_mousedown(ev), ".view.overlay");
-    on_event(document, "mousemove", ev => the_app.view_mousemove(ev));
-    on_event(document, "mouseup", ev => the_app.view_mouseup(ev));
-    on_event(document, "keydown", ev => the_app.keydown(ev));
+    on_event(document, "mousedown", ev => App.view_mousedown(ev), ".view.overlay");
+    on_event(document, "mousemove", ev => App.view_mousemove(ev));
+    on_event(document, "mouseup", ev => App.view_mouseup(ev));
+    on_event(document, "keydown", ev => App.keydown(ev));
 
-    on_event(document, "mousedown", ev => the_app.panels.draggable_mousedown(ev), ".draggable");
-    on_event(document, "mousemove", ev => the_app.panels.draggable_mousemove(ev));
-    on_event(document, "mouseup", ev => the_app.panels.draggable_mouseup(ev));
-    on_event(".panel .closebtn", "click", ev => the_app.panels.close_panel(ev));
+    on_event(document, "mousedown", ev => Panels.draggable_mousedown(ev), ".draggable");
+    on_event(document, "mousemove", ev => Panels.draggable_mousemove(ev));
+    on_event(document, "mouseup", ev => Panels.draggable_mouseup(ev));
+    on_event(".panel .closebtn", "click", ev => Panels.close_panel(ev));
 
-    on_event("#infopanel input", "change", ev => the_app.spec_change(ev));
-    on_event(window, "resize", ev => the_app.resize(ev));
+    on_event("#infopanel input", "change", ev => App.spec_change(ev));
+    on_event(window, "resize", ev => App.resize(ev));
 
-    the_app.view.set_size();
-    the_app.view.paint();
+    App.view.set_size();
+    App.view.paint();
 }
