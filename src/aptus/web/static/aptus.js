@@ -21,6 +21,11 @@ const View = {
         this.overlay_canvas = document.createElement("canvas");
         this.overlay_canvas.setAttribute("class", "view");
         this.canvas_sizer.appendChild(this.overlay_canvas);
+
+        // Request sequence number. Requests include the sequence number and the tile
+        // returns it. If the sequence number has been incremented since the tile was
+        // requested, then the tile is no longer needed, and is not displayed.
+        this.reqseq = 0;
     },
 
     reset() {
@@ -83,7 +88,7 @@ const View = {
     },
 
     paint() {
-        reqseq += 1;
+        this.reqseq += 1;
         const imageurls = [];
         var palette = [...palettes[this.palette_index]];
         //palette.push(["adjust", {hue: 120, saturation: 0}]);
@@ -106,6 +111,8 @@ const View = {
         for (let tx = 0; tx < this.canvasW / this.tileX; tx++) {
             for (let ty = 0; ty < this.canvasH / this.tileX; ty++) {
                 let tile = {
+                    view: this,
+                    reqseq: this.reqseq,
                     ctx: this.fractal_canvas.getContext("2d"),
                     tx: tx * this.tileX,
                     ty: ty * this.tileX,
@@ -125,7 +132,6 @@ const View = {
                         iter_limit: this.iter_limit,
                         palette,
                     },
-                    reqseq,
                 };
                 imageurls.push(tile);
             }
@@ -151,11 +157,6 @@ const View = {
     },
 };
 
-// Request sequence number. Requests include the sequence number and the tile
-// returns it. If the sequence number has been incremented since the tile was
-// requested, then the tile is no longer needed, and is not displayed.
-let reqseq = 0;
-
 function fetchTile(tile) {
     return new Promise(resolve => {
         const body = {
@@ -165,7 +166,7 @@ function fetchTile(tile) {
         fetch("/tile", {method: "POST", body: JSON.stringify(body)})
         .then(response => response.json())
         .then(tiledata => {
-            if (tiledata.seq == reqseq) {
+            if (tiledata.seq == tile.view.reqseq) {
                 const img = new Image();
                 tile.img = img;
                 img.src = tiledata.url;
@@ -462,7 +463,6 @@ const App = {
         this.set_pixsize(3.0/600);
         this.set_angle(0.0);
         this.set_iter_limit(999);
-        //this.set_canvas_size("*");
     },
 
     set_center(r, i) {
