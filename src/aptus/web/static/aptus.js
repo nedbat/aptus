@@ -3,6 +3,8 @@
 const View = {
     tileX: 400,
 
+    canvas_map: new Map(),
+
     init(div) {
         div.setAttribute("class", "canvas_container");
 
@@ -11,21 +13,24 @@ const View = {
         div.appendChild(this.canvas_sizer);
 
         this.backdrop_canvas = document.createElement("canvas");
-        this.backdrop_canvas.setAttribute("class", "view");
+        this.backdrop_canvas.setAttribute("class", "view backdrop");
         this.canvas_sizer.appendChild(this.backdrop_canvas);
 
         this.fractal_canvas = document.createElement("canvas");
-        this.fractal_canvas.setAttribute("class", "view");
+        this.fractal_canvas.setAttribute("class", "view fractal");
         this.canvas_sizer.appendChild(this.fractal_canvas);
 
         this.overlay_canvas = document.createElement("canvas");
-        this.overlay_canvas.setAttribute("class", "view");
+        this.overlay_canvas.setAttribute("class", "view overlay");
         this.canvas_sizer.appendChild(this.overlay_canvas);
+        this.canvas_map.set(this.overlay_canvas, this);
 
         // Request sequence number. Requests include the sequence number and the tile
         // returns it. If the sequence number has been incremented since the tile was
         // requested, then the tile is no longer needed, and is not displayed.
         this.reqseq = 0;
+
+        return this;
     },
 
     reset() {
@@ -184,277 +189,13 @@ function getImage(tile) {
     return fetchTile(tile).then(showTile);
 }
 
-function getCursorPosition(ev, target) {
-    const rect = target.getBoundingClientRect();
-    const x = ev.clientX - rect.left;
-    const y = ev.clientY - rect.top;
-    return {x, y};
-}
-
-let move_target = null;
-let moving = false;
-let mouse_dragging = false;
-let mouse_shift = false;
-let rubstart = null;
-
-function mainpane_mousedown(ev) {
-    //console.log("down. shift:", ev.shiftKey, "ctrl:", ev.ctrlKey, "meta:", ev.metaKey, "alt:", ev.altKey);
-    ev.preventDefault();
-    move_target = ev.target;
-    rubstart = getCursorPosition(ev, move_target);
-    mouse_shift = ev.shiftKey;
-}
-
-const DRAGDXY = 5;
-
-function mainpane_mousemove(ev) {
-    if (!move_target) {
-        return;
-    }
-    ev.preventDefault();
-    const movedto = getCursorPosition(ev, move_target);
-    const dx = movedto.x - rubstart.x;
-    const dy = movedto.y - rubstart.y;
-    if (!mouse_dragging && Math.abs(dx) + Math.abs(dy) > DRAGDXY) {
-        mouse_dragging = true;
-        set_moving(mouse_shift);
-    }
-    clear_canvas(the_app.view.overlay_canvas);
-    if (mouse_dragging) {
-        if (moving) {
-            the_app.view.fractal_canvas.style.left = dx + "px";
-            the_app.view.fractal_canvas.style.top = dy + "px";
-        }
-        else {
-            // With anti-aliasing, 0.5 offset makes 1-pixel wide.
-            const overlay_ctx = the_app.view.overlay_canvas.getContext("2d");
-            overlay_ctx.lineWidth = 1;
-            overlay_ctx.strokeStyle = "#ffffffc0";
-            overlay_ctx.strokeRect(rubstart.x + 0.5, rubstart.y + 0.5, dx, dy);
-        }
-    }
-}
-
-function mainpane_mouseup(ev) {
-    //console.log("up. shift:", ev.shiftKey, "ctrl:", ev.ctrlKey, "meta:", ev.metaKey, "alt:", ev.altKey);
-    if (!move_target) {
-        return;
-    }
-    ev.preventDefault();
-    const up = getCursorPosition(ev, move_target);
-    const dx = up.x - rubstart.x;
-    const dy = up.y - rubstart.y;
-    if (moving) {
-        the_app.set_center(
-            the_view.centerr - the_view.xrot(dx, dy) * the_view.pixsize,
-            the_view.centeri + the_view.yrot(dx, dy) * the_view.pixsize
-        );
-        const overlay_ctx = the_app.view.overlay_canvas.getContext("2d");
-        overlay_ctx.drawImage(the_app.view.fractal_canvas, dx, dy);
-        the_app.view.fractal_canvas.style.left = "0";
-        the_app.view.fractal_canvas.style.top = "0";
-        clear_canvas(the_app.view.fractal_canvas);
-        the_view.paint().then(() => {
-            clear_canvas(the_app.view.overlay_canvas);
-        });
-    }
-    else {
-        clear_canvas(the_app.view.overlay_canvas);
-        if (mouse_dragging) {
-            const a = the_view.ri4xy(rubstart.x, rubstart.y);
-            const b = the_view.ri4xy(up.x, up.y);
-            const dr = a.r - b.r, di = a.i - b.i;
-            const rdr = the_view.xrot(dr, di);
-            const rdi = the_view.yrot(dr, di);
-            the_app.set_pixsize(Math.max(Math.abs(rdr) / the_view.canvasW, Math.abs(rdi) / the_view.canvasH));
-            the_app.set_center((a.r + b.r) / 2, (a.i + b.i) / 2);
-        }
-        else {
-            const {r: clickr, i: clicki} = the_view.ri4xy(up.x, up.y);
-
-            const factor = ev.altKey ? 1.1 : 2.0;
-            if (ev.shiftKey) {
-                the_app.set_pixsize(the_view.pixsize * factor);
-            }
-            else {
-                the_app.set_pixsize(the_view.pixsize / factor);
-            }
-            const r0 = clickr - the_view.xrot(up.x, up.y) * the_view.pixsize;
-            const i0 = clicki + the_view.yrot(up.x, up.y) * the_view.pixsize;
-            the_app.set_center(
-                r0 + the_view.xrot(the_view.canvasW, the_view.canvasH)/2 * the_view.pixsize,
-                i0 - the_view.yrot(the_view.canvasW, the_view.canvasH)/2 * the_view.pixsize
-            );
-        }
-        the_view.paint();
-    }
-    move_target = null;
-    rubstart = null;
-    mouse_dragging = false;
-    set_moving(false);
-}
-
-function cancel_dragging() {
-    the_app.view.fractal_canvas.style.left = "0";
-    the_app.view.fractal_canvas.style.top = "0";
-    clear_canvas(the_app.view.overlay_canvas);
-    move_target = null;
-    rubstart = null;
-    mouse_dragging = false;
-}
-
-function keydown(ev) {
-    if (ev.target.matches("input")) {
-        return;
-    }
-
-    //console.log("key:",  ev.key, "shift:", ev.shiftKey, "ctrl:", ev.ctrlKey, "meta:", ev.metaKey, "alt:", ev.altKey);
-    var key = ev.key;
-
-    // Chrome handles ctrl-lessthan as shift-ctrl-comma. Fix those combinations
-    // to be what we expect.
-    if (ev.shiftKey) {
-        switch (key) {
-            case ".":
-                key = ">";
-                break;
-            case ",":
-                key = "<";
-                break;
-        }
-    }
-
-    // Mac option chars need to be mapped back to their original chars.
-    if (platform() === "mac") {
-        switch (key) {
-            case "¯":
-                key = "<";
-                break;
-            case "˘":
-                key = ">";
-                break;
-        }
-    }
-
-    var handled = false;
-
-    if (!ev.metaKey) {
-        handled = true;
-        switch (key) {
-            case "Escape":
-                cancel_dragging();
-                break;
-
-            case "a":
-                const new_angle = +prompt("Angle", the_view.angle);
-                if (new_angle != the_view.angle) {
-                    the_app.set_angle(new_angle);
-                    the_view.paint();
-                }
-                break;
-
-            case "c":
-                the_view.continuous = !the_view.continuous;
-                the_view.paint();
-                break;
-
-            case "C":
-                alert(
-                    `--center=${the_view.centerr},${the_view.centeri} ` +
-                    (the_view.angle ? `--angle=${the_view.angle} ` : "") +
-                    `--diam=${the_view.canvasW * the_view.pixsize},${the_view.canvasH * the_view.pixsize}`
-                );
-                break;
-
-            case "i":
-                new_limit = +prompt("Iteration limit", the_view.iter_limit);
-                if (new_limit != the_view.iter_limit) {
-                    the_app.set_iter_limit(new_limit);
-                    the_view.paint();
-                }
-                break;
-
-            case "I":
-                toggle_panel("infopanel");
-                break;
-
-            case "P":
-                toggle_panel("palettepanel");
-                break;
-
-            case "r":
-                the_view.paint();
-                break;
-
-            case "R":
-                the_app.reset();
-                the_view.paint();
-                break;
-
-            case "w":
-                let text;
-                if (!the_view.canvas_size_w) {
-                    text = "*";
-                }
-                else {
-                    text = `${the_view.canvas_size_w} ${the_view.canvas_size_h}`;
-                }
-                the_view.set_canvas_size(prompt("Canvas size", text));
-                the_view.paint();
-                break;
-
-            case ",":
-                the_view.palette_index -= 1;
-                if (the_view.palette_index < 0) {
-                    the_view.palette_index += palettes.length;
-                }
-                the_view.paint();
-                break;
-
-            case ".":
-                the_view.palette_index += 1;
-                the_view.palette_index %= palettes.length;
-                the_view.paint();
-                break;
-
-            case ">":
-                the_app.set_angle(the_view.angle + (ev.altKey ? 1 : 10));
-                the_view.paint();
-                break;
-
-            case "<":
-                the_app.set_angle(the_view.angle - (ev.altKey ? 1 : 10));
-                the_view.paint();
-                break;
-
-            case "?":
-                toggle_panel("helppanel");
-                break;
-
-            default:
-                handled = false;
-                break;
-        }
-    }
-
-    if (handled) {
-        ev.preventDefault();
-    }
-}
-
-function set_input_value(name, val) {
-    document.getElementById(name).value = "" + val;
-}
-
-function get_input_value(name) {
-    return +document.getElementById(name).value;
-}
-
 const App = {
     init() {
-        this.view = Object.create(View);
-        this.view.init(document.querySelector("#the_view"));
+        this.view = Object.create(View).init(document.querySelector("#the_view"));
         this.reset();
+        this.reset_dragging();
+        this.resize_timeout = null;
+        return this;
     },
 
     reset() {
@@ -463,6 +204,15 @@ const App = {
         this.set_pixsize(3.0/600);
         this.set_angle(0.0);
         this.set_iter_limit(999);
+    },
+
+    reset_dragging() {
+        this.move_target = null;
+        this.moving = false;
+        this.mouse_dragging = false;
+        this.mouse_shift = false;
+        this.rubstart = null;
+        this.set_moving(false);
     },
 
     set_center(r, i) {
@@ -492,32 +242,288 @@ const App = {
         this.set_iter_limit(get_input_value("iter_limit"));
         this.view.paint();
     },
+
+    view_mousedown(ev) {
+        //console.log("down. shift:", ev.shiftKey, "ctrl:", ev.ctrlKey, "meta:", ev.metaKey, "alt:", ev.altKey);
+        ev.preventDefault();
+        this.move_target = ev.target;
+        this.rubstart = getCursorPosition(ev, this.move_target);
+        this.mouse_shift = ev.shiftKey;
+    },
+
+    view_mousemove(ev) {
+        if (!this.move_target) {
+            return;
+        }
+        ev.preventDefault();
+        const view = View.canvas_map.get(this.move_target);
+        const movedto = getCursorPosition(ev, this.move_target);
+        const dx = movedto.x - this.rubstart.x;
+        const dy = movedto.y - this.rubstart.y;
+        if (!this.mouse_dragging && Math.abs(dx) + Math.abs(dy) > 5) {
+            this.mouse_dragging = true;
+            this.set_moving(this.mouse_shift);
+        }
+        clear_canvas(view.overlay_canvas);
+        if (this.mouse_dragging) {
+            if (this.moving) {
+                view.fractal_canvas.style.left = dx + "px";
+                view.fractal_canvas.style.top = dy + "px";
+            }
+            else {
+                // With anti-aliasing, 0.5 offset makes 1-pixel wide.
+                const overlay_ctx = view.overlay_canvas.getContext("2d");
+                overlay_ctx.lineWidth = 1;
+                overlay_ctx.strokeStyle = "#ffffffc0";
+                overlay_ctx.strokeRect(this.rubstart.x + 0.5, this.rubstart.y + 0.5, dx, dy);
+            }
+        }
+    },
+
+    view_mouseup(ev) {
+        //console.log("up. shift:", ev.shiftKey, "ctrl:", ev.ctrlKey, "meta:", ev.metaKey, "alt:", ev.altKey);
+        if (!this.move_target) {
+            return;
+        }
+        ev.preventDefault();
+        const view = View.canvas_map.get(this.move_target);
+        const up = getCursorPosition(ev, this.move_target);
+        const dx = up.x - this.rubstart.x;
+        const dy = up.y - this.rubstart.y;
+        if (this.moving) {
+            this.set_center(
+                view.centerr - view.xrot(dx, dy) * view.pixsize,
+                view.centeri + view.yrot(dx, dy) * view.pixsize
+            );
+            const overlay_ctx = view.overlay_canvas.getContext("2d");
+            overlay_ctx.drawImage(view.fractal_canvas, dx, dy);
+            view.fractal_canvas.style.left = "0";
+            view.fractal_canvas.style.top = "0";
+            clear_canvas(view.fractal_canvas);
+            view.paint().then(() => {
+                clear_canvas(view.overlay_canvas);
+            });
+        }
+        else {
+            clear_canvas(view.overlay_canvas);
+            if (this.mouse_dragging) {
+                const a = view.ri4xy(this.rubstart.x, this.rubstart.y);
+                const b = view.ri4xy(up.x, up.y);
+                const dr = a.r - b.r, di = a.i - b.i;
+                const rdr = view.xrot(dr, di);
+                const rdi = view.yrot(dr, di);
+                this.set_pixsize(Math.max(Math.abs(rdr) / view.canvasW, Math.abs(rdi) / view.canvasH));
+                this.set_center((a.r + b.r) / 2, (a.i + b.i) / 2);
+            }
+            else {
+                const {r: clickr, i: clicki} = view.ri4xy(up.x, up.y);
+
+                const factor = ev.altKey ? 1.1 : 2.0;
+                if (ev.shiftKey) {
+                    this.set_pixsize(view.pixsize * factor);
+                }
+                else {
+                    this.set_pixsize(view.pixsize / factor);
+                }
+                const r0 = clickr - view.xrot(up.x, up.y) * view.pixsize;
+                const i0 = clicki + view.yrot(up.x, up.y) * view.pixsize;
+                this.set_center(
+                    r0 + view.xrot(view.canvasW, view.canvasH)/2 * view.pixsize,
+                    i0 - view.yrot(view.canvasW, view.canvasH)/2 * view.pixsize
+                );
+            }
+            view.paint();
+        }
+        this.reset_dragging();
+    },
+
+    set_moving(m) {
+        if (this.moving = m) {
+            this.view.overlay_canvas.classList.add("move");
+        }
+        else {
+            this.view.overlay_canvas.classList.remove("move");
+        }
+    },
+
+    cancel_dragging() {
+        if (!this.move_target) {
+            return;
+        }
+        const view = View.canvas_map.get(this.move_target);
+        view.fractal_canvas.style.left = "0";
+        view.fractal_canvas.style.top = "0";
+        clear_canvas(view.overlay_canvas);
+        this.reset_dragging();
+    },
+
+    keydown(ev) {
+        if (ev.target.matches("input")) {
+            return;
+        }
+
+        //console.log("key:",  ev.key, "shift:", ev.shiftKey, "ctrl:", ev.ctrlKey, "meta:", ev.metaKey, "alt:", ev.altKey);
+        var key = ev.key;
+
+        // Chrome handles ctrl-lessthan as shift-ctrl-comma. Fix those combinations
+        // to be what we expect.
+        if (ev.shiftKey) {
+            switch (key) {
+                case ".":
+                    key = ">";
+                    break;
+                case ",":
+                    key = "<";
+                    break;
+            }
+        }
+
+        // Mac option chars need to be mapped back to their original chars.
+        if (platform() === "mac") {
+            switch (key) {
+                case "¯":
+                    key = "<";
+                    break;
+                case "˘":
+                    key = ">";
+                    break;
+            }
+        }
+
+        var handled = false;
+
+        if (!ev.metaKey) {
+            handled = true;
+            switch (key) {
+                case "Escape":
+                    this.cancel_dragging();
+                    break;
+
+                case "a":
+                    const new_angle = +prompt("Angle", this.view.angle);
+                    if (new_angle != this.view.angle) {
+                        this.set_angle(new_angle);
+                        this.view.paint();
+                    }
+                    break;
+
+                case "c":
+                    this.view.continuous = !this.view.continuous;
+                    this.view.paint();
+                    break;
+
+                case "C":
+                    alert(
+                        `--center=${this.view.centerr},${this.view.centeri} ` +
+                        (this.view.angle ? `--angle=${this.view.angle} ` : "") +
+                        `--diam=${this.view.canvasW * this.view.pixsize},${this.view.canvasH * this.view.pixsize}`
+                    );
+                    break;
+
+                case "i":
+                    new_limit = +prompt("Iteration limit", this.view.iter_limit);
+                    if (new_limit != this.view.iter_limit) {
+                        this.set_iter_limit(new_limit);
+                        this.view.paint();
+                    }
+                    break;
+
+                case "I":
+                    toggle_panel("infopanel");
+                    break;
+
+                case "P":
+                    toggle_panel("palettepanel");
+                    break;
+
+                case "r":
+                    this.view.paint();
+                    break;
+
+                case "R":
+                    this.reset();
+                    this.view.paint();
+                    break;
+
+                case "w":
+                    let text;
+                    if (!this.view.canvas_size_w) {
+                        text = "*";
+                    }
+                    else {
+                        text = `${this.view.canvas_size_w} ${this.view.canvas_size_h}`;
+                    }
+                    this.view.set_canvas_size(prompt("Canvas size", text));
+                    this.view.paint();
+                    break;
+
+                case ",":
+                    this.view.palette_index -= 1;
+                    if (this.view.palette_index < 0) {
+                        this.view.palette_index += palettes.length;
+                    }
+                    this.view.paint();
+                    break;
+
+                case ".":
+                    this.view.palette_index += 1;
+                    this.view.palette_index %= palettes.length;
+                    this.view.paint();
+                    break;
+
+                case ">":
+                    this.set_angle(this.view.angle + (ev.altKey ? 1 : 10));
+                    this.view.paint();
+                    break;
+
+                case "<":
+                    this.set_angle(this.view.angle - (ev.altKey ? 1 : 10));
+                    this.view.paint();
+                    break;
+
+                case "?":
+                    toggle_panel("helppanel");
+                    break;
+
+                default:
+                    handled = false;
+                    break;
+            }
+        }
+
+        if (handled) {
+            ev.preventDefault();
+        }
+    },
+
+    resize() {
+        if (this.resize_timeout) {
+            clearTimeout(this.resize_timeout);
+        }
+        resize_timeout = setTimeout(
+            () => {
+                this.resize_timeout = null;
+                this.view.set_size();
+                this.view.paint();
+            },
+            250
+        );
+    },
 };
 
-function set_moving(m) {
-    moving = m;
-    if (moving) {
-        the_app.view.overlay_canvas.classList.add("move");
-    }
-    else {
-        the_app.view.overlay_canvas.classList.remove("move");
-    }
+function getCursorPosition(ev, target) {
+    const rect = target.getBoundingClientRect();
+    const x = ev.clientX - rect.left;
+    const y = ev.clientY - rect.top;
+    return {x, y};
 }
 
-let resize_timeout = null;
+function set_input_value(name, val) {
+    document.getElementById(name).value = "" + val;
+}
 
-function resize() {
-    if (resize_timeout) {
-        clearTimeout(resize_timeout);
-    }
-    resize_timeout = setTimeout(
-        () => {
-            resize_timeout = null;
-            the_view.set_size();
-            the_view.paint();
-        },
-        250
-    );
+function get_input_value(name) {
+    return +document.getElementById(name).value;
 }
 
 var draggable = null;
@@ -664,29 +670,25 @@ function checkers(canvas) {
     }
 }
 
-let the_app, the_view;
-
 function main() {
     if (platform() === "mac") {
         document.querySelector("html").classList.add("mac");
     }
 
-    the_app = Object.create(App);
-    the_app.init();
-    the_view = the_app.view;
+    const the_app = Object.create(App).init();
 
     on_event("#infopanel input", "change", ev => the_app.spec_change(ev));
     on_event(".panel .closebtn", "click", close_panel);
 
-    on_event(the_app.view.overlay_canvas, "mousedown", mainpane_mousedown);
+    on_event(document, "mousedown", ev => the_app.view_mousedown(ev), ".view.overlay");
+    on_event(document, "mousemove", ev => the_app.view_mousemove(ev));
+    on_event(document, "mouseup", ev => the_app.view_mouseup(ev));
+    on_event(document, "keydown", ev => the_app.keydown(ev));
     on_event(document, "mousedown", draggable_mousedown, ".draggable");
-    on_event(document, "mousemove", mainpane_mousemove);
     on_event(document, "mousemove", draggable_mousemove);
-    on_event(document, "mouseup", mainpane_mouseup);
     on_event(document, "mouseup", draggable_mouseup);
-    on_event(document, "keydown", keydown);
-    on_event(window, "resize", resize);
+    on_event(window, "resize", ev => the_app.resize(ev));
 
-    the_view.set_size();
-    the_view.paint();
+    the_app.view.set_size();
+    the_app.view.paint();
 }
