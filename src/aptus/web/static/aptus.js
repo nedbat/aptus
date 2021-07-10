@@ -164,15 +164,15 @@ function fetchTile(tile) {
             spec: tile.spec,
         };
         fetch("/tile", {method: "POST", body: JSON.stringify(body)})
-        .then(response => response.json())
-        .then(tiledata => {
-            if (tiledata.seq == tile.view.reqseq) {
-                const img = new Image();
-                tile.img = img;
-                img.src = tiledata.url;
-                img.onload = () => resolve(tile);
-            }
-        });
+            .then(response => response.json())
+            .then(tiledata => {
+                if (tiledata.seq == tile.view.reqseq) {
+                    const img = new Image();
+                    tile.img = img;
+                    img.src = tiledata.url;
+                    img.onload = () => resolve(tile);
+                }
+            });
     });
 }
 
@@ -185,9 +185,9 @@ function getImage(tile) {
 }
 
 function getCursorPosition(ev, target) {
-    const rect = target.getBoundingClientRect()
-    const x = ev.clientX - rect.left
-    const y = ev.clientY - rect.top
+    const rect = target.getBoundingClientRect();
+    const x = ev.clientX - rect.left;
+    const y = ev.clientY - rect.top;
     return {x, y};
 }
 
