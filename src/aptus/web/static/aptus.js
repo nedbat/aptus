@@ -619,7 +619,7 @@ function delegatedTo(sel, fn) {
     };
 };
 
-function on_event(el, ev, fn, sel) {
+function on_event(el, evname, fn, sel) {
     if (sel) {
         fn = delegatedTo(sel, fn);
     }
@@ -629,8 +629,7 @@ function on_event(el, ev, fn, sel) {
     if (!el.forEach) {
         el = [el];
     }
-    el.forEach(e => e.addEventListener(ev, fn));
-    return Array.from(el);
+    el.forEach(e => e.addEventListener(evname, fn));
 }
 
 function platform() {
