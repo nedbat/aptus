@@ -160,6 +160,14 @@ const View = {
         const i = i0 - this.yrot(x, y) * this.pixsize;
         return {r, i};
     },
+
+    cli_args() {
+        return (
+            `--center=${this.centerr},${this.centeri} ` +
+            (this.angle ? `--angle=${this.angle} ` : "") +
+            `--diam=${this.canvasW * this.pixsize},${this.canvasH * this.pixsize}`
+        );
+    },
 };
 
 function fetchTile(tile) {
@@ -413,11 +421,7 @@ const App = {
                     break;
 
                 case "C":
-                    alert(
-                        `--center=${this.view.centerr},${this.view.centeri} ` +
-                        (this.view.angle ? `--angle=${this.view.angle} ` : "") +
-                        `--diam=${this.view.canvasW * this.view.pixsize},${this.view.canvasH * this.view.pixsize}`
-                    );
+                    alert(this.view.cli_args());
                     break;
 
                 case "i":
