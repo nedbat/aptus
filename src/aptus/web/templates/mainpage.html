@@ -5,6 +5,7 @@
     <script>
     const palettes = {{palettes|tojson}};
     </script>
+    <script src="/static/aptus.js"></script>
 </head>
 <body>
     <div id="the_view"/>
@@ -65,5 +66,7 @@
         <p><label for="ease">ease:</label><input id="ease" value="1" size="5"/></p>
     </div>
 
-    <script src="/static/aptus.js"></script>
+    <script>
+        document.body.onload = main;
+    </script>
 </body>

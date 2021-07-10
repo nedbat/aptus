@@ -667,7 +667,7 @@ function checkers(canvas) {
 
 let the_app, the_view;
 
-document.body.onload = () => {
+function main() {
     if (platform() === "mac") {
         document.querySelector("html").classList.add("mac");
     }
