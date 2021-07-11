@@ -118,8 +118,10 @@ const View = {
         //        ease: get_input_value("ease")
         //    }]
         //];
-        const dx = Math.ceil(this.canvasW / Math.floor(this.canvasW / this.tileX));
-        const dy = Math.ceil(this.canvasH / Math.floor(this.canvasH / this.tileX));
+        const nx = Math.floor(this.canvasW / this.tileX) || 1;
+        const ny = Math.floor(this.canvasH / this.tileX) || 1;
+        const dx = Math.ceil(this.canvasW / nx);
+        const dy = Math.ceil(this.canvasH / ny);
         for (let tx = 0; tx < this.canvasW; tx += dx) {
             for (let ty = 0; ty < this.canvasH; ty += dy) {
                 let tile = {
@@ -135,7 +137,10 @@ const View = {
                             this.canvasH * this.pixsize
                         ],
                         size: [this.canvasW, this.canvasH],
-                        coords: [tx, tx + dx, ty, ty + dy],
+                        coords: [
+                            tx, Math.min(tx + dx, this.canvasW),
+                            ty, Math.min(ty + dy, this.canvasH),
+                        ],
                         angle: this.angle,
                         continuous: this.continuous,
                         iter_limit: this.iter_limit,
