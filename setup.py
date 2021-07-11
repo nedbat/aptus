@@ -122,6 +122,7 @@ setup(
             "fastapi",
             "jinja2",
             "uvicorn",
+            "cachetools",
             ],
         },
 

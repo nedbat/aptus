@@ -3,6 +3,7 @@
 const View = {
     tileX: 400,
 
+    // One map for all views, mapping overlay canvas elements to their view.
     canvas_map: new Map(),
 
     init(div) {
@@ -46,14 +47,17 @@ const View = {
     set_center(r, i) {
         this.centerr = r;
         this.centeri = i;
+        this.clear_tile_cache();
     },
 
     set_pixsize(ps) {
         this.pixsize = ps;
+        this.clear_tile_cache();
     },
 
     set_angle(a) {
         this.angle = (a % 360 + 360) % 360;
+        this.clear_tile_cache();
         const rads = this.angle / 180 * Math.PI;
         this.sina = Math.sin(rads);
         this.cosa = Math.cos(rads);
@@ -62,6 +66,12 @@ const View = {
 
     set_iter_limit(i) {
         this.iter_limit = i;
+        this.clear_tile_cache();
+    },
+
+    set_continuous(c) {
+        this.continuous = c;
+        this.clear_tile_cache();
     },
 
     set_canvas_size(s) {
@@ -90,9 +100,29 @@ const View = {
         this.canvas_sizer.style.width = this.canvasW + "px";
         this.canvas_sizer.style.height = this.canvasH + "px";
         checkers(this.backdrop_canvas);
+        this.clear_tile_cache();
+    },
+
+    // The tile cache maps starting coordinates to an opaque value the
+    // compute engine assigned the tile.  That value is included when
+    // calculating the tile again, to index into a server-side cache.
+
+    clear_tile_cache() {
+        this.tile_cache = null;
+    },
+
+    set_tile_cache(tx, ty, value) {
+        this.tile_cache.set(`${tx},${ty}`, value);
+    },
+
+    get_tile_cache(tx, ty) {
+        return this.tile_cache.get(`${tx},${ty}`) || "";
     },
 
     paint() {
+        if (!this.tile_cache) {
+            this.tile_cache = new Map();
+        }
         this.reqseq += 1;
         const imageurls = [];
         const palette = [...palettes[this.palette_index]];
@@ -113,14 +143,14 @@ const View = {
         //        ease: get_input_value("ease")
         //    }]
         //];
-        for (let tx = 0; tx < this.canvasW / this.tileX; tx++) {
-            for (let ty = 0; ty < this.canvasH / this.tileX; ty++) {
+        for (let tx = 0; tx < this.canvasW; tx += this.tileX) {
+            for (let ty = 0; ty < this.canvasH; ty += this.tileX) {
                 let tile = {
                     view: this,
                     reqseq: this.reqseq,
                     ctx: this.fractal_canvas.getContext("2d"),
-                    tx: tx * this.tileX,
-                    ty: ty * this.tileX,
+                    tx,
+                    ty,
                     spec: {
                         center: [this.centerr, this.centeri],
                         diam: [
@@ -128,15 +158,13 @@ const View = {
                             this.canvasH * this.pixsize
                         ],
                         size: [this.canvasW, this.canvasH],
-                        coords: [
-                            tx*this.tileX, (tx+1)*this.tileX,
-                            ty*this.tileX, (ty+1)*this.tileX
-                        ],
+                        coords: [tx, tx + this.tileX, ty, ty + this.tileX],
                         angle: this.angle,
                         continuous: this.continuous,
                         iter_limit: this.iter_limit,
                         palette,
                     },
+                    cache: this.get_tile_cache(tx, ty),
                 };
                 imageurls.push(tile);
             }
@@ -175,15 +203,16 @@ function fetchTile(tile) {
         const body = {
             seq: tile.reqseq,
             spec: tile.spec,
+            cache: tile.cache,
         };
         fetch("/tile", {method: "POST", body: JSON.stringify(body)})
             .then(response => response.json())
             .then(tiledata => {
                 if (tiledata.seq == tile.view.reqseq) {
-                    const img = new Image();
-                    tile.img = img;
-                    img.src = tiledata.url;
-                    img.onload = () => resolve(tile);
+                    tile.view.set_tile_cache(tile.spec.coords[0], tile.spec.coords[2], tiledata.cache);
+                    tile.img = new Image();
+                    tile.img.src = tiledata.url;
+                    tile.img.onload = () => resolve(tile);
                 }
             });
     });
@@ -416,7 +445,7 @@ const App = {
                     break;
 
                 case "c":
-                    this.view.continuous = !this.view.continuous;
+                    this.view.set_continuous(!this.view.continuous);
                     this.view.paint();
                     break;
 

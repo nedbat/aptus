@@ -498,6 +498,10 @@ class AptusCompute:
             )
         self.stats += stats
 
+    def set_counts(self, counts):
+        self.counts = counts
+        self.status = numpy.full((self.gparams.bounds[1], self.gparams.bounds[0]), 3, dtype=numpy.uint8)
+
     def debug_callback(self, info):
         print(info)
 
