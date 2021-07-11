@@ -103,19 +103,19 @@ const View = {
         const palette = [...palettes[this.palette_index]];
         //palette.push(["adjust", {hue: 120, saturation: 0}]);
         //palette.push(["stretch", {steps: 3, hsl: true}]);
-        //palette = [["spectrum", {ncolors: 16, l: [100, 150], s: [100, 175]}], ["stretch", {steps: 10, hsl: true, ease: get_input_value("ease")}]];
-        //palette.push(["stretch", {steps: 2, hsl: true, ease: get_input_value("ease")}]);
+        //palette = [["spectrum", {ncolors: 16, l: [100, 150], s: [100, 175]}], ["stretch", {steps: 10, hsl: true, ease: get_input_value("#ease")}]];
+        //palette.push(["stretch", {steps: 2, hsl: true, ease: get_input_value("#ease")}]);
         //palette = [
         //    ["spectrum", {
-        //        ncolors: get_input_value("ncolors"),
-        //        h: [get_input_value("hlo"), get_input_value("hhi")],
-        //        l: [get_input_value("llo"), get_input_value("lhi")],
-        //        s: [get_input_value("slo"), get_input_value("shi")]
+        //        ncolors: get_input_value("#ncolors"),
+        //        h: [get_input_value("#hlo"), get_input_value("#hhi")],
+        //        l: [get_input_value("#llo"), get_input_value("#lhi")],
+        //        s: [get_input_value("#slo"), get_input_value("#shi")]
         //    }],
         //    ["stretch", {
-        //        steps: get_input_value("stretch"),
+        //        steps: get_input_value("#stretch"),
         //        hsl: true,
-        //        ease: get_input_value("ease")
+        //        ease: get_input_value("#ease")
         //    }]
         //];
         const nx = Math.floor(this.canvasW / this.tileX) || 1;
@@ -233,29 +233,29 @@ const App = {
 
     set_center(r, i) {
         this.view.set_center(r, i);
-        set_input_value("centerr", r);
-        set_input_value("centeri", i);
+        set_input_value("#centerr", r);
+        set_input_value("#centeri", i);
     },
 
     set_pixsize(ps) {
         this.view.set_pixsize(ps);
-        set_input_value("pixsize", ps);
+        set_input_value("#pixsize", ps);
     },
 
     set_angle(a) {
-        set_input_value("angle", this.view.set_angle(a));
+        set_input_value("#angle", this.view.set_angle(a));
     },
 
     set_iter_limit(i) {
         this.view.set_iter_limit(i);
-        set_input_value("iter_limit", i);
+        set_input_value("#iter_limit", i);
     },
 
     spec_change(ev) {
-        this.set_center(get_input_value("centerr"), get_input_value("centeri"));
-        this.set_pixsize(get_input_value("pixsize"));
-        this.set_angle(get_input_value("angle"));
-        this.set_iter_limit(get_input_value("iter_limit"));
+        this.set_center(get_input_value("#centerr"), get_input_value("#centeri"));
+        this.set_pixsize(get_input_value("#pixsize"));
+        this.set_angle(get_input_value("#angle"));
+        this.set_iter_limit(get_input_value("#iter_limit"));
         this.view.paint();
     },
 
@@ -398,7 +398,7 @@ const App = {
                     break;
 
                 case "a":
-                    Panels.show_panel("infopanel", "angle");
+                    Panels.show_panel("#infopanel", "#angle");
                     break;
 
                 case "c":
@@ -411,15 +411,15 @@ const App = {
                     break;
 
                 case "i":
-                    Panels.show_panel("infopanel", "iter_limit");
+                    Panels.show_panel("#infopanel", "#iter_limit");
                     break;
 
                 case "I":
-                    Panels.toggle_panel("infopanel");
+                    Panels.toggle_panel("#infopanel");
                     break;
 
                 case "P":
-                    Panels.toggle_panel("palettepanel");
+                    Panels.toggle_panel("#palettepanel");
                     break;
 
                 case "r":
@@ -468,7 +468,7 @@ const App = {
                     break;
 
                 case "?":
-                    Panels.toggle_panel("helppanel");
+                    Panels.toggle_panel("#helppanel");
                     break;
 
                 default:
@@ -504,12 +504,12 @@ function getCursorPosition(ev, target) {
     return {x, y};
 }
 
-function set_input_value(name, val) {
-    document.getElementById(name).value = "" + val;
+function set_input_value(sel, val) {
+    document.querySelector(sel).value = "" + val;
 }
 
-function get_input_value(name) {
-    return +document.getElementById(name).value;
+function get_input_value(sel) {
+    return +document.querySelector(sel).value;
 }
 
 const Panels = {
@@ -529,8 +529,8 @@ const Panels = {
         this.bring_to_top(el, document.querySelectorAll(".panel"));
     },
 
-    toggle_panel(panelid) {
-        const panel = document.getElementById(panelid);
+    toggle_panel(panelsel) {
+        const panel = document.querySelector(panelsel);
         if (panel.style.display === "block") {
             panel.style.display = "none";
         }
@@ -539,9 +539,9 @@ const Panels = {
         }
     },
 
-    show_panel(panel, inputid) {
+    show_panel(panel, inputsel) {
         if (typeof panel === 'string') {
-            panel = document.getElementById(panel);
+            panel = document.querySelector(panel);
         }
         panel.style.display = "block";
         let at_x = panel.offsetLeft, at_y = panel.offsetTop;
@@ -553,8 +553,8 @@ const Panels = {
         }
         position_element(panel, at_x, at_y);
         this.bring_panel_to_top(panel);
-        if (inputid) {
-            const inp = document.getElementById(inputid);
+        if (inputsel) {
+            const inp = document.querySelector(inputsel);
             inp.focus();
             inp.select();
         }
