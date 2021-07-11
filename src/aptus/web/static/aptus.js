@@ -47,17 +47,14 @@ const View = {
     set_center(r, i) {
         this.centerr = r;
         this.centeri = i;
-        this.clear_tile_cache();
     },
 
     set_pixsize(ps) {
         this.pixsize = ps;
-        this.clear_tile_cache();
     },
 
     set_angle(a) {
         this.angle = (a % 360 + 360) % 360;
-        this.clear_tile_cache();
         const rads = this.angle / 180 * Math.PI;
         this.sina = Math.sin(rads);
         this.cosa = Math.cos(rads);
@@ -66,12 +63,10 @@ const View = {
 
     set_iter_limit(i) {
         this.iter_limit = i;
-        this.clear_tile_cache();
     },
 
     set_continuous(c) {
         this.continuous = c;
-        this.clear_tile_cache();
     },
 
     set_canvas_size(s) {
@@ -100,29 +95,9 @@ const View = {
         this.canvas_sizer.style.width = this.canvasW + "px";
         this.canvas_sizer.style.height = this.canvasH + "px";
         checkers(this.backdrop_canvas);
-        this.clear_tile_cache();
-    },
-
-    // The tile cache maps starting coordinates to an opaque value the
-    // compute engine assigned the tile.  That value is included when
-    // calculating the tile again, to index into a server-side cache.
-
-    clear_tile_cache() {
-        this.tile_cache = null;
-    },
-
-    set_tile_cache(tx, ty, value) {
-        this.tile_cache.set(`${tx},${ty}`, value);
-    },
-
-    get_tile_cache(tx, ty) {
-        return this.tile_cache.get(`${tx},${ty}`) || "";
     },
 
     paint() {
-        if (!this.tile_cache) {
-            this.tile_cache = new Map();
-        }
         this.reqseq += 1;
         const imageurls = [];
         const palette = [...palettes[this.palette_index]];
@@ -166,7 +141,6 @@ const View = {
                         iter_limit: this.iter_limit,
                         palette,
                     },
-                    cache: this.get_tile_cache(tx, ty),
                 };
                 imageurls.push(tile);
             }
@@ -205,13 +179,11 @@ function fetchTile(tile) {
         const body = {
             seq: tile.reqseq,
             spec: tile.spec,
-            cache: tile.cache,
         };
         fetch("/tile", {method: "POST", body: JSON.stringify(body)})
             .then(response => response.json())
             .then(tiledata => {
                 if (tiledata.seq == tile.view.reqseq) {
-                    tile.view.set_tile_cache(tile.spec.coords[0], tile.spec.coords[2], tiledata.cache);
                     tile.img = new Image();
                     tile.img.src = tiledata.url;
                     tile.img.onload = () => resolve(tile);

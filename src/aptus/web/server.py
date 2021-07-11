@@ -3,10 +3,8 @@ import asyncio
 import base64
 import functools
 import io
-import itertools
 import os
 import pathlib
-import time
 
 import cachetools
 import PIL
@@ -38,10 +36,7 @@ async def home(request: Request):
     return templates.TemplateResponse("mainpage.html", context)
 
 # Cache of computed counts
-cache_root = f"c.{os.getpid()}.{time.time()}"
 cache = cachetools.LRUCache(50)
-cache_serial = itertools.count()
-
 def run_in_executor(f):
     # from https://stackoverflow.com/a/53719009/14343
     @functools.wraps(f)
@@ -59,13 +54,12 @@ def compute_tile(compute, cachekey):
         compute.set_counts(old)
     pix = compute.color_mandel()
     if old is None:
-        cachekey = f"{cache_root}.{next(cache_serial)}"
         cache[cachekey] = compute.counts
     im = PIL.Image.fromarray(pix)
     fout = io.BytesIO()
     compute.write_image(im, fout)
     data_url = "data:image/png;base64," + base64.b64encode(fout.getvalue()).decode("ascii")
-    return data_url, cachekey
+    return data_url
 
 class ComputeSpec(pydantic.BaseModel):
     center: tuple[float, float]
@@ -80,7 +74,6 @@ class ComputeSpec(pydantic.BaseModel):
 class TileRequest(pydantic.BaseModel):
     spec: ComputeSpec
     seq: int
-    cache: str
 
 @app.post("/tile")
 async def tile(
@@ -99,11 +92,19 @@ async def tile(
     gparams = compute.grid_params().subtile(*spec.coords)
     compute.create_mandel(gparams)
 
-    data_url, cachekey = await compute_tile(compute, req.cache)
+    cachekey = f"""
+        {spec.center}
+        {spec.diam}
+        {spec.size}
+        {spec.angle}
+        {spec.continuous}
+        {spec.iter_limit}
+        {spec.coords}
+        """
+    data_url = await compute_tile(compute, cachekey)
     return {
         "url": data_url,
         "seq": req.seq,
-        "cache": cachekey,
     }
 
 def main():
