@@ -23,6 +23,10 @@ canvas.view {
     image-rendering: crisp-edges;
     image-rendering: pixelated;
 
+    &.wait {
+        cursor: wait;
+    }
+
     &.move {
         cursor: grab;
     }

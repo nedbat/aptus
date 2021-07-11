@@ -42,6 +42,7 @@ const View = {
         this.set_iter_limit(999);
         this.palette_index = 0;
         this.set_canvas_size("*");
+        this.tiles_pending = 0;
     },
 
     set_center(r, i) {
@@ -150,6 +151,8 @@ const View = {
                 imageurls.push(tile);
             }
         }
+        this.tiles_pending = imageurls.length;
+        this.overlay_canvas.classList.add("wait");
         return Promise.all(imageurls.map(getImage));
     },
 
@@ -199,6 +202,10 @@ function fetchTile(tile) {
 
 function showTile(tile) {
     tile.ctx.drawImage(tile.img, tile.tx, tile.ty);
+    tile.view.tiles_pending -= 1;
+    if (tile.view.tiles_pending == 0) {
+        tile.view.overlay_canvas.classList.remove("wait");
+    }
 }
 
 function getImage(tile) {
