@@ -283,8 +283,7 @@ const App = {
         clear_canvas(view.overlay_canvas);
         if (this.mouse_dragging) {
             if (this.moving) {
-                view.fractal_canvas.style.left = dx + "px";
-                view.fractal_canvas.style.top = dy + "px";
+                position_element(view.fractal_canvas, dx, dy);
             }
             else {
                 // With anti-aliasing, 0.5 offset makes 1-pixel wide.
@@ -313,8 +312,7 @@ const App = {
             );
             const overlay_ctx = view.overlay_canvas.getContext("2d");
             overlay_ctx.drawImage(view.fractal_canvas, dx, dy);
-            view.fractal_canvas.style.left = "0";
-            view.fractal_canvas.style.top = "0";
+            position_element(view.fractal_canvas, 0, 0);
             clear_canvas(view.fractal_canvas);
             view.paint().then(() => {
                 clear_canvas(view.overlay_canvas);
@@ -367,8 +365,7 @@ const App = {
             return;
         }
         const view = View.canvas_map.get(this.move_target);
-        view.fractal_canvas.style.left = "0";
-        view.fractal_canvas.style.top = "0";
+        position_element(view.fractal_canvas, 0, 0);
         clear_canvas(view.overlay_canvas);
         this.reset_dragging();
     },
@@ -569,16 +566,9 @@ const Panels = {
             if (at_y > window.innerHeight) {
                 at_y = (window.innerHeight - panel.clientHeight) / 2;
             }
-            this.position_panel(panel, at_x, at_y);
+            position_element(panel, at_x, at_y);
             this.bring_panel_to_top(panel);
         }
-    },
-
-    position_panel(panel, left, top) {
-        panel.style.left = left + "px";
-        panel.style.top = top + "px";
-        panel.style.right = "auto";
-        panel.style.bottom = "auto";
     },
 
     close_panel(ev) {
@@ -601,7 +591,7 @@ const Panels = {
         this.rubstart = {x: ev.clientX, y: ev.clientY};
         this.draggable_start = {x: this.draggable.offsetLeft, y: this.draggable.offsetTop};
         this.bring_panel_to_top(this.draggable);
-        this.position_panel(this.draggable, this.draggable.offsetLeft, this.draggable.offsetTop);
+        position_element(this.draggable, this.draggable.offsetLeft, this.draggable.offsetTop);
     },
 
     draggable_mousemove(ev) {
@@ -610,7 +600,7 @@ const Panels = {
         }
         ev.preventDefault();
         ev.stopPropagation();
-        this.position_panel(
+        position_element(
             this.draggable,
             this.draggable_start.x - (this.rubstart.x - ev.clientX),
             this.draggable_start.y - (this.rubstart.y - ev.clientY)
@@ -660,6 +650,10 @@ function platform() {
     else if (navigator.platform.indexOf("Win") > -1) {
         return "win";
     }
+}
+
+function position_element(elt, x, y) {
+    elt.style.inset = `${y}px auto auto ${x}px`;
 }
 
 function clear_canvas(canvas) {
