@@ -398,11 +398,7 @@ const App = {
                     break;
 
                 case "a":
-                    const new_angle = +prompt("Angle", this.view.angle);
-                    if (new_angle != this.view.angle) {
-                        this.set_angle(new_angle);
-                        this.view.paint();
-                    }
+                    Panels.show_panel("infopanel", "angle");
                     break;
 
                 case "c":
@@ -415,11 +411,7 @@ const App = {
                     break;
 
                 case "i":
-                    new_limit = +prompt("Iteration limit", this.view.iter_limit);
-                    if (new_limit != this.view.iter_limit) {
-                        this.set_iter_limit(new_limit);
-                        this.view.paint();
-                    }
+                    Panels.show_panel("infopanel", "iter_limit");
                     break;
 
                 case "I":
@@ -543,16 +535,28 @@ const Panels = {
             panel.style.display = "none";
         }
         else {
-            panel.style.display = "block";
-            let at_x = panel.offsetLeft, at_y = panel.offsetTop;
-            if (at_x > window.innerWidth) {
-                at_x = (window.innerWidth - panel.clientWidth) / 2;
-            }
-            if (at_y > window.innerHeight) {
-                at_y = (window.innerHeight - panel.clientHeight) / 2;
-            }
-            position_element(panel, at_x, at_y);
-            this.bring_panel_to_top(panel);
+            this.show_panel(panel);
+        }
+    },
+
+    show_panel(panel, inputid) {
+        if (typeof panel === 'string') {
+            panel = document.getElementById(panel);
+        }
+        panel.style.display = "block";
+        let at_x = panel.offsetLeft, at_y = panel.offsetTop;
+        if (at_x > window.innerWidth) {
+            at_x = (window.innerWidth - panel.clientWidth) / 2;
+        }
+        if (at_y > window.innerHeight) {
+            at_y = (window.innerHeight - panel.clientHeight) / 2;
+        }
+        position_element(panel, at_x, at_y);
+        this.bring_panel_to_top(panel);
+        if (inputid) {
+            const inp = document.getElementById(inputid);
+            inp.focus();
+            inp.select();
         }
     },
 
