@@ -378,28 +378,13 @@ const App = {
         //console.log("key:",  ev.key, "shift:", ev.shiftKey, "ctrl:", ev.ctrlKey, "meta:", ev.metaKey, "alt:", ev.altKey);
         let key = ev.key;
 
-        // Chrome handles ctrl-lessthan as shift-ctrl-comma. Fix those combinations
-        // to be what we expect.
-        if (ev.shiftKey) {
-            switch (key) {
-                case ".":
-                    key = ">";
-                    break;
-                case ",":
-                    key = "<";
-                    break;
-            }
-        }
-
         // Mac option chars need to be mapped back to their original chars.
         if (platform() === "mac") {
-            switch (key) {
-                case "¯":
-                    key = "<";
-                    break;
-                case "˘":
-                    key = ">";
-                    break;
+            const oldkey = "¯˘·‚";
+            const newkey = "<>()";
+            const i = oldkey.indexOf(key);
+            if (i >= 0) {
+                key = newkey[i];
             }
         }
 
@@ -480,12 +465,12 @@ const App = {
                     this.view.paint();
                     break;
 
-                case ">":
+                case ")":
                     this.set_angle(this.view.angle + (ev.altKey ? 1 : 10));
                     this.view.paint();
                     break;
 
-                case "<":
+                case "(":
                     this.set_angle(this.view.angle - (ev.altKey ? 1 : 10));
                     this.view.paint();
                     break;
