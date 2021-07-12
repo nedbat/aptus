@@ -35,8 +35,6 @@ async def home(request: Request):
     }
     return templates.TemplateResponse("mainpage.html", context)
 
-# Cache of computed counts
-cache = cachetools.LRUCache(50)
 def run_in_executor(f):
     # from https://stackoverflow.com/a/53719009/14343
     @functools.wraps(f)
@@ -45,16 +43,20 @@ def run_in_executor(f):
         return loop.run_in_executor(None, lambda: f(*args, **kwargs))
     return inner
 
+# Cache of computed counts. One tile is about 830Kb.
+cache_size = int(os.getenv("APTUS_CACHE", "500"))
+tile_cache = cachetools.LRUCache(cache_size * 1_000_000, getsizeof=lambda nda: nda.nbytes)
+
 @run_in_executor
 def compute_tile(compute, cachekey):
-    old = cache.get(cachekey)
+    old = tile_cache.get(cachekey)
     if old is None:
         compute.compute_array()
     else:
         compute.set_counts(old)
     pix = compute.color_mandel()
     if old is None:
-        cache[cachekey] = compute.counts
+        tile_cache[cachekey] = compute.counts
     im = PIL.Image.fromarray(pix)
     fout = io.BytesIO()
     compute.write_image(im, fout)
