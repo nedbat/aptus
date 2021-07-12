@@ -450,7 +450,7 @@ const App = {
                     this.view.paint();
                     break;
 
-                case ",":
+                case "<":
                     this.view.palette_index -= 1;
                     if (this.view.palette_index < 0) {
                         this.view.palette_index += palettes.length;
@@ -458,7 +458,7 @@ const App = {
                     this.view.paint();
                     break;
 
-                case ".":
+                case ">":
                     this.view.palette_index += 1;
                     this.view.palette_index %= palettes.length;
                     this.view.paint();
