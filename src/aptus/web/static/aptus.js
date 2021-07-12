@@ -43,6 +43,16 @@ const View = {
         this.palette_index = 0;
         this.set_canvas_size("*");
         this.tiles_pending = 0;
+        this.reset_palette_tweaks();
+    },
+
+    reset_palette_tweaks() {
+        this.palette_tweaks = {
+            phase: 0,
+            scale: 1,
+            hue: 0,
+            saturation: 0,
+        }
     },
 
     set_center(r, i) {
@@ -102,10 +112,6 @@ const View = {
         this.reqseq += 1;
         const imageurls = [];
         const palette = [...palettes[this.palette_index]];
-        //palette.push(["adjust", {hue: 120, saturation: 0}]);
-        //palette.push(["stretch", {steps: 3, hsl: true}]);
-        //palette = [["spectrum", {ncolors: 16, l: [100, 150], s: [100, 175]}], ["stretch", {steps: 10, hsl: true, ease: get_input_value("#ease")}]];
-        //palette.push(["stretch", {steps: 2, hsl: true, ease: get_input_value("#ease")}]);
         //palette = [
         //    ["spectrum", {
         //        ncolors: get_input_value("#ncolors"),
@@ -146,6 +152,7 @@ const View = {
                         continuous: this.continuous,
                         iter_limit: this.iter_limit,
                         palette,
+                        palette_tweaks: this.palette_tweaks,
                     },
                 };
                 imageurls.push(tile);
@@ -382,13 +389,13 @@ const App = {
             return;
         }
 
-        //console.log("key:",  ev.key, "shift:", ev.shiftKey, "ctrl:", ev.ctrlKey, "meta:", ev.metaKey, "alt:", ev.altKey);
+        // console.log("key:", ev.key, "shift:", ev.shiftKey, "ctrl:", ev.ctrlKey, "meta:", ev.metaKey, "alt:", ev.altKey);
         let key = ev.key;
 
         // Mac option chars need to be mapped back to their original chars.
         if (platform() === "mac") {
-            const oldkey = "¯˘·‚";
-            const newkey = "<>()";
+            const oldkey = "¯˘·‚“‘”’…æÚÆ";
+            const newkey = "<>()[]{};':\"";
             const i = oldkey.indexOf(key);
             if (i >= 0) {
                 key = newkey[i];
@@ -471,6 +478,55 @@ const App = {
 
                 case "(":
                     this.set_angle(this.view.angle - (ev.altKey ? 1 : 10));
+                    this.view.paint();
+                    break;
+
+                case ",":
+                    this.view.palette_tweaks.phase -= 1;
+                    this.view.paint();
+                    break;
+
+                case ".":
+                    this.view.palette_tweaks.phase += 1;
+                    this.view.paint();
+                    break;
+
+                case ";":
+                    if (this.view.continuous) {
+                        this.view.palette_tweaks.scale /= (ev.altKey ? 1.01 : 1.1);
+                        this.view.paint();
+                    }
+                    break;
+
+                case "'":
+                    if (this.view.continuous) {
+                        this.view.palette_tweaks.scale *= (ev.altKey ? 1.01 : 1.1);
+                        this.view.paint();
+                    }
+                    break;
+
+                case "[":
+                    this.view.palette_tweaks.hue -= (ev.altKey ? 1 : 10);
+                    this.view.paint();
+                    break;
+
+                case "]":
+                    this.view.palette_tweaks.hue += (ev.altKey ? 1 : 10);
+                    this.view.paint();
+                    break;
+
+                case "{":
+                    this.view.palette_tweaks.saturation -= (ev.altKey ? 1 : 10);
+                    this.view.paint();
+                    break;
+
+                case "}":
+                    this.view.palette_tweaks.saturation += (ev.altKey ? 1 : 10);
+                    this.view.paint();
+                    break;
+
+                case "0":
+                    this.view.reset_palette_tweaks();
                     this.view.paint();
                     break;
 

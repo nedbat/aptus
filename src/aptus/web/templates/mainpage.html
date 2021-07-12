@@ -10,6 +10,10 @@
 <body>
     <div id="the_view"></div>
 
+    {% set altnote -%}
+        *
+    {%- endset %}
+
     {% set alt -%}
         <b><span class="notmac">alt</span><span class="mac">option</span></b>
     {%- endset %}
@@ -30,20 +34,29 @@
         <kbd>a</kbd> set the angle<br/>
         <kbd>c</kbd> toggle continuous coloring<br/>
         <kbd>i</kbd> set the iteration limit<br/>
-        <kbd>I</kbd> show the computation parameters panel<br/>
-        <kbd>P</kbd> show the palette parameters panel<br/>
+        <kbd>I</kbd> toggle the computation parameters panel<br/>
+        <!--
+        <kbd>P</kbd> toggle the palette parameters panel<br/>
+        -->
         <kbd>r</kbd> redraw<br/>
         <kbd>R</kbd> reset everything<br/>
         <kbd>w</kbd> set the canvas size<br/>
+        <kbd>(</kbd> <kbd>)</kbd> rotate the angle {{altnote}}<br/>
         <kbd>&lt;</kbd> <kbd>&gt;</kbd> cycle through palettes<br/>
-        <kbd>(</kbd> <kbd>)</kbd> rotate the angle (+{{alt}}: just a little)<br/>
+        <kbd>,</kbd> <kbd>.</kbd> cycle the palette one color<br/>
+        <kbd>;</kbd> <kbd>'</kbd> stretch the colors, if continuous {{altnote}}<br/>
+        <kbd>[</kbd> <kbd>]</kbd> adjust the hue {{altnote}}<br/>
+        <kbd>{</kbd> <kbd>}</kbd> adjust the saturation {{altnote}}<br/>
+        <kbd>0</kbd> (zero) reset all color adjustments<br/>
         <kbd>?</kbd> toggle help panel<br/>
         </p>
         <p>
-        <b>click</b>: zoom in (+{{alt}}: just a little)<br/>
-        <b>shift-click</b>: zoom out (+{{alt}}: just a little)<br/>
+        <b>click</b>: zoom in {{altnote}}<br/>
+        <b>shift-click</b>: zoom out {{altnote}}<br/>
         <b>click-drag</b>: select new viewing rectangle<br/>
         <b>shift-click-drag</b>: pan the view<br/>
+        <br/>
+        {{altnote}} +{{alt}}: just a little<br/>
         </p>
     </div>
 

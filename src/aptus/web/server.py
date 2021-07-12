@@ -72,6 +72,7 @@ class ComputeSpec(pydantic.BaseModel):
     continuous: bool
     iter_limit: int
     palette: list
+    palette_tweaks: dict
 
 class TileRequest(pydantic.BaseModel):
     spec: ComputeSpec
@@ -90,6 +91,12 @@ async def tile(
     compute.continuous = spec.continuous
     compute.iter_limit = spec.iter_limit
     compute.palette = Palette().from_spec(spec.palette)
+    compute.palette_phase = spec.palette_tweaks.get("phase", 0)
+    compute.palette_scale = spec.palette_tweaks.get("scale", 1.0)
+    compute.palette.adjust(
+        hue=spec.palette_tweaks.get("hue", 0),
+        saturation=spec.palette_tweaks.get("saturation", 0),
+    )
 
     gparams = compute.grid_params().subtile(*spec.coords)
     compute.create_mandel(gparams)
