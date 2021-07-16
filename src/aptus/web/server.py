@@ -117,4 +117,4 @@ async def tile(
     }
 
 def main():
-    uvicorn.run(app, host="127.0.0.1", port=8042)
+    uvicorn.run("aptus.web.server:app", host="127.0.0.1", port=8042, reload=True)
