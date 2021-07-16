@@ -549,7 +549,7 @@ const App = {
         if (this.resize_timeout) {
             clearTimeout(this.resize_timeout);
         }
-        resize_timeout = setTimeout(
+        this.resize_timeout = setTimeout(
             () => {
                 this.resize_timeout = null;
                 this.view.set_size();
