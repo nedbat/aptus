@@ -587,7 +587,7 @@ const App = {
         const spec = this.view.spec_for_render(supersample, +nums[0], +nums[1]);
         document.querySelector("#renderwait").classList.add("show");
         Panels.show_panel("#renderwait .panel");
-        fetch("/hires", {method: "POST", body: JSON.stringify(spec)})
+        fetch("/render", {method: "POST", body: JSON.stringify(spec)})
             .then(response => response.blob())
             .then(blob => {
                 document.querySelector("#renderwait").classList.remove("show");

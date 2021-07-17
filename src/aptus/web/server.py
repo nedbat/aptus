@@ -122,8 +122,8 @@ async def tile(req: TileRequest):
         "seq": req.seq,
     }
 
-@app.post("/hires")
-async def hires(spec: ComputeSpec):
+@app.post("/render")
+async def render(spec: ComputeSpec):
     compute = spec_to_compute(spec)
     data = await compute_tile(compute)
     return Response(content=data)
