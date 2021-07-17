@@ -85,7 +85,7 @@ const View = {
             this.canvas_size_w = this.canvas_size_h = null;
         }
         else {
-            const nums = s.split(/[ ,]+/);
+            const nums = s.split(/[ ,x]+/);
             this.canvas_size_w = +nums[0];
             this.canvas_size_h = +nums[1];
         }
@@ -108,10 +108,34 @@ const View = {
         checkers(this.backdrop_canvas);
     },
 
+    spec_for_view() {
+        return {
+            center: [this.centerr, this.centeri],
+            diam: [
+                this.canvasW * this.pixsize,
+                this.canvasH * this.pixsize
+            ],
+            size: [this.canvasW, this.canvasH],
+            angle: this.angle,
+            continuous: this.continuous,
+            iter_limit: this.iter_limit,
+            palette: palettes[this.palette_index],
+            palette_tweaks: this.palette_tweaks,
+        };
+    },
+
+    spec_for_render(supersample, w, h) {
+        return {
+            ...this.spec_for_view(),
+            supersample: supersample,
+            coords: [0, w, 0, h],
+            size: [w, h],
+        };
+    },
+
     paint() {
         this.reqseq += 1;
         const imageurls = [];
-        const palette = [...palettes[this.palette_index]];
         //palette = [
         //    ["spectrum", {
         //        ncolors: get_input_value("#ncolors"),
@@ -138,21 +162,12 @@ const View = {
                     tx,
                     ty,
                     spec: {
-                        center: [this.centerr, this.centeri],
-                        diam: [
-                            this.canvasW * this.pixsize,
-                            this.canvasH * this.pixsize
-                        ],
-                        size: [this.canvasW, this.canvasH],
+                        ...this.spec_for_view(),
+                        supersample: 1,
                         coords: [
                             tx, Math.min(tx + dx, this.canvasW),
                             ty, Math.min(ty + dy, this.canvasH),
                         ],
-                        angle: this.angle,
-                        continuous: this.continuous,
-                        iter_limit: this.iter_limit,
-                        palette,
-                        palette_tweaks: this.palette_tweaks,
                     },
                 };
                 imageurls.push(tile);
@@ -445,6 +460,10 @@ const App = {
                     this.view.paint();
                     break;
 
+                case "s":
+                    Panels.toggle_panel("#renderform");
+                    break;
+
                 case "w":
                     let text;
                     if (!this.view.canvas_size_w) {
@@ -557,6 +576,23 @@ const App = {
             },
             250
         );
+    },
+
+    click_render(ev) {
+        const supersample = get_input_value("#supersample");
+        const nums = document.querySelector("#rendersize").value.split(/[ ,x]+/);
+        const spec = this.view.spec_for_render(supersample, +nums[0], +nums[1]);
+        document.querySelector("html").classList.add("wait");
+        fetch("/hires", {method: "POST", body: JSON.stringify(spec)})
+            .then(response => response.blob())
+            .then(blob => {
+                const save = document.createElement("a");
+                save.href = URL.createObjectURL(blob);
+                save.target = "_blank";
+                save.download = "Aptus.png";
+                save.dispatchEvent(new MouseEvent("click"));
+                document.querySelector("html").classList.remove("wait");
+            });
     },
 };
 
@@ -750,6 +786,8 @@ function main() {
 
     on_event("#infopanel input", "change", ev => App.spec_change(ev));
     on_event(window, "resize", ev => App.resize(ev));
+
+    on_event("#renderbutton", "click", ev => App.click_render(ev));
 
     App.view.set_size();
     App.view.paint();

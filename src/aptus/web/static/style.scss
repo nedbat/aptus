@@ -36,10 +36,14 @@ canvas.view {
     display: none;
     position: absolute;
     background: #ffeebb;
+    padding: .5em;
     border: 2px solid black;
-    padding: 1em 1em 0 1em;
     border-radius: .5em;
     box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.4);
+
+    width: 15em;
+    top: 10em;
+    left: 10em;
 
     p {
         margin: 0 0 1em 0;
@@ -63,8 +67,6 @@ canvas.view {
     }
 
     &.form {
-        padding: .5em 0;
-
         p {
             margin: .25em 0;
         }
@@ -75,13 +77,14 @@ canvas.view {
             padding-right: .25em;
         }
     }
-
 }
 
 #helppanel {
     width: 20em;
     top: 5em;
     right: 5em;
+    left: auto;
+    padding: 1em 1em 0 1em;
 }
 
 #infopanel {
@@ -92,6 +95,7 @@ canvas.view {
 
 #palettepanel {
     width: 12em;
+    top: auto;
     bottom: 5em;
     left: 5em;
 }
@@ -125,5 +129,9 @@ html {
             display: none;
         }
 
+    }
+
+    &.wait {
+        cursor: wait;
     }
 }

@@ -11,7 +11,7 @@ import PIL
 import pydantic
 import uvicorn
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -48,25 +48,29 @@ cache_size = int(os.getenv("APTUS_CACHE", "500"))
 tile_cache = cachetools.LRUCache(cache_size * 1_000_000, getsizeof=lambda nda: nda.nbytes)
 
 @run_in_executor
-def compute_tile(compute, cachekey):
+def compute_tile(compute, cachekey=None):
     old = tile_cache.get(cachekey)
     if old is None:
         compute.compute_array()
+        print(f"{compute.counts.shape=}")
     else:
         compute.set_counts(old)
     pix = compute.color_mandel()
-    if old is None:
+    if cachekey and old is None:
         tile_cache[cachekey] = compute.counts
     im = PIL.Image.fromarray(pix)
+    if compute.supersample > 1:
+        print(f"Resampling from {im.size=} to {compute.size=}")
+        im = im.resize(compute.size, PIL.Image.ANTIALIAS)
     fout = io.BytesIO()
     compute.write_image(im, fout)
-    data_url = "data:image/png;base64," + base64.b64encode(fout.getvalue()).decode("ascii")
-    return data_url
+    return fout.getvalue()
 
 class ComputeSpec(pydantic.BaseModel):
     center: tuple[float, float]
     diam: tuple[float, float]
     size: tuple[int, int]
+    supersample: int
     coords: tuple[int, int, int, int]
     angle: float
     continuous: bool
@@ -78,15 +82,12 @@ class TileRequest(pydantic.BaseModel):
     spec: ComputeSpec
     seq: int
 
-@app.post("/tile")
-async def tile(
-    req: TileRequest
-):
-    spec = req.spec
+def spec_to_compute(spec):
     compute = AptusCompute()
     compute.center = spec.center
     compute.diam = spec.diam
     compute.size = spec.size
+    compute.supersample = spec.supersample
     compute.angle = spec.angle
     compute.continuous = spec.continuous
     compute.iter_limit = spec.iter_limit
@@ -98,9 +99,15 @@ async def tile(
         saturation=spec.palette_tweaks.get("saturation", 0),
     )
 
-    gparams = compute.grid_params().subtile(*spec.coords)
+    supercoords = [v * spec.supersample for v in spec.coords]
+    gparams = compute.grid_params().subtile(*supercoords)
     compute.create_mandel(gparams)
+    return compute
 
+@app.post("/tile")
+async def tile(req: TileRequest):
+    spec = req.spec
+    compute = spec_to_compute(spec)
     cachekey = f"""
         {spec.center}
         {spec.diam}
@@ -110,11 +117,19 @@ async def tile(
         {spec.iter_limit}
         {spec.coords}
         """
-    data_url = await compute_tile(compute, cachekey)
+    data = await compute_tile(compute, cachekey)
+    data_url = "data:image/png;base64," + base64.b64encode(data).decode("ascii")
     return {
         "url": data_url,
         "seq": req.seq,
     }
+
+@app.post("/hires")
+async def hires(spec: ComputeSpec):
+    compute = spec_to_compute(spec)
+    data = await compute_tile(compute)
+    return Response(content=data)
+
 
 def main():
     uvicorn.run("aptus.web.server:app", host="127.0.0.1", port=8042, reload=True)
