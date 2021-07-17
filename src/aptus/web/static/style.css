@@ -1,0 +1,51 @@
+html { height: 100%; }
+
+html span.mac { display: none; }
+
+html span.notmac { display: inline; }
+
+html.mac span.mac { display: inline; }
+
+html.mac span.notmac { display: none; }
+
+html.wait { cursor: wait; }
+
+body { font-family: Helvetica; overflow: hidden; margin: 0; padding: 0; height: 100%; }
+
+.canvas_container { display: flex; justify-content: center; width: 100%; }
+
+.canvas_sizer { position: absolute; top: 0; overflow: hidden; }
+
+canvas.view { position: absolute; image-rendering: crisp-edges; image-rendering: pixelated; }
+
+canvas.view.wait { cursor: wait; }
+
+canvas.view.move { cursor: grab; }
+
+.panel { display: none; position: absolute; background: #ffeebb; padding: .5em; border: 2px solid black; border-radius: .5em; box-shadow: 5px 5px 5px rgba(0, 0, 0, 0.4); width: 15em; top: 10em; left: 10em; }
+
+.panel p { margin: 0 0 1em 0; line-height: 1.3; }
+
+.panel .closebtn { position: absolute; top: .25em; right: .25em; border: 1px solid #00000000; border-radius: .25em; }
+
+.panel .closebtn:hover { border: 1px solid black; }
+
+.panel .closebtn * { margin-bottom: -.3em; }
+
+.panel.form p { margin: .25em 0; }
+
+.panel.form label { display: inline-block; width: 4em; text-align: right; padding-right: .25em; }
+
+#helppanel { width: 20em; top: 5em; right: 5em; left: auto; padding: 1em 1em 0 1em; }
+
+#infopanel { width: 18em; top: 5em; left: 5em; }
+
+#palettepanel { width: 12em; top: auto; bottom: 5em; left: 5em; }
+
+kbd { display: inline-block; font-family: monospace; font-weight: bold; background: #f0f0f0; border: 2px solid #888; border-color: #888 #333 #333 #888; border-radius: .25em; padding: .1em .25em; margin: .1em; }
+
+#renderwait { position: absolute; display: none; background: #00000080; width: 100%; height: 100%; cursor: wait; }
+
+#renderwait.show { display: block; }
+
+#renderwait .panel { width: 10em; text-align: center; padding: 2em; top: 20em; left: 0; right: 0; margin: auto; }
