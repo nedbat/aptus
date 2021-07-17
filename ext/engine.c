@@ -165,7 +165,7 @@ AptEngine_init(AptEngine *self, PyObject *args, PyObject *kwds)
     self->ridy.i = 0.001;
     self->rijulia.r = 0.0;
     self->rijulia.i = 0.0;
-    self->iter_limit = 999;
+    self->iter_limit = 1000;
     self->bailout = 2.0;
     self->check_cycles = 1;
     self->trace_boundary = 1;

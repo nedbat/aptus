@@ -168,7 +168,7 @@ class AptusCompute:
         self._geometry_attributes = ['center', 'diam', 'size', 'angle']
 
         # computation
-        self.iter_limit = 999
+        self.iter_limit = 1000
         self.continuous = False
         self.supersample = 1
         self.mode = 'mandelbrot'

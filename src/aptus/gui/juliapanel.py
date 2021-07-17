@@ -45,7 +45,7 @@ class JuliaPanel(MiniComputePanel, ListeningWindowMixin):
         pt_info = self.viewwin.get_point_info(pt)
         if pt_info:
             self.compute.rijulia = pt_info['r'], pt_info['i']
-            self.compute.iter_limit = 999
+            self.compute.iter_limit = 1000
         else:
             self.compute.rijulia = 0,0
         self.compute.create_mandel()

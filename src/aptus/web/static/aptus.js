@@ -39,7 +39,7 @@ const View = {
         this.set_pixsize(3.0/600);
         this.set_angle(0.0);
         this.continuous = false;
-        this.set_iter_limit(999);
+        this.set_iter_limit(1000);
         this.palette_index = 0;
         this.set_canvas_size("*");
         this.tiles_pending = 0;
@@ -248,7 +248,7 @@ const App = {
         this.set_center(-0.6, 0.0);
         this.set_pixsize(3.0/600);
         this.set_angle(0.0);
-        this.set_iter_limit(999);
+        this.set_iter_limit(1000);
     },
 
     reset_dragging() {
