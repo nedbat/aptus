@@ -10,6 +10,12 @@
 <body>
     <div id="the_view"></div>
 
+    <div id="renderwait">
+        <div class="panel draggable">
+            Rendering...
+        </div>
+    </div>
+
     {% set altnote -%}
         *
     {%- endset %}
@@ -82,7 +88,7 @@
     <div id="renderform" class="panel draggable form">
         {{closebtn}}
         <p><label for="rendersize">size:</label><input id="rendersize" size="10"/></p>
-        <p><label for="supersample">super:</label><input id="supersample" size="5"/></p>
+        <p><label for="supersample">super:</label><input id="supersample" size="5" value="1"/></p>
         <p><label></label><input type="button" value="Render" id="renderbutton"/></p>
     </div>
 

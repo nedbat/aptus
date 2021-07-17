@@ -461,6 +461,9 @@ const App = {
                     break;
 
                 case "s":
+                    if (get_input_value("#rendersize") === "") {
+                        set_input_value("#rendersize", `${this.view.canvasW} x ${this.view.canvasH}`);
+                    }
                     Panels.toggle_panel("#renderform");
                     break;
 
@@ -470,7 +473,7 @@ const App = {
                         text = "*";
                     }
                     else {
-                        text = `${this.view.canvas_size_w} ${this.view.canvas_size_h}`;
+                        text = `${this.view.canvas_size_w} x ${this.view.canvas_size_h}`;
                     }
                     this.view.set_canvas_size(prompt("Canvas size", text));
                     this.view.paint();
@@ -582,16 +585,18 @@ const App = {
         const supersample = get_input_number("#supersample");
         const nums = get_input_value("#rendersize").split(/[ ,x]+/);
         const spec = this.view.spec_for_render(supersample, +nums[0], +nums[1]);
-        document.querySelector("html").classList.add("wait");
+        document.querySelector("#renderwait").classList.add("show");
+        Panels.show_panel("#renderwait .panel");
         fetch("/hires", {method: "POST", body: JSON.stringify(spec)})
             .then(response => response.blob())
             .then(blob => {
+                document.querySelector("#renderwait").classList.remove("show");
                 const save = document.createElement("a");
                 save.href = URL.createObjectURL(blob);
                 save.target = "_blank";
                 save.download = "Aptus.png";
                 save.dispatchEvent(new MouseEvent("click"));
-                document.querySelector("html").classList.remove("wait");
+                save.remove();
             });
     },
 };

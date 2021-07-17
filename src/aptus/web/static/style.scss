@@ -1,8 +1,35 @@
+html {
+    height: 100%;
+
+    span.mac {
+        display: none;
+    }
+
+    span.notmac {
+        display: inline;
+    }
+
+    &.mac {
+        span.mac {
+            display: inline;
+        }
+        span.notmac {
+            display: none;
+        }
+
+    }
+
+    &.wait {
+        cursor: wait;
+    }
+}
+
 body {
     font-family: Helvetica;
     overflow: hidden;
     margin: 0;
     padding: 0;
+    height: 100%;
 }
 
 .canvas_container {
@@ -112,26 +139,23 @@ kbd {
     margin: .1em;
 }
 
-html {
-    span.mac {
-        display: none;
+#renderwait {
+    position: absolute;
+    display: none;
+    background: #00000080;
+    width: 100%;
+    height: 100%;
+    cursor: wait;
+    &.show {
+        display: block;
     }
-
-    span.notmac {
-        display: inline;
-    }
-
-    &.mac {
-        span.mac {
-            display: inline;
-        }
-        span.notmac {
-            display: none;
-        }
-
-    }
-
-    &.wait {
-        cursor: wait;
+    .panel {
+        width: 10em;
+        text-align: center;
+        padding: 2em;
+        top: 20em;
+        left: 0;
+        right: 0;
+        margin: auto;
     }
 }
