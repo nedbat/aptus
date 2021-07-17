@@ -491,6 +491,30 @@ class AptusCompute:
         else:
             xmin = ymin = 0
             ymax, xmax = self.counts.shape
+
+        # The computation optimizations can go wrong if the set is zoomed out
+        # too far. They decide the entire set can be flood-filled since the
+        # edges of the view are all the same count. To prevent this, if we are
+        # zoomed out enough to see the entire radius-2 circle, and the origin
+        # is in the view, then compute in two halves, split at x=0.
+        optimization_safe = True
+        x0, y0 = self.pixel_from_coords(0.0, 0.0)
+        if xmin <= x0 < xmax and ymin <= y0 < ymax:
+            min_tile_diam = min(
+                (xmax - xmin) * self.diam[0] / self.size[0],
+                (ymax - ymin) * self.diam[1] / self.size[1],
+            )
+            if min_tile_diam >= 4.0:
+                optimization_safe = False
+
+        if optimization_safe:
+            self._compute_array(n_tile, (xmin, xmax, ymin, ymax))
+        else:
+            self._compute_array(n_tile, (xmin, int(x0), ymin, ymax))
+            self._compute_array(n_tile, (int(x0), xmax, ymin, ymax))
+
+    def _compute_array(self, n_tile=0, coords=None):
+        xmin, xmax, ymin, ymax = coords
         stats = self.eng.compute_array(
             self.counts, self.status,
             xmin, xmax, ymin, ymax,
