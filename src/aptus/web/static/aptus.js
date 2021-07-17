@@ -108,12 +108,12 @@ const View = {
         checkers(this.backdrop_canvas);
     },
 
-    spec_for_view() {
+    spec_for_tile() {
         return {
             center: [this.centerr, this.centeri],
             diam: [
                 this.canvasW * this.pixsize,
-                this.canvasH * this.pixsize
+                this.canvasH * this.pixsize,
             ],
             size: [this.canvasW, this.canvasH],
             angle: this.angle,
@@ -126,7 +126,7 @@ const View = {
 
     spec_for_render(supersample, w, h) {
         return {
-            ...this.spec_for_view(),
+            ...this.spec_for_tile(),
             supersample: supersample,
             coords: [0, w, 0, h],
             size: [w, h],
@@ -138,15 +138,15 @@ const View = {
         const imageurls = [];
         //palette = [
         //    ["spectrum", {
-        //        ncolors: get_input_value("#ncolors"),
-        //        h: [get_input_value("#hlo"), get_input_value("#hhi")],
-        //        l: [get_input_value("#llo"), get_input_value("#lhi")],
-        //        s: [get_input_value("#slo"), get_input_value("#shi")]
+        //        ncolors: get_input_number("#ncolors"),
+        //        h: [get_input_number("#hlo"), get_input_number("#hhi")],
+        //        l: [get_input_number("#llo"), get_input_number("#lhi")],
+        //        s: [get_input_number("#slo"), get_input_number("#shi")]
         //    }],
         //    ["stretch", {
-        //        steps: get_input_value("#stretch"),
+        //        steps: get_input_number("#stretch"),
         //        hsl: true,
-        //        ease: get_input_value("#ease")
+        //        ease: get_input_number("#ease")
         //    }]
         //];
         const nx = Math.floor(this.canvasW / this.tileX) || 1;
@@ -162,7 +162,7 @@ const View = {
                     tx,
                     ty,
                     spec: {
-                        ...this.spec_for_view(),
+                        ...this.spec_for_tile(),
                         supersample: 1,
                         coords: [
                             tx, Math.min(tx + dx, this.canvasW),
@@ -281,10 +281,10 @@ const App = {
     },
 
     spec_change(ev) {
-        this.set_center(get_input_value("#centerr"), get_input_value("#centeri"));
-        this.set_pixsize(get_input_value("#pixsize"));
-        this.set_angle(get_input_value("#angle"));
-        this.set_iter_limit(get_input_value("#iter_limit"));
+        this.set_center(get_input_number("#centerr"), get_input_number("#centeri"));
+        this.set_pixsize(get_input_number("#pixsize"));
+        this.set_angle(get_input_number("#angle"));
+        this.set_iter_limit(get_input_number("#iter_limit"));
         this.view.paint();
     },
 
@@ -579,8 +579,8 @@ const App = {
     },
 
     click_render(ev) {
-        const supersample = get_input_value("#supersample");
-        const nums = document.querySelector("#rendersize").value.split(/[ ,x]+/);
+        const supersample = get_input_number("#supersample");
+        const nums = get_input_value("#rendersize").split(/[ ,x]+/);
         const spec = this.view.spec_for_render(supersample, +nums[0], +nums[1]);
         document.querySelector("html").classList.add("wait");
         fetch("/hires", {method: "POST", body: JSON.stringify(spec)})
@@ -608,7 +608,11 @@ function set_input_value(sel, val) {
 }
 
 function get_input_value(sel) {
-    return +document.querySelector(sel).value;
+    return document.querySelector(sel).value;
+}
+
+function get_input_number(sel) {
+    return +get_input_value(sel);
 }
 
 const Panels = {
