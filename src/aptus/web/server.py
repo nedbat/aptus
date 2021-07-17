@@ -52,7 +52,6 @@ def compute_tile(compute, cachekey=None):
     old = tile_cache.get(cachekey)
     if old is None:
         compute.compute_array()
-        print(f"{compute.counts.shape=}")
     else:
         compute.set_counts(old)
     pix = compute.color_mandel()
@@ -60,7 +59,6 @@ def compute_tile(compute, cachekey=None):
         tile_cache[cachekey] = compute.counts
     im = PIL.Image.fromarray(pix)
     if compute.supersample > 1:
-        print(f"Resampling from {im.size=} to {compute.size=}")
         im = im.resize(compute.size, PIL.Image.ANTIALIAS)
     fout = io.BytesIO()
     compute.write_image(im, fout)
