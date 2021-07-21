@@ -48,15 +48,24 @@ cache_size = int(os.getenv("APTUS_CACHE", "500"))
 tile_cache = cachetools.LRUCache(cache_size * 1_000_000, getsizeof=lambda nda: nda.nbytes)
 
 @run_in_executor
-def compute_tile(compute, cachekey=None):
+def compute_tile(compute, cachekey):
     old = tile_cache.get(cachekey)
     if old is None:
         compute.compute_array()
     else:
         compute.set_counts(old)
-    pix = compute.color_mandel()
-    if cachekey and old is None:
+    if old is None:
         tile_cache[cachekey] = compute.counts
+    pix = compute.color_mandel()
+    im = PIL.Image.fromarray(pix)
+    fout = io.BytesIO()
+    compute.write_image(im, fout)
+    return fout.getvalue()
+
+@run_in_executor
+def compute_render(compute):
+    compute.compute_pixels()
+    pix = compute.color_mandel()
     im = PIL.Image.fromarray(pix)
     if compute.supersample > 1:
         im = im.resize(compute.size, PIL.Image.ANTIALIAS)
@@ -82,6 +91,7 @@ class TileRequest(pydantic.BaseModel):
 
 def spec_to_compute(spec):
     compute = AptusCompute()
+    compute.quiet = True
     compute.center = spec.center
     compute.diam = spec.diam
     compute.size = spec.size
@@ -125,7 +135,7 @@ async def tile(req: TileRequest):
 @app.post("/render")
 async def render(spec: ComputeSpec):
     compute = spec_to_compute(spec)
-    data = await compute_tile(compute)
+    data = await compute_render(compute)
     return Response(content=data)
 
 
