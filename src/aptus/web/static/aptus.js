@@ -1,5 +1,11 @@
 // Aptus web
 
+const Defaults = {
+    center: {r: -0.6, i: 0.0},
+    iter_limit: 1000,
+    angle: 0,
+};
+
 const View = {
     tileX: 400,
 
@@ -35,11 +41,11 @@ const View = {
     },
 
     reset() {
-        this.set_center(-0.6, 0.0);
+        this.set_center(Defaults.center.r, Defaults.center.i);
         this.set_pixsize(3.0/600);
-        this.set_angle(0.0);
+        this.set_angle(Defaults.angle);
         this.continuous = false;
-        this.set_iter_limit(1000);
+        this.set_iter_limit(Defaults.iter_limit);
         this.palette_index = 0;
         this.set_canvas_size("*");
         this.tiles_pending = 0;
@@ -195,11 +201,12 @@ const View = {
         return {r, i};
     },
 
-    cli_args() {
+    url_args() {
         return (
-            `--center=${this.centerr},${this.centeri} ` +
-            (this.angle ? `--angle=${this.angle} ` : "") +
-            `--diam=${this.canvasW * this.pixsize},${this.canvasH * this.pixsize}`
+            `?cr=${this.centerr}&ci=${this.centeri}` +
+            (this.angle != Defaults.angle ? `&angle=${this.angle}` : "") +
+            (this.iter_limit != Defaults.iter_limit ? `&iter=${this.iter_limit}` : "") +
+            `&dw=${this.canvasW * this.pixsize}&dh=${this.canvasH * this.pixsize}`
         );
     },
 };
@@ -245,10 +252,19 @@ const App = {
 
     reset() {
         this.view.reset();
-        this.set_center(-0.6, 0.0);
-        this.set_pixsize(3.0/600);
-        this.set_angle(0.0);
+        const params = new URLSearchParams(document.location.search.substring(1));
+        const cr = parseFloat(params.get("cr") || Defaults.center.r);
+        const ci = parseFloat(params.get("ci") || Defaults.center.i);
+        const angle = parseFloat(params.get("angle") || Defaults.angle);
+        const dw = parseFloat(params.get("dw") || 2.7);
+        const dh = parseFloat(params.get("dh") || 2.7);
+        const iter = parseFloat(params.get("iter") || Defaults.iter_limit);
+        pixsize = Math.max(dw / this.view.canvasW, dh / this.view.canvasH);
+        this.set_center(cr, ci);
+        this.set_pixsize(pixsize);
+        this.set_angle(angle);
         this.set_iter_limit(1000);
+        window.history.replaceState({}, "", "/");
     },
 
     reset_dragging() {
@@ -435,8 +451,11 @@ const App = {
                     this.view.paint();
                     break;
 
-                case "C":
-                    alert(this.view.cli_args());
+                case "L":
+                    const url = `${document.URL}${this.view.url_args()}`.replace("&", "&amp;");
+                    const html = `<a href="${url}">${url}</a>`;
+                    document.querySelector("#linklink").innerHTML = html;
+                    Panels.show_panel("#linkpanel");
                     break;
 
                 case "i":

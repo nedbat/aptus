@@ -41,9 +41,7 @@
         <kbd>c</kbd> toggle continuous coloring<br/>
         <kbd>i</kbd> set the iteration limit<br/>
         <kbd>I</kbd> toggle the computation parameters panel<br/>
-        <!--
-        <kbd>P</kbd> toggle the palette parameters panel<br/>
-        -->
+        <kbd>L</kbd> display a permalink<br/>
         <kbd>r</kbd> redraw<br/>
         <kbd>R</kbd> reset everything<br/>
         <kbd>w</kbd> set the canvas size<br/>
@@ -90,6 +88,12 @@
         <p><label for="rendersize">size:</label><input id="rendersize" size="10"/></p>
         <p><label for="supersample">super:</label><input id="supersample" size="5" value="1"/></p>
         <p class="buttons"><input type="button" value="Render" id="renderbutton"/></p>
+    </div>
+
+    <div id="linkpanel" class="panel draggable">
+        {{closebtn}}
+        <p>Permalink:</p>
+        <p id="linklink"></p>
     </div>
 
     <script>
