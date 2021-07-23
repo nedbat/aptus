@@ -75,6 +75,10 @@ canvas.view {
     p {
         margin: 0 0 1em 0;
         line-height: 1.3;
+
+        &.buttons {
+            text-align: right;
+        }
     }
 
     .closebtn {
