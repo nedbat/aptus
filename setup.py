@@ -103,16 +103,17 @@ setup(
 
     entry_points = {
         "console_scripts": [
-            "aptus = aptus.cmdline:main",
+            "aptuscli = aptus.cmdline:main",
             "aptusgui = aptus.gui:main",
             "aptusweb = aptus.web:main",
             ],
         },
 
     install_requires = [
-        "Pillow>=3.0",
-        "numpy>=1.5.1",
+        "Pillow",
+        "numpy",
         ],
+
     extras_require = {
         "gui": [
             "wxPython",
