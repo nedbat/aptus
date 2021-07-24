@@ -217,7 +217,7 @@ function fetchTile(tile) {
             seq: tile.reqseq,
             spec: tile.spec,
         };
-        fetch("/tile", {method: "POST", body: JSON.stringify(body)})
+        fetch_post_json("/tile", body)
             .then(response => response.json())
             .then(tiledata => {
                 if (tiledata.seq == tile.view.reqseq) {
@@ -239,6 +239,16 @@ function showTile(tile) {
 
 function getImage(tile) {
     return fetchTile(tile).then(showTile);
+}
+
+function fetch_post_json(url, body) {
+    return fetch(url, {
+        method: "POST",
+        body: JSON.stringify(body),
+        headers: {
+            "Content-Type": "application/json",
+        },
+    });
 }
 
 const App = {
@@ -606,7 +616,7 @@ const App = {
         const spec = this.view.spec_for_render(supersample, +nums[0], +nums[1]);
         document.querySelector("#renderwait").classList.add("show");
         Panels.show_panel("#renderwait .panel");
-        fetch("/render", {method: "POST", body: JSON.stringify(spec)})
+        fetch_post_json("/render", spec)
             .then(response => response.blob())
             .then(blob => {
                 document.querySelector("#renderwait").classList.remove("show");
