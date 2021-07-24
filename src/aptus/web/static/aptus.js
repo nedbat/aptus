@@ -218,14 +218,15 @@ function fetchTile(tile) {
             spec: tile.spec,
         };
         fetch_post_json("/tile", body)
-            .then(response => response.json())
-            .then(tiledata => {
-                if (tiledata.seq == tile.view.reqseq) {
-                    tile.img = new Image();
-                    tile.img.src = tiledata.url;
-                    tile.img.onload = () => resolve(tile);
-                }
-            });
+        .then(response => response.json())
+        .then(tiledata => {
+            if (tiledata.seq == tile.view.reqseq) {
+                tile.img = new Image();
+                tile.img.src = tiledata.url;
+                tile.img.onload = () => resolve(tile);
+            }
+        })
+        .catch(() => {});
     });
 }
 
@@ -248,6 +249,17 @@ function fetch_post_json(url, body) {
         headers: {
             "Content-Type": "application/json",
         },
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`${response.status}: ${response.statusText}`);
+        }
+        return response;
+    })
+    .catch(error => {
+        document.querySelector("#problempanel p").innerHTML = error;
+        Panels.show_panel("#problempanel");
+        return Promise.reject(error);
     });
 }
 
