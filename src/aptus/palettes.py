@@ -299,8 +299,6 @@ all_palettes = [
     Palette().xaos(),
     Palette().spectrum(2, h=120, l=(50,200), s=125).stretch(128, hsl=True),
     Palette().rgb_colors([(0x00,0x28,0x68), (0xFF, 0xFF, 0xFF), (0xBF, 0x0A, 0x30), (0xFF, 0xFF, 0xFF)]).stretch(4, ease="sine"),
-    Palette().rgb_colors([(255,192,192), (255,255,255)]).rgb_incolor((192,192,255)),
     Palette().rgb_colors([(255,255,255), (0,0,0), (0,0,0), (0,0,0)]),
     Palette().rgb_colors([(255,255,255)]),
-    Palette().rgb_colors([(0,0,0), (255,255,255)]).wrapping(False),
     ]
