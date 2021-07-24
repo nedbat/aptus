@@ -74,20 +74,20 @@ setup(
 
     # The data
     packages = [
-        'aptus',
-        'aptus.gui',
+        "aptus",
+        "aptus.gui",
         "aptus.web",
         ],
 
     package_dir = {
-        '': 'src'
+        "": "src",
         },
 
     package_data = {
-        'aptus': [
-            '*.ico',
-            '*.png',
-            'palettes/*.ggr',
+        "aptus": [
+            "*.ico",
+            "*.png",
+            "palettes/*.ggr",
             "web/static/*.*",
             ]
         },
