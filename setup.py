@@ -5,12 +5,12 @@ Aptus is a Mandelbrot set explorer and renderer with a wxPython GUI and
 a computation extension in C for speed.
 """
 
-import distutils, sys
-from distutils.core import Extension
-from distutils.cygwinccompiler import Mingw32CCompiler
-import glob
-
 from setuptools import setup
+
+import distutils
+from distutils.core import Extension
+import glob
+import sys
 
 try:
     import numpy
@@ -27,6 +27,7 @@ Environment :: Console
 Environment :: MacOS X
 Environment :: Win32 (MS Windows)
 Environment :: X11 Applications :: GTK
+Programming Language :: Python :: 3.9
 License :: OSI Approved :: MIT License
 Programming Language :: C
 Programming Language :: Python
@@ -42,29 +43,14 @@ options = {}
 extra_compile_args = ['-O3']
 
 if sys.platform == "win32":
-    #if isinstance(self.compiler, Mingw32CCompiler):
     extra_compile_args = ['-O2']
-
-    try:
-        import py2exe
-    except:
-        py2exe = None
-
-    if py2exe:
-        data_files += [
-            ("Microsoft.VC90.CRT", glob.glob(r'C:\Program Files (x86)\Microsoft Visual Studio 9.0\VC\redist\x86\Microsoft.VC90.CRT\*.*')),
-            ]
-        options.update({
-            'py2exe': {
-                'bundle_files': 1,
-                },
-            })
 
 setup(
     # The metadata
     name = "Aptus",
     description = doclines[0],
     long_description = "\n".join(doclines[2:]),
+    long_description_content_type="text/x-rst",
     version = version,
     author = "Ned Batchelder",
     author_email = "ned@nedbatchelder.com",
@@ -89,6 +75,7 @@ setup(
             "*.png",
             "palettes/*.ggr",
             "web/static/*.*",
+            "web/templates/*.*",
             ]
         },
 

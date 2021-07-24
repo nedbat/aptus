@@ -72,6 +72,11 @@ local_kit: kit
 pypi:
 	python setup.py register
 
+DOWNLOAD_PY = https://raw.githubusercontent.com/nedbat/coveragepy/master/ci/download_gha_artifacts.py
+download_kits:
+	wget -qO - $(DOWNLOAD_PY) | python - nedbat/aptus
+	python -m twine check dist/*
+
 SCSS = src/aptus/web/static/style.scss
 CSS = src/aptus/web/static/style.css
 
