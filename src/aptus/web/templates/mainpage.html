@@ -28,6 +28,12 @@
         <div class="closebtn">{% include "icon_close.svg" %}</div>
     {%- endset %}
 
+    <div id="splash" class="panel draggabble">
+        {{closebtn}}
+        <p>Aptus mandelbrot explorer.</p>
+        <p>Type <kbd>?</kbd> for help.</p>
+    </div>
+
     <div id="helppanel" class="panel draggable">
         {{closebtn}}
         <p><b>Aptus {{version}}</b>, Mandelbrot set explorer.</p>

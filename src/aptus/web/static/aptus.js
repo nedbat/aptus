@@ -841,4 +841,9 @@ function main() {
 
     App.view.set_size();
     App.view.paint();
+
+    setTimeout(
+        () => document.querySelector("#splash").classList.add("hidden"),
+        4000
+    );
 }

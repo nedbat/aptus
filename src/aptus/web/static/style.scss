@@ -110,6 +110,17 @@ canvas.view {
     }
 }
 
+#splash {
+    display: block;
+    padding: 1em 1em 0 1em;
+    opacity: 1;
+    &.hidden {
+        visibility: hidden;
+        opacity: 0;
+        transition: opacity 1s, visibility 1s;
+    }
+}
+
 #helppanel {
     width: 20em;
     top: 5em;
