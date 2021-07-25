@@ -60,17 +60,18 @@ publish_samples: samples
 publish_doc:
 	cp -v doc/*.px $(WEBHOME)
 
-local_kit: kit
-	cp -v dist/*.* $(LOCALHOME)
-
-pypi:
-	python setup.py register
 publish: publish_doc publish_samples
 
 DOWNLOAD_PY = https://raw.githubusercontent.com/nedbat/coveragepy/master/ci/download_gha_artifacts.py
 download_kits:
 	wget -qO - $(DOWNLOAD_PY) | python - nedbat/aptus
 	python -m twine check dist/*
+
+kit_upload:				## Upload the built distributions to PyPI.
+	twine upload --verbose dist/*
+
+test_upload:				## Upload the distrubutions to PyPI's testing server.
+	twine upload --verbose --repository testpypi dist/*
 
 SCSS = src/aptus/web/static/style.scss
 CSS = src/aptus/web/static/style.css

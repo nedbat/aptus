@@ -1,3 +1,11 @@
+-----------------------
+Aptus 3.0, July 25 2021
+-----------------------
+
+* Web interface.
+
+* Requires Python 3.9 or higher.
+
 ------------
 Next release
 ------------
@@ -34,13 +42,13 @@ Aptus 2.0, October 2008
   * Point Info panel shows information about the current point, shift-hover to indicate point.
   * Julia panel shows Julia set for the current point, shift-hover to indicate point.
     Double-clicking the Julia panel opens a new exploration window to explore that Julia set.
-  
+
 * Computation improvements:
   * Faster.
-  * The exploration window updates during computation.  
+  * The exploration window updates during computation.
   * Continuous coloring is more accurate now: banding artifacts are gone.
   * When dragging the exploration window, pixels still in the window aren't re-calculated.
-  
+
 * Center and diameter can be specified in the command line arguments.
 
 
@@ -82,7 +90,7 @@ Aptus 1.5, March 2008
 * Palette tweaking:
     * Hue and saturation adjustments.
     * Scaling the palette to adjust distance between colors.
-    
+
 * More statistics: boundaries traced, boundaries filled, and points computed.
 
 * Statistics are written into the final .PNG files.

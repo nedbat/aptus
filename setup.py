@@ -35,7 +35,6 @@ Topic :: Artistic Software
 Topic :: Scientific/Engineering :: Mathematics
 """
 
-data_files = []
 options = {}
 
 # Most examples on the web seem to imply that O3 will be automatic,
@@ -57,6 +56,14 @@ setup(
     url="http://nedbatchelder.com/code/aptus",
     license="MIT",
     classifiers=list(filter(None, classifiers.split("\n"))),
+    python_requires=">=3.9",
+
+    project_urls={
+        "Documentation": "https://nedbatchelder.com/code/aptus/v3.html",
+        "Code": "http://github.com/nedbat/aptus",
+        "Issues": "https://github.com/nedbat/aptus/issues",
+        "Funding": "https://github.com/users/nedbat/sponsorship",
+    },
 
     # The data
     packages=[
@@ -90,7 +97,7 @@ setup(
 
     entry_points={
         "console_scripts": [
-            "aptuscli = aptus.cmdline:main",
+            "aptuscmd = aptus.cmdline:main",
             "aptusgui = aptus.gui:main",
             "aptusweb = aptus.web:main",
         ],
@@ -114,6 +121,5 @@ setup(
         ],
     },
 
-    data_files=data_files,
     options=options,
 )
