@@ -20,7 +20,7 @@ try:
 except:
     raise Exception("Need numpy, from http://numpy.scipy.org/")
 
-version = "3.0"
+version = "3.0.1"
 
 doclines = __doc__.split("\n")
 
