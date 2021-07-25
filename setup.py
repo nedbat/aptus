@@ -40,80 +40,80 @@ options = {}
 
 # Most examples on the web seem to imply that O3 will be automatic,
 # but for me it wasn't, and I want all the speed I can get...
-extra_compile_args = ['-O3']
+extra_compile_args = ["-O3"]
 
 if sys.platform == "win32":
-    extra_compile_args = ['-O2']
+    extra_compile_args = ["-O2"]
 
 setup(
     # The metadata
-    name = "Aptus",
-    description = doclines[0],
-    long_description = "\n".join(doclines[2:]),
+    name="Aptus",
+    description=doclines[0],
+    long_description="\n".join(doclines[2:]),
     long_description_content_type="text/x-rst",
-    version = version,
-    author = "Ned Batchelder",
-    author_email = "ned@nedbatchelder.com",
-    url = "http://nedbatchelder.com/code/aptus",
-    license = "MIT",
-    classifiers = list(filter(None, classifiers.split("\n"))),
+    version=version,
+    author="Ned Batchelder",
+    author_email="ned@nedbatchelder.com",
+    url="http://nedbatchelder.com/code/aptus",
+    license="MIT",
+    classifiers=list(filter(None, classifiers.split("\n"))),
 
     # The data
-    packages = [
+    packages=[
         "aptus",
         "aptus.gui",
         "aptus.web",
-        ],
+    ],
 
-    package_dir = {
+    package_dir={
         "": "src",
-        },
+    },
 
-    package_data = {
+    package_data={
         "aptus": [
             "*.ico",
             "*.png",
             "palettes/*.ggr",
             "web/static/*.*",
             "web/templates/*.*",
-            ]
-        },
+        ]
+    },
 
-    ext_modules = [
+    ext_modules=[
         Extension(
             "aptus.engine",
             sources=["ext/engine.c"],
             include_dirs=[numpy.get_include()],
             extra_compile_args=extra_compile_args,
-            ),
-        ],
+        ),
+    ],
 
-    entry_points = {
+    entry_points={
         "console_scripts": [
             "aptuscli = aptus.cmdline:main",
             "aptusgui = aptus.gui:main",
             "aptusweb = aptus.web:main",
-            ],
-        },
+        ],
+    },
 
-    install_requires = [
+    install_requires=[
         "Pillow",
         "numpy",
-        ],
+    ],
 
-    extras_require = {
+    extras_require={
         "gui": [
             "wxPython",
-            ],
+        ],
         "web": [
             "aiofiles",
             "fastapi",
             "jinja2",
             "uvicorn",
             "cachetools",
-            ],
-        },
+        ],
+    },
 
-    data_files = data_files,
-    options = options,
-    )
+    data_files=data_files,
+    options=options,
+)
