@@ -8,6 +8,7 @@
 <what when='20080405T211600'>Update to 1.55.</what>
 <what when='20080420T111000'>Update to 1.56.</what>
 <what when='20081005T142900'>Update to 2.0.</what>
+<what when='20101114T105600'>Added bitbucket link.</what>
 </history>
 
 <p>Aptus is a Mandelbrot set viewer and renderer.  It is written in Python
@@ -41,6 +42,11 @@ users will probably be happier with the .exe:</p>
 <p>Install the kit with the usual command:</p>
 
 <code>python setup.py install</code>
+
+<h2>Source</h2>
+
+<p>The <a href='http://bitbucket.org/ned/aptus/'>source is available on bitbucket</a> if you
+    prefer direct access to the code, including recent changes.</p>
 
 
 <h1>Using Aptus</h1>
@@ -90,6 +96,8 @@ Options:
   -h, --help            show this help message and exit
   -a ANGLE, --angle=ANGLE
                         set the angle of rotation
+  -b BAILOUT, --bailout=BAILOUT
+                        set the radius of the escape circle
   --center=RE,IM        set the center of the view
   -c, --continuous      use continuous coloring
   --diam=DIAM           set the diameter of the view
@@ -247,6 +255,8 @@ the usual Aptus controls to navigate and manipulate the image.</p>
         <li>Statistics are written into the final .PNG files.</li>
         </ul></li>
 
+    <li>Reads .xet files from <a href='http://hbar.servebeer.com/mandelbrot/coordinates.html'>servebeer.com</a>.</li>
+
     <li>Some old .aptus files recorded the y coordinate incorrectly,
         and will now render upside-down: negate the y component of the center to fix this.</li>
 </ul>
@@ -260,11 +270,11 @@ the usual Aptus controls to navigate and manipulate the image.</p>
 <h1>More samples</h1>
 
 <figurep>
-    <thumbnail href='code/aptus/DragonTails.png' alt='A portion of the Mandelbrot set' style='margin:1em'/>
-    <thumbnail href='code/aptus/FringedBabies.png' alt='A portion of the Mandelbrot set' style='margin:1em'/>
+    <thumbnail href='code/aptus/DragonTails.png' alt='A portion of the Mandelbrot set'/>
+    <thumbnail href='code/aptus/FringedBabies.png' alt='A portion of the Mandelbrot set'/>
     <br/>
-    <thumbnail href='code/aptus/GreenSeahorses.png' alt='A portion of the Mandelbrot set' style='margin:1em'/>
-    <thumbnail href='code/aptus/PaisleySpiral.png' alt='A portion of the Mandelbrot set' style='margin:1em'/>
+    <thumbnail href='code/aptus/GreenSeahorses.png' alt='A portion of the Mandelbrot set'/>
+    <thumbnail href='code/aptus/PaisleySpiral.png' alt='A portion of the Mandelbrot set'/>
 </figurep>
 
 <h1>See also</h1>
