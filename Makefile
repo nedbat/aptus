@@ -43,8 +43,7 @@ test: install
 asm:
 	gcc.exe -mno-cygwin -mdll -O -Wall -Ic:\\Python25\\lib\\site-packages\\numpy\\core\\include -Ic:\\Python25\\include -Ic:\\Python25\\PC -c ext/engine.c -O3 -g -Wa,-alh > engine.lst
 
-WEBHOME = c:/ned/web/stellated/pages/code/aptus
-LOCALHOME = c:/www/code/aptus
+WEBHOME = ~/web/stellated/pages/code/aptus
 
 %.png: %.aptus
 	python scripts/aptuscmd.py $< --super=3 -o $*.png -s 1000x740
@@ -58,19 +57,15 @@ samples: $(SAMPLE_PNGS) build
 publish_samples: samples
 	cp -v doc/*.png $(WEBHOME)
 
-publish_kit: kit
-	cp -v dist/*.* $(WEBHOME)
-
 publish_doc:
 	cp -v doc/*.px $(WEBHOME)
-
-publish: publish_kit publish_doc publish_samples
 
 local_kit: kit
 	cp -v dist/*.* $(LOCALHOME)
 
 pypi:
 	python setup.py register
+publish: publish_doc publish_samples
 
 DOWNLOAD_PY = https://raw.githubusercontent.com/nedbat/coveragepy/master/ci/download_gha_artifacts.py
 download_kits:

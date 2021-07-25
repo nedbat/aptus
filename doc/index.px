@@ -11,6 +11,11 @@
 <what when='20101114T105600'>Added bitbucket link.</what>
 </history>
 
+<box>
+This page is about an outdated version of Aptus. Instead you should read about
+the <a href="/code/aptus/v3.html">latest version, Aptus v3</a>.
+</box>
+
 <p>Aptus is a Mandelbrot set viewer and renderer.  It is written in Python
 with a computation engine in C for speed.
 </p>
@@ -96,8 +101,6 @@ Options:
   -h, --help            show this help message and exit
   -a ANGLE, --angle=ANGLE
                         set the angle of rotation
-  -b BAILOUT, --bailout=BAILOUT
-                        set the radius of the escape circle
   --center=RE,IM        set the center of the view
   -c, --continuous      use continuous coloring
   --diam=DIAM           set the diameter of the view

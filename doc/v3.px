@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<page title='Aptus v3'>
+<section title='Aptus' order='70'/>
+<history>
+<what when='20210725T172200'>Created.</what>
+</history>
+
+<p>Aptus is a Mandelbrot set viewer and renderer.  It is written in Python
+with a computation engine in C for speed.
+</p>
+
+<figurep href='code/aptus/JamesGiantPeach.png'>
+    <img src='code/aptus/JamesGiantPeach_med.png' alt='A portion of the Mandelbrot set'/>
+</figurep>
+
+
+<h1>Getting Aptus</h1>
+
+<h2>Installation</h2>
+
+<p>Aptus requires Python 3.9 or greater.</p>
+
+<p>Use pip to install Aptus:</p>
+
+<code>python3.9 -m pip install aptus</code>
+
+<h2>Source</h2>
+
+<p>The <a href='https://github.com/nedbat/aptus/'>source is available on
+GitHub</a> if you prefer direct access to the code, including recent
+changes.</p>
+
+
+<h1>Using Aptus</h1>
+
+<p>There are two ways to use Aptus: a browser-based explorer, and a command line
+renderer.  There is also an older GUI which doesn't work as well as it used to,
+but has more features than the browser interface.  The browser and GUI let you
+zoom in and out, and change the color palette to find an image you like.  The
+command line renderer produces higher-quality images.</p>
+
+<h2>Web interface</h2>
+
+<p>To launch the web interface, use the "aptusweb" command.  It starts a local
+web server on <a href="http://127.0.0.1:8042">http://127.0.0.1:8042</a>.  Open
+that URL in your browser, and you should see a Mandelbrot set.</p>
+
+<p>Hitting the "?" key will bring up a help panel, but briefly, click to zoom
+in, shift-click to zoom out.  Dragging will move the image around, and
+shift-dragging will select a new rectangle to view.</p>
+
+<p>The "s" key will render a downloadable image with super-sampling for higher
+quality.</p>
+
+<h2>Parameter files</h2>
+
+<p>When saving an image as a .PNG file, Aptus also stores all its parameter
+information in a text block hidden in the image, so that the .PNG can be used
+directly as a parameter file for the command line renderer.</p>
+
+<h2>GUI usage</h2>
+
+<p>The GUI interface runs with the "aptusgui" command.  Details of how to use it
+are on the <a href="/code/aptus">older Aptus page</a>.</p>
+
+
+<h2>Command line usage</h2>
+
+<p>The command line renderer is called "aptuscmd".  It will accept a number of
+switches or parameter files:
+</p>
+
+<code>
+Usage: aptuscmd [options] [parameterfile]
+
+Aptus renders Mandelbrot set images. Three flavors are available: aptusweb and
+aptusgui for interactive exploration, and aptuscmd for high-quality rendering.
+
+Options:
+  -h, --help            show this help message and exit
+  -a ANGLE, --angle=ANGLE
+                        set the angle of rotation
+  --center=RE,IM        set the center of the view
+  -c, --continuous      use continuous coloring
+  --diam=DIAM           set the diameter of the view
+  -i ITER_LIMIT, --iterlimit=ITER_LIMIT
+                        set the limit on the iteration count
+  -o OUTFILE, --output=OUTFILE
+                        set the output filename (aptuscmd only)
+  --phase=PHASE         set the palette phase
+  --pscale=SCALE        set the palette scale
+  -s WIDxHGT, --size=WIDxHGT
+                        set the pixel size of the image
+  --super=S             set the supersample rate (aptuscmd only)
+</code>
+
+
+<h1>More samples</h1>
+
+<figurep>
+    <thumbnail href='code/aptus/DragonTails.png' alt='A portion of the Mandelbrot set'/>
+    <thumbnail href='code/aptus/FringedBabies.png' alt='A portion of the Mandelbrot set'/>
+    <br/>
+    <thumbnail href='code/aptus/GreenSeahorses.png' alt='A portion of the Mandelbrot set'/>
+    <thumbnail href='code/aptus/PaisleySpiral.png' alt='A portion of the Mandelbrot set'/>
+</figurep>
+
+<pagecomments/>
+
+</page>
