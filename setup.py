@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 """Aptus: A Mandelbrot set explorer and renderer.
 
-Aptus is a Mandelbrot set explorer and renderer with a wxPython GUI and
+Aptus is a Mandelbrot set explorer and renderer with a browser interface, a wxPython GUI and
 a computation extension in C for speed.
+
+For more information see `Aptus v3 <https://nedbatchelder.com/code/aptus/v3.html>`_.
+
 """
 
 from setuptools import setup
@@ -53,7 +56,7 @@ setup(
     version=version,
     author="Ned Batchelder",
     author_email="ned@nedbatchelder.com",
-    url="http://nedbatchelder.com/code/aptus",
+    url="http://nedbatchelder.com/code/aptus/v3.html",
     license="MIT",
     classifiers=list(filter(None, classifiers.split("\n"))),
     python_requires=">=3.9",

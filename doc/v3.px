@@ -20,9 +20,9 @@ with a computation engine in C for speed.
 
 <p>Aptus requires Python 3.9 or greater.</p>
 
-<p>Use pip to install Aptus:</p>
+<p>Use pip to install Aptus.  The web interface requires the "web" extra:</p>
 
-<code>python3.9 -m pip install aptus</code>
+<code>python3.9 -m pip install "aptus[web]"</code>
 
 <h2>Source</h2>
 
