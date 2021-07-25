@@ -10,8 +10,8 @@ from PIL import Image
 from aptus.palettes import Palette
 
 description = """\
-Aptus renders Mandelbrot set images. Two flavors are available:
-aptusgui.py for interactive exploration, and aptuscmd.py for
+Aptus renders Mandelbrot set images. Three flavors are available:
+aptusweb and aptusgui for interactive exploration, and aptuscmd for
 high-quality rendering.
 """.replace('\n', ' ')
 
@@ -36,12 +36,12 @@ class AptusOptions:
         parser.add_option("-c", "--continuous", dest="continuous", help="use continuous coloring", action="store_true")
         parser.add_option("--diam", dest="diam", help="set the diameter of the view")
         parser.add_option("-i", "--iterlimit", dest="iter_limit", help="set the limit on the iteration count")
-        parser.add_option("-o", "--output", dest="outfile", help="set the output filename (aptuscmd.py only)")
+        parser.add_option("-o", "--output", dest="outfile", help="set the output filename (aptuscmd only)")
         parser.add_option("--phase", dest="palette_phase", help="set the palette phase", metavar="PHASE")
         parser.add_option("--pscale", dest="palette_scale", help="set the palette scale", metavar="SCALE")
         parser.add_option("-s", "--size", dest="size", help="set the pixel size of the image", metavar="WIDxHGT")
         parser.add_option("--super", dest="supersample",
-                          help="set the supersample rate (aptuscmd.py only)", metavar="S")
+                          help="set the supersample rate (aptuscmd only)", metavar="S")
         return parser
 
     def _pair(self, s, cast):
