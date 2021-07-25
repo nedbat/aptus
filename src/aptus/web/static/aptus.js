@@ -345,7 +345,7 @@ const App = {
         const dy = movedto.y - this.rubstart.y;
         if (!this.mouse_dragging && Math.abs(dx) + Math.abs(dy) > 5) {
             this.mouse_dragging = true;
-            this.set_moving(this.mouse_shift);
+            this.set_moving(!this.mouse_shift);
         }
         clear_canvas(view.overlay_canvas);
         if (this.mouse_dragging) {
