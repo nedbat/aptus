@@ -10,9 +10,7 @@ For more information see `Aptus v3 <https://nedbatchelder.com/code/aptus/v3.html
 
 from setuptools import setup
 
-import distutils
 from distutils.core import Extension
-import glob
 import sys
 
 try:
