@@ -17,7 +17,8 @@ class ComputePanel(wx.Panel):
         self.SetBackgroundStyle(wx.BG_STYLE_CUSTOM)
 
         self.compute = AptusCompute()
-        self.compute.quiet = True     # default to quiet.
+        self.compute.quiet = True       # default to quiet.
+        self.compute.need_chex = True   # GUI wants a checkerboard background.
 
         # AptusCompute default values
         self.compute.palette = all_palettes[0]

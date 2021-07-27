@@ -197,7 +197,8 @@ class AptusCompute:
         self.status = None
         # An array for the output pixels.
         self.pix = None
-        # A gray checkerboard
+        # A gray checkerboard, if desired.
+        self.need_chex = False
         self.chex = None
 
         self.pixels_computed = False
@@ -342,15 +343,18 @@ class AptusCompute:
 
     def color_mandel(self):
         w, h = self.counts.shape
-        if (self.chex is None) or (self.chex.shape[:2] != self.counts.shape):
-            # Make a checkerboard
-            sq = 15
-            c = numpy.fromfunction(lambda x,y: ((x//sq) + (y//sq)) % 2, (w,h))
-            self.chex = numpy.empty((w,h,3), dtype=numpy.uint8)
-            self.chex[c == 0] = (0xAA, 0xAA, 0xAA)
-            self.chex[c == 1] = (0x99, 0x99, 0x99)
+        if self.need_chex:
+            if (self.chex is None) or (self.chex.shape[:2] != self.counts.shape):
+                # Make a checkerboard
+                sq = 15
+                c = numpy.fromfunction(lambda x,y: ((x//sq) + (y//sq)) % 2, (w,h))
+                self.chex = numpy.empty((w,h,3), dtype=numpy.uint8)
+                self.chex[c == 0] = (0xAA, 0xAA, 0xAA)
+                self.chex[c == 1] = (0x99, 0x99, 0x99)
 
-        self.pix = numpy.copy(self.chex)
+            self.pix = numpy.copy(self.chex)
+        else:
+            self.pix = numpy.empty((w, h, 3), dtype=numpy.uint8)
 
         # Modulo in C is ill-defined if anything is negative, so make sure the
         # phase is positive if we're going to wrap.
