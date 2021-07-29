@@ -29,9 +29,7 @@ kit: build
 	python setup.py bdist_wininst --bitmap etc/wininst.bmp
 
 icon:
-	python scripts/aptuscmd.py etc/icon.aptus -s 47x47
-	python scripts/aptuscmd.py etc/icon.aptus -s 31x31
-	python scripts/aptuscmd.py etc/icon.aptus -s 15x15
+	aptuscmd --size=64x64 --super=5 --output src/aptus/web/static/icon.png etc/icon.aptus
 
 lint: clean
 	python -x /Python25/Scripts/pylint.bat --rcfile=.pylintrc src
