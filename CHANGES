@@ -1,14 +1,19 @@
------------------------
+Unreleased
+----------
+
+* Added lightness tweaking controls.
+
+* Web interface now has a favicon.
+
 Aptus 3.0.1, July 25 2021
------------------------
+-------------------------
 
 * Web interface.
 
 * Requires Python 3.9 or higher.
 
-------------
-Next release
-------------
+Next release (was 2.1, never formally released)
+-----------------------------------------------
 
 * Multi-threaded.
 
@@ -29,7 +34,6 @@ Next release
   pre-requisite packages.
 
 
------------------------
 Aptus 2.0, October 2008
 -----------------------
 
@@ -52,21 +56,18 @@ Aptus 2.0, October 2008
 * Center and diameter can be specified in the command line arguments.
 
 
-----------------------
 Aptus 1.56, April 2008
 ----------------------
 
 * Yet more painting improvements.  Thanks, Paul Ollis.
 
 
-----------------------
 Aptus 1.55, April 2008
 ----------------------
 
 * Painting is now flicker-free. Thanks, Rob McMullen.
 
 
-----------------------
 Aptus 1.51, March 2008
 ----------------------
 
@@ -77,7 +78,6 @@ Aptus 1.51, March 2008
 * Shifting the palette into negative offsets caused incorrect jumps in colors.
 
 
----------------------
 Aptus 1.5, March 2008
 ---------------------
 

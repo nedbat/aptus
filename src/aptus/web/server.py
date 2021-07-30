@@ -105,6 +105,7 @@ def spec_to_compute(spec):
     compute.palette.adjust(
         hue=spec.palette_tweaks.get("hue", 0),
         saturation=spec.palette_tweaks.get("saturation", 0),
+        lightness=spec.palette_tweaks.get("lightness", 0),
     )
 
     supercoords = [v * spec.supersample for v in spec.coords]

@@ -58,6 +58,7 @@ const View = {
             scale: 1,
             hue: 0,
             saturation: 0,
+            lightness: 0,
         }
     },
 
@@ -447,8 +448,8 @@ const App = {
 
         // Mac option chars need to be mapped back to their original chars.
         if (platform() === "mac") {
-            const oldkey = "¯˘·‚“‘”’…æÚÆ";
-            const newkey = "<>()[]{};':\"";
+            const oldkey = "¯˘·‚“‘”’…æÚÆ–≠";
+            const newkey = "<>()[]{};':\"-=";
             const i = oldkey.indexOf(key);
             if (i >= 0) {
                 key = newkey[i];
@@ -585,6 +586,16 @@ const App = {
 
                 case "}":
                     this.view.palette_tweaks.saturation += (ev.altKey ? 1 : 10);
+                    this.view.paint();
+                    break;
+
+                case '-':
+                    this.view.palette_tweaks.lightness -= (ev.altKey ? 1 : 5);
+                    this.view.paint();
+                    break;
+
+                case '=':
+                    this.view.palette_tweaks.lightness += (ev.altKey ? 1 : 5);
                     this.view.paint();
                     break;
 

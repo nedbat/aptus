@@ -39,7 +39,7 @@ class Palette:
             palette. It's returned by the spec property.
     """
 
-    default_adjusts = {'hue': 0, 'saturation': 0}
+    default_adjusts = {'hue': 0, 'saturation': 0, 'lightness': 0}
 
     def __init__(self):
         self.incolor = (0,0,0)
@@ -72,12 +72,18 @@ class Palette:
         """
         self.colors = []
 
-        hue_adj = self.adjusts['hue']/360.0
-        sat_adj = self.adjusts['saturation']/255.0
+        hue_adj = self.adjusts['hue'] / 360.0
+        sat_adj = self.adjusts['saturation'] / 255.0
+        lgt_adj = self.adjusts['lightness'] / 100.0
 
         for h, l, s in self.fcolors:
             h = (h + hue_adj) % 1.0
             s = _clip(s + sat_adj, 0.0, 1.0)
+            if lgt_adj:
+                if lgt_adj > 0:
+                    l += (1 - l) * lgt_adj
+                else:
+                    l -= l * -lgt_adj
             self.colors.append(_255(*colorsys.hls_to_rgb(h, l, s)))
         self._colorbytes = b""
 
@@ -192,21 +198,23 @@ class Palette:
         self._spec.append(['stretch', {'steps':steps, 'hsl':hsl, 'ease':ease}])
         return self
 
-    def adjust(self, hue=0, saturation=0):
+    def adjust(self, hue=0, saturation=0, lightness=0):
         """ Make adjustments to various aspects of the display of the palette.
             0 <= hue <= 360
-            0 <= saturation <= 255
+            -255 <= saturation <= 255
+            -100 <= lightness <= 100
         """
         adj = self.adjusts
         adj['hue'] = (adj['hue'] + hue) % 360
         adj['saturation'] = _clip(adj['saturation'] + saturation, -255, 255)
+        adj['lightness'] = _clip(adj['lightness'] + lightness, -100, 100)
         self._colors_from_fcolors()
         return self
 
     def reset(self):
         """ Reset all palette adjustments.
         """
-        self.adjusts = {'hue': 0, 'saturation': 0}
+        self.adjusts = {'hue': 0, 'saturation': 0, 'lightness': 0}
         self._colors_from_fcolors()
         return self
 
