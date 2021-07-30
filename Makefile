@@ -31,7 +31,7 @@ kit: build
 icon:
 	aptuscmd --size=64x64 --super=5 --output /tmp/aptus.png etc/icon.aptus
 	aptuscmd --size=64x64 --super=5 --output /tmp/aptus_mask.png etc/icon_mask.aptus
-	convert -size 64x64 xc:none /tmp/aptus.png /tmp/aptus_mask.png -composite src/aptus/web/static/icon.png
+	convert /tmp/aptus.png /tmp/aptus_mask.png -compose copy-opacity -composite src/aptus/web/static/icon.png
 
 lint: clean
 	python -x /Python25/Scripts/pylint.bat --rcfile=.pylintrc src
