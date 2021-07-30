@@ -286,7 +286,7 @@ const App = {
         this.set_center(cr, ci);
         this.set_pixsize(pixsize);
         this.set_angle(angle);
-        this.set_iter_limit(1000);
+        this.set_iter_limit(iter);
         window.history.replaceState({}, "", "/");
     },
 

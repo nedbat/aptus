@@ -1,6 +1,8 @@
 Unreleased
 ----------
 
+* fix: iter_limit wasn't set from the URL parameter.
+
 * Added lightness tweaking controls.
 
 * Web interface now has a favicon.
