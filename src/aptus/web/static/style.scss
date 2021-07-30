@@ -154,6 +154,14 @@ kbd {
     margin: .1em;
 }
 
+a {
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
 #renderwait {
     position: absolute;
     display: none;

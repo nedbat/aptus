@@ -50,6 +50,10 @@ canvas.view.move { cursor: grab; }
 
 kbd { display: inline-block; font-family: monospace; font-weight: bold; background: #f0f0f0; border: 2px solid #888; border-color: #888 #333 #333 #888; border-radius: .25em; padding: .1em .25em; margin: .1em; }
 
+a { text-decoration: none; }
+
+a:hover { text-decoration: underline; }
+
 #renderwait { position: absolute; display: none; background: #00000080; width: 100%; height: 100%; cursor: wait; }
 
 #renderwait.show { display: block; }
