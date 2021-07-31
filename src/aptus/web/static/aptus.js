@@ -265,12 +265,38 @@ function fetch_post_json(url, body) {
 }
 
 const App = {
-    init() {
+    main() {
+        if (platform() === "mac") {
+            document.querySelector("html").classList.add("mac");
+        }
+
         this.view = Object.create(View).init(document.querySelector("#the_view"));
         this.reset();
         this.reset_dragging();
         this.resize_timeout = null;
-        return this;
+
+        on_event(document, "mousedown", ev => this.view_mousedown(ev), ".view.overlay");
+        on_event(document, "mousemove", ev => this.view_mousemove(ev));
+        on_event(document, "mouseup", ev => this.view_mouseup(ev));
+        on_event(document, "keydown", ev => this.keydown(ev));
+
+        on_event(document, "mousedown", ev => Panels.draggable_mousedown(ev), ".draggable");
+        on_event(document, "mousemove", ev => Panels.draggable_mousemove(ev));
+        on_event(document, "mouseup", ev => Panels.draggable_mouseup(ev));
+        on_event(".panel .closebtn", "click", ev => Panels.close_panel(ev));
+
+        on_event("#infopanel input", "change", ev => this.spec_change(ev));
+        on_event(window, "resize", ev => this.resize(ev));
+
+        on_event("#renderbutton", "click", ev => this.click_render(ev));
+
+        this.view.set_size();
+        this.view.paint();
+
+        setTimeout(
+            () => document.querySelector("#splash").classList.add("hidden"),
+            4000
+        );
     },
 
     reset() {
@@ -826,35 +852,4 @@ function checkers(canvas) {
             }
         }
     }
-}
-
-function main() {
-    if (platform() === "mac") {
-        document.querySelector("html").classList.add("mac");
-    }
-
-    App.init();
-
-    on_event(document, "mousedown", ev => App.view_mousedown(ev), ".view.overlay");
-    on_event(document, "mousemove", ev => App.view_mousemove(ev));
-    on_event(document, "mouseup", ev => App.view_mouseup(ev));
-    on_event(document, "keydown", ev => App.keydown(ev));
-
-    on_event(document, "mousedown", ev => Panels.draggable_mousedown(ev), ".draggable");
-    on_event(document, "mousemove", ev => Panels.draggable_mousemove(ev));
-    on_event(document, "mouseup", ev => Panels.draggable_mouseup(ev));
-    on_event(".panel .closebtn", "click", ev => Panels.close_panel(ev));
-
-    on_event("#infopanel input", "change", ev => App.spec_change(ev));
-    on_event(window, "resize", ev => App.resize(ev));
-
-    on_event("#renderbutton", "click", ev => App.click_render(ev));
-
-    App.view.set_size();
-    App.view.paint();
-
-    setTimeout(
-        () => document.querySelector("#splash").classList.add("hidden"),
-        4000
-    );
 }
