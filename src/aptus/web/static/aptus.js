@@ -182,6 +182,7 @@ const View = {
         }
         this.tiles_pending = imageurls.length;
         this.overlay_canvas.classList.add("wait");
+        this.stats = Object.create(Stats);
         return Promise.all(imageurls.map(getImage));
     },
 
@@ -212,6 +213,10 @@ const View = {
     },
 };
 
+function getImage(tile) {
+    return fetchTile(tile).then(showTile);
+}
+
 function fetchTile(tile) {
     return new Promise(resolve => {
         const body = {
@@ -222,6 +227,7 @@ function fetchTile(tile) {
         .then(response => response.json())
         .then(tiledata => {
             if (tiledata.seq == tile.view.reqseq) {
+                tile.view.stats.add(tiledata.stats);
                 tile.img = new Image();
                 tile.img.src = tiledata.url;
                 tile.img.onload = () => resolve(tile);
@@ -237,10 +243,6 @@ function showTile(tile) {
     if (tile.view.tiles_pending == 0) {
         tile.view.overlay_canvas.classList.remove("wait");
     }
-}
-
-function getImage(tile) {
-    return fetchTile(tile).then(showTile);
 }
 
 function fetch_post_json(url, body) {
@@ -262,6 +264,40 @@ function fetch_post_json(url, body) {
         Panels.show_panel("#problempanel");
         return Promise.reject(error);
     });
+}
+
+const Stats = {
+    boundaries: 0,
+    boundariesfilled: 0,
+    computedpoints: 0,
+    filledpoints: 0,
+    largestfilled: 0,
+    longestboundary: 0,
+    maxedpoints: 0,
+    maxiter: 0,
+    maxitercycle: 0,
+    miniter: 0,
+    minitercycle: 0,
+    miniteredge: 0,
+    totalcycles: 0,
+    totaliter: 0,
+
+    add(more) {
+        this.boundaries += more.boundaries;
+        this.boundariesfilled += more.boundariesfilled;
+        this.computedpoints += more.computedpoints;
+        this.filledpoints += more.filledpoints;
+        this.largestfilled = Math.max(this.largestfilled, more.largestfilled);
+        this.longestboundary = Math.max(this.longestboundary, more.longestboundary);
+        this.maxedpoints += more.maxedpoints;
+        this.maxiter = Math.max(this.maxiter, more.maxiter);
+        this.maxitercycle = Math.max(this.maxitercycle, more.maxitercycle);
+        this.miniter = (this.miniter == 0) ? more.miniter : Math.min(this.miniter, more.miniter);
+        this.minitercycle = (this.minitercycle == 0) ? more.minitercycle : Math.min(this.minitercycle, more.minitercycle);
+        this.miniteredge = (this.miniteredge == 0) ? more.miniteredge : Math.min(this.miniteredge, more.miniteredge);
+        this.totalcycles += more.totalcycles;
+        this.totaliter += more.totaliter;
+    },
 }
 
 const App = {

@@ -1,6 +1,7 @@
 import ast
 import asyncio
 import base64
+import dataclasses
 import functools
 import io
 import os
@@ -43,24 +44,37 @@ def run_in_executor(f):
         return loop.run_in_executor(None, lambda: f(*args, **kwargs))
     return inner
 
+
+@dataclasses.dataclass
+class CachedResult:
+    counts: object  # ndarray
+    stats: dict
+
+@dataclasses.dataclass
+class TileResult:
+    pixels: bytes
+    stats: dict
+
+
 # Cache of computed counts. One tile is about 830Kb.
 cache_size = int(os.getenv("APTUS_CACHE", "500"))
-tile_cache = cachetools.LRUCache(cache_size * 1_000_000, getsizeof=lambda nda: nda.nbytes)
+tile_cache = cachetools.LRUCache(cache_size * 1_000_000, getsizeof=lambda cr: cr.counts.nbytes)
 
 @run_in_executor
 def compute_tile(compute, cachekey):
     old = tile_cache.get(cachekey)
     if old is None:
         compute.compute_array()
+        stats = compute.stats
+        tile_cache[cachekey] = CachedResult(counts=compute.counts, stats=stats)
     else:
-        compute.set_counts(old)
-    if old is None:
-        tile_cache[cachekey] = compute.counts
+        compute.set_counts(old.counts)
+        stats = old.stats
     pix = compute.color_mandel()
     im = PIL.Image.fromarray(pix)
     fout = io.BytesIO()
     compute.write_image(im, fout)
-    return fout.getvalue()
+    return TileResult(pixels=fout.getvalue(), stats=stats)
 
 @run_in_executor
 def compute_render(compute):
@@ -126,11 +140,12 @@ async def tile(req: TileRequest):
         {spec.iter_limit}
         {spec.coords}
         """
-    data = await compute_tile(compute, cachekey)
-    data_url = "data:image/png;base64," + base64.b64encode(data).decode("ascii")
+    results = await compute_tile(compute, cachekey)
+    data_url = "data:image/png;base64," + base64.b64encode(results.pixels).decode("ascii")
     return {
         "url": data_url,
         "seq": req.seq,
+        "stats": results.stats,
     }
 
 @app.post("/render")
