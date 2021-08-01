@@ -10,8 +10,20 @@
 
 // Type definitions.
 
+#if 0   // Long double
+// Long double has more digits, but is about 50% slower.
+// A floating-point number.
+typedef long double aptfloat;
+
+// The fabs() for aptfloat
+#define APTABS(x)   fabsl(x)
+#else
 // A floating-point number.
 typedef double aptfloat;
+
+// The fabs() for aptfloat
+#define APTABS(x)   fabs(x)
+#endif // long double
 
 // A complex number.
 typedef struct {
@@ -192,20 +204,27 @@ AptEngine_dealloc(AptEngine *self)
 static PyObject *
 get_ri0(AptEngine *self, void *closure)
 {
-    return Py_BuildValue("dd", self->ri0.r, self->ri0.i);
+    double r = self->ri0.r;
+    double i = self->ri0.i;
+    return Py_BuildValue("dd", r, i);
 }
 
 static int
 set_ri0(AptEngine *self, PyObject *value, void *closure)
 {
+    double r, i;
+
     if (value == NULL) {
         PyErr_SetString(PyExc_TypeError, "Cannot delete the ri0 attribute");
         return -1;
     }
 
-    if (!PyArg_ParseTuple(value, "dd", &self->ri0.r, &self->ri0.i)) {
+    if (!PyArg_ParseTuple(value, "dd", &r, &i)) {
         return -1;
     }
+
+    self->ri0.r = r;
+    self->ri0.i = i;
 
     return 0;
 }
@@ -215,7 +234,13 @@ set_ri0(AptEngine *self, PyObject *value, void *closure)
 static PyObject *
 get_ridxdy(AptEngine *self, void *closure)
 {
-    return Py_BuildValue("dddd", self->ridx.r, self->ridx.i, self->ridy.r, self->ridy.i);
+    double xr = self->ridx.r;
+    double xi = self->ridx.i;
+    double yr = self->ridy.r;
+    double yi = self->ridy.i;
+
+    return Py_BuildValue("dddd", xr, xi, yr, yi);
+
 }
 
 static int
@@ -226,9 +251,15 @@ set_ridxdy(AptEngine *self, PyObject *value, void *closure)
         return -1;
     }
 
-    if (!PyArg_ParseTuple(value, "dddd", &self->ridx.r, &self->ridx.i, &self->ridy.r, &self->ridy.i)) {
+    double xr, xi, yr, yi;
+    if (!PyArg_ParseTuple(value, "dddd", &xr, &xi, &yr, &yi)) {
         return -1;
     }
+
+    self->ridx.r = xr;
+    self->ridx.i = xi;
+    self->ridy.r = yr;
+    self->ridy.i = yi;
 
     // Make a crude estimate of an epsilon to use for cycle checking.
     self->epsilon = (self->ridx.r+self->ridx.i)/2;
@@ -297,7 +328,7 @@ set_cycle_params(AptEngine *self, PyObject *value, void *closure)
 inline int
 fequal(AptEngine *self, aptfloat a, aptfloat b)
 {
-    return fabs(a - b) < self->epsilon;
+    return APTABS(a - b) < self->epsilon;
 }
 
 // An experiment in leaving out statistics and progress reporting.
