@@ -373,12 +373,6 @@ class AptusCompute:
         self.eng.ridxdy = self.gparams.ridxdy
         self.eng.iter_limit = self.iter_limit
 
-        # Set bailout differently based on continuous or discrete coloring.
-        if self.continuous:
-            self.eng.bailout = 100.0
-        else:
-            self.eng.bailout = 2.0
-
         # Continuous is really two different controls in the engine.
         self.eng.cont_levels = self.eng.blend_colors = 256 if self.continuous else 1
 

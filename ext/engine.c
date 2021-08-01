@@ -132,10 +132,9 @@ typedef struct {
     aptcomplex rijulia;     // julia point.
 
     u4int iter_limit;       // limit on iteration count.
-    aptfloat bailout;       // escape radius.
     int check_cycles;       // should we check for cycles?
     aptfloat epsilon;       // the epsilon to use when checking for cycles.
-    aptfloat cont_levels;   // the number of continuous levels to compute.
+    int cont_levels;        // the number of continuous levels to compute.
     int blend_colors;       // how many levels of color should we blend?
     int trace_boundary;     // should we use boundary tracing?
     int julia;              // are we doing julia or mandelbrot?
@@ -166,10 +165,9 @@ AptEngine_init(AptEngine *self, PyObject *args, PyObject *kwds)
     self->rijulia.r = 0.0;
     self->rijulia.i = 0.0;
     self->iter_limit = 1000;
-    self->bailout = 2.0;
     self->check_cycles = 1;
     self->trace_boundary = 1;
-    self->cont_levels = 1.0;
+    self->cont_levels = 1;
     self->blend_colors = 1;
     self->julia = 0;
 
@@ -347,7 +345,8 @@ compute_count(AptEngine *self, int xi, int yi, ComputeStats *stats)
     int cycle_tries = self->cycle_params.tries;
     int cycle_countdown = cycle_period;
 
-    aptfloat bail2 = self->bailout * self->bailout;
+    aptfloat bailout = self->cont_levels > 1 ? 100.0 : 2.0;
+    aptfloat bail2 = bailout * bailout;
 
     // Macros for the meat of the iterations, since we need to do them in a few
     // places.
@@ -1097,9 +1096,8 @@ type_check(PyObject *self, PyObject *args)
 static PyMemberDef
 AptEngine_members[] = {
     { "iter_limit",     T_INT,      offsetof(AptEngine, iter_limit),        0, "Limit on iterations" },
-    { "bailout",        T_DOUBLE,   offsetof(AptEngine, bailout),           0, "Radius of the escape circle" },
     { "check_cycles",   T_INT,      offsetof(AptEngine, check_cycles),      0, "Check for cycles?" },
-    { "cont_levels",    T_DOUBLE,   offsetof(AptEngine, cont_levels),       0, "Number of fractional levels to compute" },
+    { "cont_levels",    T_INT,      offsetof(AptEngine, cont_levels),       0, "Number of fractional levels to compute" },
     { "blend_colors",   T_INT,      offsetof(AptEngine, blend_colors),      0, "How many levels of color to blend" },
     { "trace_boundary", T_INT,      offsetof(AptEngine, trace_boundary),    0, "Control whether boundaries are traced" },
     { "julia",          T_INT,      offsetof(AptEngine, julia),             0, "Compute Julia set?" },
