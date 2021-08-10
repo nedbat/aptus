@@ -536,11 +536,13 @@ const App = {
                     this.view.paint();
                     break;
 
-                case "L":
-                    const url = `${document.URL}${this.view.url_args()}`.replace("&", "&amp;");
-                    const html = `<a href="${url}">${url}</a>`;
-                    document.querySelector("#linklink").innerHTML = html;
-                    Panels.show_panel("#linkpanel");
+                case "F":
+                    if (document.fullscreenElement) {
+                        document.exitFullscreen();
+                    }
+                    else {
+                        document.querySelector("body").requestFullscreen().then(() => {});
+                    }
                     break;
 
                 case "i":
@@ -549,6 +551,13 @@ const App = {
 
                 case "I":
                     Panels.toggle_panel("#infopanel");
+                    break;
+
+                case "L":
+                    const url = `${document.URL}${this.view.url_args()}`.replace("&", "&amp;");
+                    const html = `<a href="${url}">${url}</a>`;
+                    document.querySelector("#linklink").innerHTML = html;
+                    Panels.show_panel("#linkpanel");
                     break;
 
                 case "P":

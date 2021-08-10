@@ -12,7 +12,7 @@ html.wait { cursor: wait; }
 
 body { font-family: Helvetica; overflow: hidden; margin: 0; padding: 0; height: 100%; }
 
-.canvas_container { display: flex; justify-content: center; width: 100%; }
+.canvas_container { display: flex; justify-content: center; width: 100%; height: 100%; }
 
 .canvas_sizer { position: absolute; top: 0; overflow: hidden; }
 
@@ -42,7 +42,7 @@ canvas.view.move { cursor: grab; }
 
 #splash.hidden { visibility: hidden; opacity: 0; transition: opacity 1s, visibility 1s; }
 
-#helppanel { width: 20em; top: 5em; right: 5em; left: auto; padding: 1em 1em 0 1em; }
+#helppanel { width: 20em; top: 5em; right: 5em; left: auto; padding: 1em 1em 0 1em; max-height: 80%; overflow: scroll; }
 
 #infopanel { width: 18em; top: 5em; left: 5em; }
 
