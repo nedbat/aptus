@@ -167,10 +167,10 @@ a {
 
 #renderwait {
     position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     display: none;
     background: #00000080;
-    width: 100%;
-    height: 100%;
     cursor: wait;
     &.show {
         display: block;
