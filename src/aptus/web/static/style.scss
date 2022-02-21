@@ -63,6 +63,7 @@ canvas.view {
 .panel {
     display: none;
     position: absolute;
+    overflow: scroll;
     background: #ffeebb;
     padding: .5em;
     border: 2px solid black;
@@ -129,7 +130,6 @@ canvas.view {
     left: auto;
     padding: 1em 1em 0 1em;
     max-height: 80%;
-    overflow: scroll;
 }
 
 #infopanel {
@@ -155,6 +155,7 @@ kbd {
     border-radius: .25em;
     padding: .1em .25em;
     margin: .1em;
+    cursor: default;
 }
 
 a {
