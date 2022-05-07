@@ -306,7 +306,10 @@ all_palettes = [
     Palette().spectrum(16, l=125, s=175),
     Palette().xaos(),
     Palette().spectrum(2, h=120, l=(50,200), s=125).stretch(128, hsl=True),
+    # US flag:
     Palette().rgb_colors([(0x00,0x28,0x68), (0xFF, 0xFF, 0xFF), (0xBF, 0x0A, 0x30), (0xFF, 0xFF, 0xFF)]).stretch(4, ease="sine"),
+    # Ukraine flag:
+    Palette().rgb_colors([(0x22,0x5C,0xB5)] * 10 + [(0xF9,0xD5,0x48)]).stretch(4, ease="sine"),
     Palette().rgb_colors([(255,255,255), (0,0,0), (0,0,0), (0,0,0)]),
     Palette().rgb_colors([(255,255,255)]),
     ]
