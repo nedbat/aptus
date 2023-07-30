@@ -1,17 +1,10 @@
 # Makefile for utility work on Aptus
 
-RESFILE = src/gui/resources.py
-
 install: build
 	python setup.py install
 
 build:
 	python setup.py build
-
-rez: $(RESFILE)
-
-$(RESFILE): etc/crosshair.gif
-	python /Python25/Scripts/img2py -n Crosshair etc/crosshair.gif $(RESFILE)
 
 clean:
 	-rm -rf build dist
@@ -24,21 +17,10 @@ clean:
 	-rm -f *.bak */*.bak */*/*.bak */*/*/*.bak
 	-rm -f *.so */*.so */*/*.so */*/*/*.so
 
-kit: build
-	python setup.py sdist --formats=gztar
-	python setup.py bdist_wininst --bitmap etc/wininst.bmp
-
 icon:
 	aptuscmd --size=64x64 --super=5 --output /tmp/aptus.png etc/icon.aptus
 	aptuscmd --size=64x64 --super=5 --output /tmp/aptus_mask.png etc/icon_mask.aptus
 	convert /tmp/aptus.png /tmp/aptus_mask.png -compose copy-opacity -composite src/aptus/web/static/icon.png
-
-lint: clean
-	python -x /Python25/Scripts/pylint.bat --rcfile=.pylintrc src
-	python checkeol.py
-
-test: install
-	nosetests
 
 asm:
 	gcc.exe -mno-cygwin -mdll -O -Wall -Ic:\\Python25\\lib\\site-packages\\numpy\\core\\include -Ic:\\Python25\\include -Ic:\\Python25\\PC -c ext/engine.c -O3 -g -Wa,-alh > engine.lst
@@ -46,9 +28,9 @@ asm:
 WEBHOME = ~/web/stellated/pages/code/aptus
 
 %.png: %.aptus
-	python scripts/aptuscmd.py $< --super=3 -o $*.png -s 1000x740
-	python scripts/aptuscmd.py $< --super=3 -o $*_med.png -s 500x370
-	python scripts/aptuscmd.py $< --super=5 -o $*_thumb.png -s 250x185
+	aptuscmd $< --super=3 -o $*.png -s 1000x740
+	aptuscmd $< --super=3 -o $*_med.png -s 500x370
+	aptuscmd $< --super=5 -o $*_thumb.png -s 250x185
 
 SAMPLE_PNGS := $(patsubst %.aptus,%.png,$(wildcard doc/*.aptus))
 

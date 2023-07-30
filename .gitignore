@@ -11,3 +11,5 @@ build/
 dist/
 Aptus.egg-info/
 MANIFEST
+
+doc/*.png
