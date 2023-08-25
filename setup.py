@@ -115,9 +115,10 @@ setup(
         ],
         "web": [
             "aiofiles",
+            "cachetools",
+            "Jinja2",
             "fastapi",
             "uvicorn",
-            "cachetools",
         ],
     },
 
