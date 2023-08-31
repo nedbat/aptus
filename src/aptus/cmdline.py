@@ -24,7 +24,7 @@ class AptusCmdApp():
         im = Image.fromarray(pix)
         if compute.supersample > 1:
             print("Resampling image...")
-            im = im.resize(compute.size, Image.ANTIALIAS)
+            im = im.resize(compute.size, Image.LANCZOS)
         compute.write_image(im, compute.outfile)
 
 

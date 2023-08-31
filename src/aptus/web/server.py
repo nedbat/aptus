@@ -81,7 +81,7 @@ def compute_render(compute):
     pix = compute.color_mandel()
     im = PIL.Image.fromarray(pix)
     if compute.supersample > 1:
-        im = im.resize(compute.size, PIL.Image.ANTIALIAS)
+        im = im.resize(compute.size, PIL.Image.LANCZOS)
     fout = io.BytesIO()
     compute.write_image(im, fout)
     return fout.getvalue()
