@@ -7,7 +7,7 @@ const Defaults = {
 };
 
 const View = {
-    tileX: 400,
+    tileX: 200,
 
     // One map for all views, mapping overlay canvas elements to their view.
     canvas_map: new Map(),
