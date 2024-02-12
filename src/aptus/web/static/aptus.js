@@ -555,7 +555,7 @@ const App = {
 
                 case "L":
                     const url = `${document.URL}${this.view.url_args()}`.replace("&", "&amp;");
-                    const html = `<a href="${url}">${url}</a>`;
+                    const html = `<a href="${url}">Permalink to this view</a>`;
                     document.querySelector("#linklink").innerHTML = html;
                     Panels.show_panel("#linkpanel");
                     break;
