@@ -580,6 +580,10 @@ const App = {
                     Panels.toggle_panel("#renderform");
                     break;
 
+                case "U":
+                    Panels.toggle_panel("#uploadpanel");
+                    break;
+
                 case "w":
                     let text;
                     if (!this.view.canvas_size_w) {
