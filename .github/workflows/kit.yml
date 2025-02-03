@@ -55,7 +55,7 @@ jobs:
       - name: "Upload wheels"
         uses: actions/upload-artifact@v4
         with:
-          name: dist
+          name: dist-wheel-${{ matrix.os }}
           path: wheelhouse/*.whl
 
   sdist:
@@ -84,5 +84,5 @@ jobs:
       - name: "Upload sdist"
         uses: actions/upload-artifact@v4
         with:
-          name: dist
+          name: dist-sdist
           path: dist/*.tar.gz
