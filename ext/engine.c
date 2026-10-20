@@ -1018,6 +1018,9 @@ apply_palette(AptEngine *self, PyObject *args)
 #define WRAP_COLOR(cindex)                      \
         if (wrap) {                             \
             cindex %= ncolors;                  \
+            if (cindex < 0) {                   \
+                cindex += ncolors;              \
+            }                                   \
         }                                       \
         else {                                  \
             if (cindex < 0) {                   \
